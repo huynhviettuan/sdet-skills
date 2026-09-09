@@ -1,0 +1,22 @@
+import { test as a11yFixtures } from '@fixtures/accessibility-fixtures';
+import { test as databaseFixtures } from '@fixtures/database-fixtures';
+import { test as hookFixtures } from '@fixtures/hook-fixtures';
+import { test as pdfFixtures } from '@fixtures/pdf-fixtures';
+import { test as wordFixtures } from '@fixtures/word-fixtures';
+import { mergeExpects, mergeTests } from '@playwright/test';
+import { expect as expectFixtures } from 'src/fixtures/expect-fixtures';
+import { test as notificationFixtures } from 'src/fixtures/notification-fixtures';
+import { test as pageFixtures } from 'src/fixtures/page-fixtures';
+import { test as serviceFixtures } from 'src/fixtures/service-fixtures';
+
+export const test = mergeTests(
+    serviceFixtures,
+    pageFixtures,
+    notificationFixtures,
+    hookFixtures,
+    a11yFixtures,
+    databaseFixtures,
+    pdfFixtures,
+    wordFixtures
+);
+export const expect = mergeExpects(expectFixtures);

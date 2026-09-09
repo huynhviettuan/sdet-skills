@@ -1,0 +1,13 @@
+!.*
+node_modules/
+package-lock.json
+.env
+.env.*
+!.env.example
+.mcp.json
+test-results/*
+.qodo
+src/downloads
+.vscode
+docs/articles
+docs/diagrams/*.png

@@ -1,0 +1,47 @@
+<svg viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Notification design for test automation</title>
+<desc>A diagram showing a test reporter publishing an event to an event bus, which fans out to Slack, Teams, Email, and Webhook channels.</desc>
+<defs>
+<marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+<path d="M0,0 L8,4 L0,8 Z" fill="#64748b"/>
+</marker>
+</defs>
+<rect width="1200" height="630" fill="#0f172a"/>
+
+<text x="600" y="80" text-anchor="middle" font-size="40" font-weight="700" fill="#f8fafc" font-family="Arial, sans-serif">Notification Design for Test Automation</text>
+<text x="600" y="120" text-anchor="middle" font-size="20" fill="#94a3b8" font-family="Arial, sans-serif">Decoupling test runs from delivery with an Observer pattern</text>
+
+<rect x="70" y="260" width="220" height="120" rx="10" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+<text x="180" y="300" text-anchor="middle" font-size="18" font-weight="700" fill="#f8fafc" font-family="Arial, sans-serif">Test Reporter</text>
+<text x="180" y="326" text-anchor="middle" font-size="13" fill="#94a3b8" font-family="Arial, sans-serif">(Producer)</text>
+<text x="180" y="350" text-anchor="middle" font-size="13" fill="#cbd5e1" font-family="Arial, sans-serif">publishes suite:finished</text>
+
+<line x1="290" y1="320" x2="410" y2="320" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+<circle cx="530" cy="320" r="110" fill="#1e293b" stroke="#f59e0b" stroke-width="3"/>
+<text x="530" y="312" text-anchor="middle" font-size="20" font-weight="700" fill="#f8fafc" font-family="Arial, sans-serif">EventBus</text>
+<text x="530" y="336" text-anchor="middle" font-size="13" fill="#94a3b8" font-family="Arial, sans-serif">(Observer)</text>
+
+<line x1="640" y1="280" x2="810" y2="180" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="640" y1="305" x2="810" y2="290" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="640" y1="335" x2="810" y2="400" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="640" y1="360" x2="810" y2="500" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+<rect x="820" y="140" width="300" height="80" rx="10" fill="#1e293b" stroke="#4ade80" stroke-width="2"/>
+<text x="970" y="185" text-anchor="middle" font-size="17" font-weight="700" fill="#f8fafc" font-family="Arial, sans-serif">SlackChannel</text>
+<text x="970" y="205" text-anchor="middle" font-size="12" fill="#94a3b8" font-family="Arial, sans-serif">every run</text>
+
+<rect x="820" y="250" width="300" height="80" rx="10" fill="#1e293b" stroke="#4ade80" stroke-width="2"/>
+<text x="970" y="295" text-anchor="middle" font-size="17" font-weight="700" fill="#f8fafc" font-family="Arial, sans-serif">TeamsChannel</text>
+<text x="970" y="315" text-anchor="middle" font-size="12" fill="#94a3b8" font-family="Arial, sans-serif">only on failure</text>
+
+<rect x="820" y="360" width="300" height="80" rx="10" fill="#1e293b" stroke="#4ade80" stroke-width="2"/>
+<text x="970" y="405" text-anchor="middle" font-size="17" font-weight="700" fill="#f8fafc" font-family="Arial, sans-serif">EmailChannel</text>
+<text x="970" y="425" text-anchor="middle" font-size="12" fill="#94a3b8" font-family="Arial, sans-serif">daily digest</text>
+
+<rect x="820" y="470" width="300" height="80" rx="10" fill="#1e293b" stroke="#4ade80" stroke-width="2"/>
+<text x="970" y="515" text-anchor="middle" font-size="17" font-weight="700" fill="#f8fafc" font-family="Arial, sans-serif">WebhookChannel</text>
+<text x="970" y="535" text-anchor="middle" font-size="12" fill="#94a3b8" font-family="Arial, sans-serif">custom integrations</text>
+
+<text x="600" y="600" text-anchor="middle" font-size="14" fill="#64748b" font-family="Arial, sans-serif">Each channel fails independently — Promise.allSettled, not Promise.all</text>
+</svg>
