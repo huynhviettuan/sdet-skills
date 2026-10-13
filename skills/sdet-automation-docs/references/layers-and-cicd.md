@@ -64,6 +64,10 @@ averages), error-rate target, environment, test data.
 Scenario types: normal load, peak, stress, spike, soak. Interpret throughput and response time together. Keep
 performance runs out of the fast PR stage unless intentionally lightweight.
 
+For the content of this document — SLOs, workload model, script standards, environment, CI gates, analysis, and
+the report template — use the **`performance-testing`** skill. This document links its workload model and latest
+report rather than restating them.
+
 ---
 
 ## CI_CD_STRATEGY.md — execution stages

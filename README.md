@@ -17,6 +17,12 @@ A collection of portable [Claude Code](https://claude.com/claude-code) skills fo
   Senior SDET: risk-based scope, test-layer decisions, standards, data/account strategy, flaky/retry policy, CI
   stages, quality gates, and traceability. Builds on `project-docs` formats and `sdet-framework-architect` design
   rules.
+- [`skills/performance-testing`](skills/performance-testing/SKILL.md) — tool-agnostic performance testing: SLOs,
+  workload modeling from production data, open vs closed models, script design (k6 examples + JMeter/Gatling/Locust
+  mapping), environment and monitoring, CI gates, bottleneck analysis, and reporting.
+- [`skills/security-testing`](skills/security-testing/SKILL.md) — authorized, defensive security testing: threat
+  modeling and ASVS scoping, automated authz/BOLA/session/header tests in the existing suite, SAST/SCA/secrets/IaC/
+  DAST in CI with gating policies, and finding triage and reporting.
 
 The documentation skills share one ID scheme (`FR-` / `BR-` / `AC-` from product docs, `TC-` for automated
 scenarios, `OQ-`, `ADR-`) so requirements trace through to tests.
