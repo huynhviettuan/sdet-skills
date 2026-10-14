@@ -43,6 +43,11 @@ it covers:
   and for architecture findings in a review. Do not restate or contradict its rules here.
 - **`project-docs`** owns the product-side documents and the formats for OQ, ADR, and the traceability matrix. If
   the product already has those docs, read its BR/AC IDs and extend its matrix instead of creating parallel copies.
+- **`test-case-design`** derives the `TC-` cases (techniques, format, coverage summary) that the traceability
+  matrix and CI suites here consume.
+- **`test-script-writer`** implements `TC-` cases as tests following the standards documented here.
+- **`debug-failed-tests`** applies the flaky/retry/quarantine policy and failure-artifact standards documented here
+  when a test actually fails.
 - **`performance-testing`** and **`security-testing`** own the content of `PERFORMANCE_TESTING.md` and any
   security testing docs; reference them instead of restating.
 - **`init-playwright-framework`** scaffolds a Playwright/TypeScript repo once the strategy says Playwright.

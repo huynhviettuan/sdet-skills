@@ -130,7 +130,7 @@ Read .claude/skills/debug-tests.md, then help me diagnose <test name/path>. Here
 
 ### Architecture / flow diagram (SVG)
 
-Used to generate the [health locator diagram](../articles/health-locator-rag-architecture.svg). Adapt the boxes and
+Used to generate the health locator architecture diagram. Adapt the boxes and
 sections for any system:
 
 ```

@@ -73,3 +73,22 @@ docs/
     explains _what_ a pattern is and _when_ to use it.
 -   **Path references** — when a doc cites code, use the path alias (`@elements/common/input`) so search and tooling
     resolve it.
+-   **IDs** — acceptance criteria are `AC-<AREA>-NNN`, test cases `TC-<AREA>-NNN` (security: `TC-SEC-<AREA>-NNN`);
+    never reused or renumbered.
+
+## Beyond this scaffold
+
+This folder documents the **framework**. Strategy-level documents — automation strategy, risk-based scope, test-data
+and account strategy, flaky/retry policy, CI stages, quality gates, traceability — are not scaffolded here. Generate
+them when needed with these skills (from the `sdet-skills` collection), which use the same ID scheme:
+
+| Need                                                       | Skill                  |
+| ---------------------------------------------------------- | ---------------------- |
+| Product rules, state machines, acceptance criteria, ADRs   | `project-docs`         |
+| Systematic test cases (boundaries, decision tables, …)     | `test-case-design`     |
+| Automation strategy, standards, CI, quality gates          | `sdet-automation-docs` |
+| Load / stress / soak testing                               | `performance-testing`  |
+| Authorization tests, security scanning, finding triage     | `security-testing`     |
+
+When they are added, place the automation documents under `docs/automation/` and reuse this repo's `decisions/`
+for ADRs rather than creating a second ADR folder.

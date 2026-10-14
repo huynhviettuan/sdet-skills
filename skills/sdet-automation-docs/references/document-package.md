@@ -59,7 +59,8 @@ automation-project/
 │   │   ├── MOBILE_TESTING.md
 │   │   ├── VISUAL_TESTING.md
 │   │   ├── ACCESSIBILITY_TESTING.md
-│   │   └── PERFORMANCE_TESTING.md
+│   │   ├── PERFORMANCE_TESTING.md      # content from the performance-testing skill
+│   │   └── SECURITY_TESTING.md         # content from the security-testing skill
 │   │
 │   ├── reliability/
 │   │   ├── FLAKY_TEST_POLICY.md

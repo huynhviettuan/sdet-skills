@@ -2,409 +2,194 @@
 
 ## When to Use
 
-Use this skill when you have a **Swagger/OpenAPI spec** (JSON or YAML, v2 or v3) and want to generate the full service
-layer: interfaces, service class, fixtures registration, and endpoint constants — all following the controller pattern
-from [`create-api-service.md`](./create-api-service.md).
+Use this skill when you have a **Swagger/OpenAPI spec** (JSON or YAML, v2 or v3) and want to generate the service
+layer: types, response schemas, service classes, fixtures, and registry — **mapped 1:1 to the spec**.
+
+> If the `service-builder` skill from the sdet-skills collection is installed, use it: it is the full version of
+> this workflow with every mapping edge case (versions, collisions, `allOf`/`oneOf`, auth schemes, spec drift).
 
 Typical triggers:
 
 -   "Here's the Swagger JSON for the Users API — generate the service"
--   "Convert this OpenAPI spec to a service class"
--   "I have swagger.json at this URL — create services from it"
+-   "Sync the services with the new spec"
+-   "Add the new endpoint from the spec to the service"
 
 ## When NOT to Use
 
-| Situation                           | Use instead                                                    |
-| ----------------------------------- | -------------------------------------------------------------- |
-| No Swagger spec available           | [`create-api-service.md`](./create-api-service.md) (manual)    |
-| Need to explore a live screen first | [`explore-screens.md`](./explore-screens.md) → then this skill |
-| Only need request/response types    | Extract Step 2 only                                            |
+| Situation                                | Use instead                                                             |
+| ---------------------------------------- | ----------------------------------------------------------------------- |
+| No spec at all                           | "No spec" below — draft one first, then come back                       |
+| A single endpoint not described anywhere | [`create-api-service.md`](./create-api-service.md) (manual, documented) |
 
-## Input Formats
+## The 1:1 Contract
 
-This skill accepts Swagger in any of these forms:
+| OpenAPI                       | Generated                                                                          |
+| ----------------------------- | ---------------------------------------------------------------------------------- |
+| tag (first tag)               | one `<Tag>Service extends BaseService` in `src/services/<tag>.service.ts`          |
+| operation                     | one method, name = camelCase(`operationId`) **verbatim**                           |
+| path                          | kept verbatim in the method: `this.pathOf('/users/{id}', { id })`                  |
+| path params                   | positional arguments, typed from their schema                                      |
+| JSON request body             | `body` argument, typed                                                             |
+| query / header params         | `options?: { query?: {…}; headers?: {…} }`                                         |
+| `components.schemas.X`        | `export type X` in `src/models/<tag>/<tag>.interface.ts`                               |
+| JSON 2xx response             | `ServiceResponse<T>` + `src/data/schemas/<tag>/<operationId>_<status>_schema.json` |
+| `securitySchemes`             | credentials in `service-fixtures.ts`, resolved once per worker                     |
+| operation that can't be built | JSDoc `@operationId <id>` + `@skipped <reason>` — never silently absent            |
 
-| Format               | How to provide                                        |
-| -------------------- | ----------------------------------------------------- |
-| **File path**        | `src/data/swagger/users.json` or `.yaml`              |
-| **URL**              | `https://api.example.com/swagger.json` or `/api-docs` |
-| **Pasted JSON/YAML** | Inline in the conversation                            |
-| **Partial spec**     | Just the `paths` + `components/schemas` sections      |
+Why verbatim operationIds: a spec line and its method are one grep apart, and regenerating never renames anything.
+Better names belong in the spec, not in the service.
 
-## Workflow Overview
+## Workflow
 
 ```
-1. Parse the Swagger spec
-2. Extract types        → src/models/<module>/<module>.interface.ts
-3. Generate service     → src/services/<module>.service.ts
-4. Update endpoints     → src/constants/endpoints.constant.ts
-5. Update registry      → docs/registry/services.md
-6. Register fixture     → src/fixtures/service-fixtures.ts
-7. Verify               → tsc --noEmit + eslint
+1. Save the spec        → specs/<api>.json
+2. Inventory            → npm run api:inventory -- specs/<api>.json --out specs/<api>.inventory.json
+3. Resolve flags        → NO-OPERATION-ID / NAME-COLLISION (see Edge Cases)
+4. Types                → src/models/<tag>/<tag>.interface.ts
+5. Response schemas     → npm run api:schemas -- specs/<api>.json
+6. Services             → src/services/<tag>.service.ts
+7. Fixtures + registry  → src/fixtures/service-fixtures.ts, docs/registry/services.md
+8. Verify               → npx tsc --noEmit, npx eslint, npm run api:coverage -- specs/<api>.json
 ```
 
-## Step 1: Parse the Swagger Spec
+`scripts/openapi-tool.mjs` (behind the `api:*` npm scripts) is dependency-free. YAML specs need `npm i -D yaml`, or
+convert them to JSON.
 
-Read the spec and identify:
+## Step 2: Inventory
 
--   **`info.title`** or **tags** → service class name
--   **`servers[0].url`** or **`basePath`** → `super('/base-path')` in constructor
--   **`paths`** → one method per operation
--   **`components.schemas`** (v3) or **`definitions`** (v2) → TypeScript interfaces
+The inventory prints one row per operation with the target class, method name, request/response types, and flags.
+It is the generation plan — follow it instead of re-deriving names by hand.
 
-### Mapping Rules
+## Step 4: Types
 
-| Swagger concept                  | Framework artifact                   |
-| -------------------------------- | ------------------------------------ |
-| Tag name (e.g. `"Users"`)        | Service class: `UsersService`        |
-| `servers[0].url + common prefix` | `super('/users')` basePath           |
-| `operationId`                    | Method name (converted to camelCase) |
-| Path parameters `{id}`           | Method argument: `id: string`        |
-| Query parameters                 | Optional params object               |
-| Request body schema              | `Request` type in `@models/`         |
-| Response `200/201` schema        | `Response` type in `@models/`        |
-| `$ref` to shared schema          | Shared type, same file or separate   |
+| OpenAPI                            | TypeScript                                                                 |
+| ---------------------------------- | -------------------------------------------------------------------------- |
+| `object` + `properties`            | `export type X = {…}` — always `type`, never `interface` (bodies must be assignable to `JSONObject`) |
+| required / not required            | `name: T` / `name?: T`                                                     |
+| `string` (any format but `binary`) | `string`                                                                   |
+| `integer` / `number`               | `number`                                                                   |
+| `boolean`                          | `boolean`                                                                  |
+| `enum`                             | named string-literal union: `export type UserRole = 'admin' \| 'user'`     |
+| `array` of T                       | `T[]`                                                                      |
+| `nullable: true`                   | `T \| null`                                                                |
+| `$ref`                             | the referenced type name                                                   |
+| `allOf` / `oneOf`                  | `A & B` / `A \| B`                                                         |
+| inline object                      | named after the method: `GetInventoryResponse`                             |
 
-## Step 2: Extract Types
+A schema used by two or more tags goes to `src/models/common/api.interface.ts`.
 
-For each **request body** and **success response** schema, generate a TypeScript type.
+## Step 5: Response schemas
 
-### Schema-to-TypeScript rules
-
-| OpenAPI type                     | TypeScript type                                |
-| -------------------------------- | ---------------------------------------------- |
-| `string`                         | `string`                                       |
-| `string` + `format: date-time`   | `string` (ISO 8601)                            |
-| `string` + `enum: [...]`         | String literal union: `'active' \| 'inactive'` |
-| `integer` / `number`             | `number`                                       |
-| `boolean`                        | `boolean`                                      |
-| `array` + `items: { $ref }`      | `Type[]`                                       |
-| `object` + `properties`          | Named interface                                |
-| `$ref: '#/components/schemas/X'` | Import/reuse `X` type                          |
-| Required field                   | Non-optional property                          |
-| Optional field                   | Property with `?`                              |
-
-### Naming conventions
-
-| Swagger schema                     | TypeScript name            | File                                  |
-| ---------------------------------- | -------------------------- | ------------------------------------- |
-| Request body for `POST /users`     | `CreateUserRequest`        | `src/models/users/users.interface.ts` |
-| Request body for `PUT /users/{id}` | `UpdateUserRequest`        | same file                             |
-| Response for `GET /users`          | `User` (entity)            | same file                             |
-| Response for `GET /users` (list)   | `User[]` (array of entity) | same file                             |
-| Shared pagination wrapper          | `PaginatedResponse<T>`     | `src/models/requests/request.type.ts` |
-
-### Example conversion
-
-**Swagger schemas:**
-
-```yaml
-components:
-    schemas:
-        CreateUserRequest:
-            type: object
-            required: [name, email]
-            properties:
-                name:
-                    type: string
-                email:
-                    type: string
-                    format: email
-                role:
-                    type: string
-                    enum: [admin, user, viewer]
-        User:
-            type: object
-            properties:
-                id:
-                    type: string
-                    format: uuid
-                name:
-                    type: string
-                email:
-                    type: string
-                role:
-                    type: string
-                    enum: [admin, user, viewer]
-                createdAt:
-                    type: string
-                    format: date-time
-```
-
-**Generated TypeScript** (`src/models/users/users.interface.ts`):
+Extracted from the spec — never inferred from captured responses — and read by the existing helper:
 
 ```ts
-export type UserRole = 'admin' | 'user' | 'viewer';
-
-export type CreateUserRequest = {
-    name: string;
-    email: string;
-    role?: UserRole;
-};
-
-export type User = {
-    id: string;
-    name: string;
-    email: string;
-    role: UserRole;
-    createdAt: string;
-};
+await validateJsonSchema('getUserById_200', 'users', data);
 ```
 
-## Step 3: Generate Service
+If a real response fails validation, the API or the spec is wrong: report it; never loosen the schema.
 
-Map each **path + method** to a service method.
+## Step 6: Services
 
-### Path-to-method mapping
-
-| Swagger path                 | HTTP   | Method name  | Signature                                        |
-| ---------------------------- | ------ | ------------ | ------------------------------------------------ |
-| `GET /resource`              | GET    | `getAll`     | `(params?) → ServiceResponse<T[]>`               |
-| `GET /resource/{id}`         | GET    | `getById`    | `(id: string) → ServiceResponse<T>`              |
-| `POST /resource`             | POST   | `create`     | `(body: CreateRequest) → ServiceResponse<T>`     |
-| `PUT /resource/{id}`         | PUT    | `update`     | `(id, body: UpdateRequest) → ServiceResponse<T>` |
-| `PATCH /resource/{id}`       | PATCH  | `patch`      | `(id, body: PatchRequest) → ServiceResponse<T>`  |
-| `DELETE /resource/{id}`      | DELETE | `deleteById` | `(id: string) → ServiceResponse<void>`           |
-| `POST /resource/{id}/action` | POST   | `actionName` | `(id, body?) → ServiceResponse<T>`               |
-| `GET /resource/{id}/sub`     | GET    | `getSub`     | `(id: string) → ServiceResponse<Sub[]>`          |
-
-### Non-CRUD endpoints
-
-When `operationId` doesn't fit CRUD (e.g. `POST /auth/signin`), use the operationId directly:
-
-```ts
-// operationId: signIn
-async signIn(body: SignInRequest): Promise<ServiceResponse<SignInResponse>> {
-    return await this.send<SignInResponse>('post', {
-        url: this.endpoint('/signin'),
-        body
-    });
-}
-```
-
-### Full example
-
-**Swagger paths:**
-
-```yaml
-paths:
-    /users:
-        get:
-            tags: [Users]
-            operationId: getUsers
-            parameters:
-                - name: page
-                  in: query
-                  schema: { type: integer }
-                - name: perPage
-                  in: query
-                  schema: { type: integer }
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                type: array
-                                items: { $ref: '#/components/schemas/User' }
-        post:
-            tags: [Users]
-            operationId: createUser
-            requestBody:
-                content:
-                    application/json:
-                        schema: { $ref: '#/components/schemas/CreateUserRequest' }
-            responses:
-                201:
-                    content:
-                        application/json:
-                            schema: { $ref: '#/components/schemas/User' }
-    /users/{id}:
-        get:
-            tags: [Users]
-            operationId: getUserById
-            parameters:
-                - name: id
-                  in: path
-                  required: true
-                  schema: { type: string }
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema: { $ref: '#/components/schemas/User' }
-        delete:
-            tags: [Users]
-            operationId: deleteUser
-            parameters:
-                - name: id
-                  in: path
-                  required: true
-                  schema: { type: string }
-            responses:
-                204: {}
-```
-
-**Generated service** (`src/services/users.service.ts`):
+Example for tag `users` with operations `getUsers`, `createUser`, `getUserById`, `deleteUser`:
 
 ```ts
 import { type ServiceResponse } from '@models/requests/request.type';
 import { type CreateUserRequest, type User } from '@models/users/users.interface';
 import { BaseService } from '@services/base.service';
 
+/**
+ * Generated 1:1 from OpenAPI tag `users` — <API title> <spec version>.
+ * One method per operation; method name = operationId. Regenerate from the spec instead of renaming.
+ */
 export class UsersService extends BaseService {
-    constructor() {
-        super('/users');
+    /**
+     * @operationId getUsers
+     * GET /users
+     */
+    async getUsers(options?: { query?: { page?: number; perPage?: number } }): Promise<ServiceResponse<User[]>> {
+        return this.send<User[]>('get', { uri: '/users', params: options?.query });
     }
 
-    async getAll(params?: { page?: number; perPage?: number }): Promise<ServiceResponse<User[]>> {
-        return await this.send<User[]>('get', { params });
+    /**
+     * @operationId createUser
+     * POST /users
+     */
+    async createUser(body: CreateUserRequest): Promise<ServiceResponse<User>> {
+        return this.send<User>('post', { uri: '/users', body });
     }
 
-    async getById(id: string): Promise<ServiceResponse<User>> {
-        return await this.send<User>('get', { id });
+    /**
+     * @operationId getUserById
+     * GET /users/{id}
+     */
+    async getUserById(id: string): Promise<ServiceResponse<User>> {
+        return this.send<User>('get', { uri: this.pathOf('/users/{id}', { id }) });
     }
 
-    async create(body: CreateUserRequest): Promise<ServiceResponse<User>> {
-        return await this.send<User>('post', { body });
-    }
-
-    async deleteById(id: string): Promise<ServiceResponse<void>> {
-        return await this.send<void>('delete', { id });
+    /**
+     * @operationId deleteUser
+     * DELETE /users/{id}
+     */
+    async deleteUser(id: string): Promise<ServiceResponse<void>> {
+        return this.send<void>('delete', { uri: this.pathOf('/users/{id}', { id }) });
     }
 }
 ```
 
-## Step 4: Update Endpoints Constant
+Rules:
 
-Add the new API endpoints to `src/constants/endpoints.constant.ts` under `ApiEndpoints`:
+-   `super()` with no base path; the server URL (including any `/api/v1`) is `API_DOMAIN`.
+-   Signature order: path params, body, `options`. Auth headers are not parameters — fixtures set them.
+-   No child services: `/users/{id}/orders` is a method on `UsersService` (or on the tag the spec gives it).
+-   Methods in spec order; no hand-written helpers inside generated services.
+-   `multipart/form-data` → pass `multipart`; other non-JSON bodies → `@skipped` + open question.
 
-```ts
-export const ApiEndpoints = {
-    // ... existing
-    users: {
-        list: '/users',
-        byId: '/users/{id}'
-    }
-} as const;
-```
-
-## Step 5: Update Service Registry
-
-Add or update the entry in [`docs/registry/services.md`](../../docs/registry/services.md) with the service class, base
-path, methods, and models path.
-
-## Step 6: Register Fixture
-
-Add to `src/fixtures/service-fixtures.ts`:
+## Step 7: Fixtures and registry
 
 ```ts
-import { UsersService } from '@services/users.service';
+type ServiceObjects = { usersService: UsersService };
+type ServiceWorkerObjects = { apiToken: string };
 
-type ServiceObjects = {
-    // ... existing
-    usersService: UsersService;
-};
-
-export const test = base.extend<ServiceObjects>({
-    // ... existing
-    usersService: async ({}, use) => {
-        await use(new UsersService());
+export const test = base.extend<ServiceObjects, ServiceWorkerObjects>({
+    apiToken: [async ({}, use) => await use(Config.api.token), { scope: 'worker' }],
+    usersService: async ({ apiToken }, use) => {
+        await use(new UsersService().setToken(apiToken));
     }
 });
 ```
 
-## Step 7: Verify
+Credentials come from env through `Config` (add the variable to `.env.example`). For `apiKey` schemes use
+`setHeaders({ '<header>': key })`. Add one row per service to `docs/registry/services.md`.
 
--   [ ] `npx tsc --noEmit` — zero errors
--   [ ] `npx eslint .` — zero errors
--   [ ] All types match the Swagger schema (required vs optional, enums, nested objects)
--   [ ] Method names are consistent with CRUD conventions
--   [ ] Service extends `BaseService`
--   [ ] Types are in `@models/<module>/`, not beside the service
+## Step 8: Verify
+
+-   [ ] `npx tsc --noEmit` and `npx eslint` — zero new errors
+-   [ ] `npm run api:coverage -- specs/<api>.json` — 0 missing, 0 extra, 0 duplicate
+-   [ ] Every method has `@operationId` + `METHOD /path`; every skipped operation has a reason
+-   [ ] One read-only smoke test per service passes with schema validation
 
 ## Edge Cases
 
-### Multiple tags per path
+| Case                                 | Rule                                                                                                 |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Missing `operationId`                | Tool fallback: verb + path (`GET /users/{id}/orders` → `getUsersByIdOrders`) + open question to fix the spec |
+| Colliding names in one class         | Tool adds a numeric suffix and flags it; ask for unique operationIds                                 |
+| Several tags on one operation        | First tag owns the method                                                                            |
+| `/v1` and `/v2` under one tag        | One class per version (`UsersV1Service`, `UsersV2Service`) — the tool names them                     |
+| Spec changes                         | Replace the spec, diff the inventory, regenerate affected files; never delete a removed method without updating its callers |
+| Swagger v2                           | Supported by the tool (`definitions`, body parameters, `host` + `basePath`)                          |
 
-If a Swagger path has operations under different tags, group by the **primary tag** (first one listed). If two tags map
-to different controllers, create two services.
+## No spec
 
-### Shared schemas across services
-
-Put shared types in a common file:
-
-```
-src/models/common/pagination.interface.ts   → PaginatedResponse<T>
-src/models/common/error.interface.ts        → ErrorResponse
-```
-
-### Nested resources
-
-`/users/{userId}/orders` → method on `UsersService` or separate `OrdersService` depending on whether orders exist as a
-standalone resource:
-
-```ts
-// If orders are always scoped to a user → method on UsersService
-async getOrders(userId: string): Promise<ServiceResponse<Order[]>> {
-    return await this.send<Order[]>('get', {
-        url: this.endpoint(`/${userId}/orders`)
-    });
-}
-
-// If orders also exist at /orders → separate OrdersService
-export class OrdersService extends BaseService {
-    constructor() {
-        super('/orders');
-    }
-
-    async getByUser(userId: string): Promise<ServiceResponse<Order[]>> {
-        return await this.send<Order[]>('get', { params: { userId } });
-    }
-}
-```
-
-### File upload endpoints
-
-```yaml
-/users/{id}/avatar:
-    post:
-        requestBody:
-            content:
-                multipart/form-data:
-                    schema:
-                        type: object
-                        properties:
-                            file:
-                                type: string
-                                format: binary
-```
-
-```ts
-async uploadAvatar(id: string, file: Buffer, fileName: string): Promise<ServiceResponse<User>> {
-    return await this.send<User>('post', {
-        url: this.endpoint(`/${id}/avatar`),
-        multipart: {
-            file: {
-                name: fileName,
-                mimeType: 'image/png',
-                buffer: file
-            }
-        }
-    });
-}
-```
-
-### Swagger v2 differences
-
-| v2                             | v3 equivalent                                 |
-| ------------------------------ | --------------------------------------------- |
-| `basePath: /api/v1`            | `servers[0].url`                              |
-| `definitions.User`             | `components.schemas.User`                     |
-| `parameters` (body type)       | `requestBody.content.application/json.schema` |
-| `produces: [application/json]` | Implicit in `responses.200.content`           |
+1. Ask whether one exists (`/swagger.json`, `/v3/api-docs`, `/openapi.json`, backend repo).
+2. Capture traffic while exploring (see [`explore-screens.md`](./explore-screens.md)): method, path with `{param}`,
+   query, body, status, response — sanitized.
+3. Write `specs/<api>.draft.json` (OpenAPI 3.0) with `info.description: "UNVERIFIED — drafted from captured traffic"`,
+   and raise an open question to the API team.
+4. Generate from the draft with this workflow.
 
 ## Related
 
--   [`create-api-service.md`](./create-api-service.md) — manual service creation + controller pattern details
+-   [`create-api-service.md`](./create-api-service.md) — `BaseService` mechanics, manual services
 -   [`write-api-test.md`](./write-api-test.md) — writing tests against generated services
--   [`explore-screens.md`](./explore-screens.md) — capturing API calls from a live app (when no Swagger exists)
+-   [`explore-screens.md`](./explore-screens.md) — capturing API calls from a live app

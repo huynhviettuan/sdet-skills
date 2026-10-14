@@ -1,5 +1,8 @@
 # Skill: Explore Screens
 
+> This is the discovery step of the `page-builder` agent / skill. Scope first from the feature's test cases (which
+> screens and states the tests need), then explore only those.
+
 ## When to Use
 
 Use this skill when you need to **inspect a live screen** and produce two things from a single observation pass:
@@ -109,8 +112,9 @@ For each interactive element, record:
 | Wrapper class | `.input`, `.select`, `.checkbox` | Confirms the wrapper convention        |
 | Section       | header / main / footer           | Decides which container it lands in    |
 
-Prefer locators in this priority order (most stable first): **`data-testid` → `id` → `label` (visible text) →
-`placeholder` → `href` → role/index fallback.**
+Prefer locators in this priority order (most stable first), always built from the owning container: **test id →
+role + accessible name → label → placeholder → stable visible text → stable CSS / `id` → XPath.** Pass them via the
+element's `locator:` option; use the `label`/`id` options only when the DOM follows the wrapper conventions below.
 
 ## Step 3: Trigger User Flows + Capture Network
 
@@ -176,7 +180,7 @@ This framework wraps DOM in typed element classes. Match what you observed to th
 | `.checkbox` control                    | `CheckBox`         | `new CheckBox({ parentLocator, label: 'Remember me' })`                     |
 | Static text / heading / error message  | `Label`            | `new Label({ locator: container.locator('h1') })`                           |
 | `<img>` / icon                         | `Image`            | `new Image({ parentLocator, ... })`                                         |
-| `<table>` with rows                    | `Table`            | `new Table(container.locator('table'))`                                     |
+| `<table>` with rows                    | `Table`            | `new Table(container)` — appends `table` itself                             |
 | A `<form>` wrapping inputs + submit    | `Form`             | `new Form(container)` then `.getInput()` / `.getButton()`                   |
 | A radio button group                   | `GroupRadioButton` | see `@elements/common/group-radio-button`                                   |
 | Loading placeholders                   | `Skeleton`         | `new Skeleton({ parentLocator: container })`                                |
@@ -297,9 +301,11 @@ Delete any exploration scripts, captures with real credentials, and scratch file
 -   ✅ **Discovery only** — this skill captures locators and endpoints; the downstream skills write the files.
 -   ✅ **Capture both surfaces in one pass** — clicking through the UI is when network calls fire; observe them
     together.
--   ✅ **Save responses as scratchpad JSON** — they bootstrap schemas (`write-api-test`) and mocks (`mock-network`).
--   ✅ **Prefer stable locators** — `data-testid` → `id` → visible text → placeholder → role/index.
--   ✅ **Respect wrapper conventions** — `.input`, `.select`, `.checkbox`; raw `locator` only when needed.
+-   ✅ **Save responses as scratchpad JSON** — they bootstrap mocks (`mock-network`) and, when no OpenAPI spec exists,
+    the draft spec (`create-service-from-swagger.md` → "No spec"). Response schemas come from the spec, not captures.
+-   ✅ **Prefer stable locators** — test id → role + name → label → placeholder → text → CSS/`id` → XPath.
+-   ✅ **Check wrapper conventions** — `.input`, `.select`, `.checkbox`: if the DOM follows them, the `label` option
+    works; otherwise pass `locator:` built from the container.
 -   ✅ **Use path aliases** in any generated code (`@elements/*`, `@components/*`, `@models/*`, `@services/*`).
 -   ❌ **Never commit exploration scripts or unsanitized captures** — they live in the scratchpad.
 -   ❌ **Never hardcode credentials** — use `Config.auth.*` and `Config.app.baseUrl`.

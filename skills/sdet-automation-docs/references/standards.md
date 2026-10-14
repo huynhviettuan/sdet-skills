@@ -11,8 +11,11 @@ project's stack.
 Contents:
 
 - [FRAMEWORK_ARCHITECTURE.md](#framework_architecturemd)
+- [PROJECT_STRUCTURE.md](#project_structuremd)
 - [COMPONENT_DESIGN.md](#component_designmd)
 - [FIXTURE_DESIGN.md](#fixture_designmd)
+- [DATA_FLOW.md](#data_flowmd)
+- [LOGGING_STANDARD.md](#logging_standardmd)
 - [LOCATOR_STRATEGY.md](#locator_strategymd)
 - [WAIT_STRATEGY.md](#wait_strategymd)
 - [ASSERTION_STRATEGY.md](#assertion_strategymd)
@@ -44,6 +47,33 @@ Utilities stay generic and stateless.
 ```
 
 Avoid giant page objects — split by region/component long before a page object reaches hundreds of lines.
+
+---
+
+## PROJECT_STRUCTURE.md
+
+A folder map where every folder has one line saying what belongs there and one rule for what doesn't. The exact
+names follow the framework's layers; a typical shape:
+
+```text
+src/
+├── elements/       # element/control wrappers (button, input, table) — no page knowledge
+├── components/     # reusable widgets (modal, toast, pagination) — constructed with a root
+├── pages/          # page/screen objects composed of containers/components — no assertions
+├── services/       # one API client per resource — no UI imports
+├── fixtures/       # composition root: wiring, data factories, setup + teardown
+├── data/           # factories/builders and static reference data — no secrets
+└── utils/          # generic, stateless helpers — no domain knowledge
+tests/
+├── api/
+├── ui/
+└── integration/
+config/             # environments, per-env settings — secrets from env/secret store only
+```
+
+Also record: file naming (`*.page.ts`, `*.service.ts`, `*.spec.ts`), the import direction rule (tests → fixtures →
+pages/services → elements; never the reverse), and where a new kind of thing goes when it doesn't fit (ask, then
+update this doc — don't create an ad hoc folder).
 
 ---
 
@@ -88,6 +118,47 @@ Rules:
   the test body, where a failed assertion would skip it.
 - No fixtures with invisible side effects — anything a fixture changes is stated in its doc entry.
 - Tests receive pages, components, services, and data factories only through fixtures.
+
+---
+
+## DATA_FLOW.md
+
+One diagram plus a short walk-through of how a single test runs end to end, so a reader can see where state comes
+from and where it goes:
+
+```text
+CI job / CLI
+ → config resolves environment (base URLs, flags; secrets from secret store)
+ → global setup: health check, reference data, per-worker auth state saved
+ → worker fixtures: reserve account, load auth state, create API clients
+ → test fixtures: create test data via API (tagged with run id), build page objects
+ → test body: act through pages/services, assert on observable outcome
+ → test fixture teardown: delete created data (idempotent, runs on failure too)
+ → reporter: results + artifacts (trace, screenshots, logs, created data ids)
+ → global teardown: release accounts, sweep orphans tagged with this run id
+```
+
+Also mark which steps touch external systems (identity provider, email inbox, third-party stubs) and which
+environments each step is allowed to run against.
+
+---
+
+## LOGGING_STANDARD.md
+
+Test logs exist to make a CI failure diagnosable without re-running it.
+
+- **Log at the step level**, not the click level: "create contract via API → id 8f3a", "approve as manager". Most
+  runners have a step/annotation API; use it so steps appear in the report.
+- **Always log identifiers** of data the test created, the account/worker used, the environment, and the run id —
+  these are what you search production-like logs with.
+- **Correlate** with the system under test: send a per-test correlation id header (e.g. `X-Request-Id`/
+  `traceparent`) on API calls and record it, so a failing request can be found in backend logs/traces.
+- **Never log secrets or personal data**: mask tokens, passwords, cookies, auth headers, and PII in request/response
+  logging by default.
+- **Levels**: `info` for steps, `debug` for request/response bodies (enabled in CI on failure/retry only), `warn`
+  for recoverable anomalies (retried call, slow response), `error` only with the failure.
+- **No `console.log` left in tests**; go through the one shared logger so format, masking, and levels stay
+  consistent.
 
 ---
 

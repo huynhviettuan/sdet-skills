@@ -49,6 +49,7 @@ class MailWaiter {
 
         for (let attempt = 0; attempt < maxRetries; attempt++) {
             if (await condition()) return;
+            // audit-ignore R-NO-SLEEP: poll interval between inbox checks, bounded by maxRetries
             await new Promise((resolve) => setTimeout(resolve, interval));
         }
         throw new Error(errorMessage);

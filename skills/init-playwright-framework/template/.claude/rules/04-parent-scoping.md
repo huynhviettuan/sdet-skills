@@ -9,12 +9,15 @@ Every element MUST resolve through a parent `Locator` (container, section, or co
 selectors.
 
 ```ts
-// ✅ Correct — scoped through container
-this.btnSubmit = new Button({ parentLocator: this.container, locator: '[data-testid="submit"]' });
+// ✅ Correct — built from the container's root
+this.btnSubmit = new Button({ locator: this.container.getByTestId('submit') });
 
 // ❌ Wrong — page-global, will match duplicates in modals/tabs
-this.btnSubmit = new Button({ locator: '[data-testid="submit"]' });
+this.btnSubmit = new Button({ locator: $getByTestId('submit') });
 ```
 
 The same `data-testid` can appear in modals, hidden tabs, or prerendered routes. Page-global locators are flakiness
 sources.
+
+The one allowed page-level lookup is a container's own root (`this.container = $('section.main')`); every element is
+then built from that root.

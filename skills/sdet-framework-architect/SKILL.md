@@ -7,10 +7,9 @@ description: >
   reviewing a page-object / screen-object / element hierarchy, designing an API service layer, deciding how to wire
   dependency injection or fixtures for tests, or explicitly asked to apply SOLID/DRY/YAGNI/KISS to test code. Trigger
   on phrases like "new test framework", "test automation architecture", "page object design", "SOLID for test
-  automation", "clean code for tests", "design a QA framework", "structure this automation repo". Distilled from a
-  mature production Playwright/TypeScript framework and cross-checked against a mature Java/Selenium/TestNG
-  framework (a thread-based parallel runner, vs. Playwright's process-based model), but every rule here is stated
-  tool-agnostically — do not assume the target repo uses Playwright, TypeScript, Selenium, or Java.
+  automation", "clean code for tests", "design a QA framework", "structure this automation repo". Distilled from
+  production Playwright/TypeScript and Java/Selenium/TestNG frameworks, but every rule is stated tool-agnostically —
+  do not assume the target repo uses Playwright, TypeScript, Selenium, or Java.
 ---
 
 # SDET Framework Architect
@@ -28,6 +27,9 @@ seed a brand-new repo or review/refactor an existing one, in any language or too
   mapped to test-automation use cases, each with the SOLID principle it serves.
 - [`references/principles-and-anti-patterns.md`](references/principles-and-anti-patterns.md) — the full SOLID/DRY/
   YAGNI/KISS checklist, a tiered (Block/Warn/Nit) review list, and cross-project reuse rules.
+- [`references/claude-md-snippet.md`](references/claude-md-snippet.md) — the non-negotiable rules condensed for
+  pasting into a `CLAUDE.md`, so they apply in every session. Offer it when the user sets up a new automation repo
+  or asks to make these rules permanent.
 
 ## Core layered blueprint
 
@@ -102,3 +104,17 @@ Use these thresholds when the "right" structure isn't obvious:
 
 When a decision genuinely isn't covered by a rule above, don't invent a pattern silently — flag the ambiguity and
 ask, the same discipline this skill's source repo applies to its own skills.
+
+## Related skills
+
+- **`init-playwright-framework`** / **`init-selenium-java-framework`** — scaffold a Playwright/TypeScript or a
+  Selenium + RestAssured/Java (TestNG, thread-local holder) repo that already implements this blueprint.
+- **`page-builder`** / **`service-builder`** — apply the container/section and service-layer rules to generate page
+  objects and OpenAPI-mapped services for that scaffold.
+- **`sdet-automation-docs`** — documents the automation project around the framework (strategy, risk, data,
+  flaky policy, CI, quality gates); its architecture documents defer to this skill.
+- **`refactor-test-suite`** — audits existing suites against these rules (rule IDs, audit script, CI ratchet) and
+  migrates them step by step.
+- **`test-case-design`** — what to test; this skill covers how the automated tests are structured.
+- **`performance-testing`** / **`security-testing`** — the same layering and composition rules apply to perf
+  scripts and security test fixtures (role-scoped clients, two-tenant data).

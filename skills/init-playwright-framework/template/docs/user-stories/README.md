@@ -7,7 +7,7 @@ One file per feature.
 
 A user story documents **what** the feature should do, from the user's perspective, with testable acceptance criteria.
 The [`generate-test-cases`](../../.claude/skills/generate-test-cases.md) skill reads a story, extracts acceptance
-criteria (AC-1, AC-2, …), then produces the matching [`docs/test-cases/<feature>.md`](../test-cases/) where every test
+criteria (`AC-<AREA>-NNN`, e.g. `AC-AUTH-001`), then produces the matching [`docs/test-cases/<feature>.md`](../test-cases/) where every test
 case is traceable back to an AC.
 
 ## File format
@@ -19,7 +19,7 @@ Each file should include:
 | **Title (`# <Feature>`)**           | ✅       | Short noun phrase                                  |
 | **Status / Last updated**           | ✅       | Draft / Accepted / Implemented + date              |
 | **Story (As-a / I-want / So-that)** | ✅       | Standard user-story sentence                       |
-| **Acceptance Criteria**             | ✅       | Numbered AC-1, AC-2, …; each must be testable      |
+| **Acceptance Criteria**             | ✅       | IDs `AC-<AREA>-NNN`; each must be testable         |
 | **Business Rules**                  | optional | Constraints not in ACs (rate limits, retention, …) |
 | **Out of Scope**                    | optional | Explicitly excluded behaviors                      |
 | **References**                      | optional | Links to designs, related stories, prior ADRs      |

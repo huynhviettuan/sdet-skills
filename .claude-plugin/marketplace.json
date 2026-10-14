@@ -1,0 +1,14 @@
+{
+  "name": "sdet-skills",
+  "description": "SDET / test-automation skills for Claude Code",
+  "owner": {
+    "name": "huynhviettuan"
+  },
+  "plugins": [
+    {
+      "name": "sdet-skills",
+      "source": "./",
+      "description": "Framework architecture, Playwright and Selenium/RestAssured Java scaffolding, page-object and OpenAPI service builders, test-script writer, test-suite refactoring, project and automation docs, test case design, performance and security testing, failed-test debugging."
+    }
+  ]
+}

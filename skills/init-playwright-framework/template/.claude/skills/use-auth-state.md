@@ -18,8 +18,10 @@ Use this for the **majority** of E2E tests. Do **not** use it when the test unde
 
 ### ✅ Prefer API login over UI login
 
-The repo already exposes API login via `ApiCommands.getAuthorizationToken()`. API login is ~10× faster than driving the
-UI form and doesn't depend on selectors. Reserve UI login for tests that explicitly verify the sign-in flow.
+The scaffold ships no login helper — the target app's auth API isn't known yet. Create one as an API service (e.g.
+`AuthService` extending `BaseService` in `src/services/`, see [`create-api-service.md`](create-api-service.md)) with a
+method that returns a token for an account. API login is ~10× faster than driving the UI form and doesn't depend on
+selectors. Reserve UI login for tests that explicitly verify the sign-in flow.
 
 ### ✅ One file per role
 
@@ -36,7 +38,7 @@ Storage state goes stale (tokens expire, password rotates). Regenerate on every 
 Create `src/common/global-setup.ts`:
 
 ```ts
-import { ApiCommands } from '@commands/api-commands';
+import { AuthService } from '@services/auth.service'; // create this first — see Critical Rules
 import { Config } from '@constants/config.constant';
 import { BrowserInstance } from '@common/browser';
 import { mkdirSync } from 'fs';
@@ -53,7 +55,7 @@ async function globalSetup(): Promise<void> {
     await BrowserInstance.start();
     const page = await BrowserInstance.startNewPage();
 
-    const token = await new ApiCommands().getAuthorizationToken(Config.auth.superAdminEmail);
+    const token = await new AuthService().getToken(Config.auth.superAdminEmail);
 
     // Inject the token into the context the way your app expects it
     // (cookie, localStorage key, etc. — choose ONE pattern based on the app)
@@ -159,7 +161,7 @@ export const STORAGE_STATE_PATHS = {
 // In global setup — loop through roles
 for (const [role, path] of Object.entries(STORAGE_STATE_PATHS)) {
     const email = ROLE_EMAILS[role];
-    const token = await apiCommands.getAuthorizationToken(email);
+    const token = await authService.getToken(email);
     // ...persist state to `path`
 }
 ```
@@ -188,7 +190,6 @@ independent** — auth state makes that independence easier to achieve, but does
 
 ## Related
 
--   `src/commands/api-commands.ts` — programmatic login (already implemented)
--   `src/commands/commands.ts` — UI login fallback
--   [ADR-002](../../docs/decisions/ADR-002-custom-fixtures.md) — custom fixtures
+-   [`create-api-service.md`](create-api-service.md) — build the `AuthService` used for API login
+-   [`../rules/05-imports.md`](../rules/05-imports.md) — why tests import from `@fixtures/fixtures`
 -   Playwright docs: [Authentication](https://playwright.dev/docs/auth)

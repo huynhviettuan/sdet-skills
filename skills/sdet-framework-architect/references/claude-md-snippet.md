@@ -1,9 +1,19 @@
-# Global preferences
+# CLAUDE.md Snippet
 
+A condensed version of this skill's non-negotiable rules, meant to be **copied into a `CLAUDE.md`** so they apply in
+every session without loading the skill: your global `~/.claude/CLAUDE.md`, or a test-automation repo's own
+`CLAUDE.md`. Claude Code doesn't read a `CLAUDE.md` placed inside a skill folder, which is why this lives here as a
+reference rather than as a live file.
+
+Copy everything between the markers.
+
+<!-- BEGIN SNIPPET -->
+
+```md
 ## SDET / test-automation framework principles
 
 Apply these whenever building, extending, or reviewing a test-automation framework (UI or API, any language/tool —
-Playwright, Selenium, Cypress, WebdriverIO, RestAssured, Appium, etc.), not only in playwright-poc:
+Playwright, Selenium, Cypress, WebdriverIO, RestAssured, Appium, etc.):
 
 - Scope every element/locator through its owning parent — never a page-global lookup. Same id/testid can exist in a
   modal, hidden tab, or prerendered route elsewhere on the page.
@@ -22,3 +32,8 @@ Playwright, Selenium, Cypress, WebdriverIO, RestAssured, Appium, etc.), not only
 
 For the full layered architecture blueprint, a design-pattern catalogue, and a detailed Block/Warn checklist, use
 the `sdet-framework-architect` skill.
+```
+
+<!-- END SNIPPET -->
+
+Keep this snippet in sync with "Non-negotiable rules" in [`../SKILL.md`](../SKILL.md) when either changes.

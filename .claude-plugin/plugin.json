@@ -1,0 +1,10 @@
+{
+  "name": "sdet-skills",
+  "version": "1.0.0",
+  "description": "SDET / test-automation skills: framework architecture, Playwright and Selenium/RestAssured Java scaffolding, page-object and OpenAPI service builders, test-script writer, test-suite refactoring, project and automation documentation, test case design, performance testing, security testing, and debugging failed tests.",
+  "author": {
+    "name": "huynhviettuan"
+  },
+  "repository": "https://github.com/huynhviettuan/sdet-skills",
+  "keywords": ["sdet", "qa", "test-automation", "playwright", "performance-testing", "security-testing", "documentation"]
+}

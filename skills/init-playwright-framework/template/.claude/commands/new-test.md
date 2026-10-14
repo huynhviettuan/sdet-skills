@@ -14,5 +14,8 @@ Requirements:
 -   Keep logic in page objects; follow Arrange-Act-Assert.
 -   Use the `notification` fixture and `NotificationMessages` constants for messages.
 
+If the input is a documented test case (`TC-…` in `docs/test-cases/`), follow the `test-writer` agent (or the
+`test-script-writer` skill if installed) instead: one test per case, traced by TC/AC id.
+
 If the scenario is purely technical (no business sign-off value), use `.claude/skills/write-e2e-test.md` and write a
 plain E2E spec instead.

@@ -11,6 +11,7 @@ Contents:
 - [RISK_BASED_TESTING.md](#risk_based_testingmd)
 - [AUTOMATION_DECISION_MATRIX.md](#automation_decision_matrixmd)
 - [SCOPE_AND_COVERAGE.md](#scope_and_coveragemd)
+- [AUTOMATION_ROADMAP.md](#automation_roadmapmd)
 - [Metrics](#metrics)
 - [Framework / tool selection questions](#framework--tool-selection-questions)
 
@@ -118,6 +119,34 @@ Never use a single vague number ("automation coverage = 90%"). Define coverage b
 | Payment | P0 | AC-PAYMENT-001..009 | Yes | Yes | Yes | PR |
 | Export | P1 | AC-REPORT-010 | Yes | Yes | Yes | Nightly |
 | Tooltip | P3 | — | No | No | No | — |
+
+---
+
+## AUTOMATION_ROADMAP.md
+
+Phases ordered by risk, each ending in something that runs in CI and is trusted — not "framework done, tests
+later".
+
+```text
+Phase 0 — Foundation
+  framework skeleton, config/env, CI job, reporting + failure artifacts, one smoke test green in CI
+Phase 1 — P0 safety net
+  API tests for P0 business rules, UI smoke for P0 journeys, PR gate on
+Phase 2 — P1 coverage
+  P1 rules at API level, key P1 journeys, test data + account strategy proven at full parallelism
+Phase 3 — Breadth
+  integration/contract tests, cross-browser/device, visual and accessibility where justified
+Phase 4 — Non-functional
+  performance baseline + CI smoke (performance-testing), security tests + scanners (security-testing)
+Phase 5 — Hardening
+  flaky rate under target, suite duration under budget, traceability complete, manual regression retired
+```
+
+For each phase record: scope (AC/TC IDs or features), exit criteria (measurable: "P0 coverage 100 %, flaky
+rate < 2 %, PR suite < 10 min"), owner, target date, dependencies on developers (test ids, setup APIs, environments).
+
+Review the roadmap when risk priorities change; never let a later phase start while the previous phase's suite is
+still untrusted.
 
 ---
 

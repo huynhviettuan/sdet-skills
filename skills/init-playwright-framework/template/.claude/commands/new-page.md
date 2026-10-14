@@ -12,7 +12,7 @@ Requirements:
 -   Use a `Form` component where the screen has form inputs.
 -   Read error/success messages via the `notification` fixture (don't add per-page toast/error elements).
 -   Use path aliases (`@pages/*`, `@elements/*`, ...), never relative imports.
--   Register the new page object in `src/fixtures/fixtures.ts`.
+-   Register the new page object in `src/fixtures/page-fixtures.ts` and add a row to `docs/registry/pages.md`.
 
-If a URL was provided, first read `.claude/skills/explore-screens.md` and explore it to capture real locators before
-writing the page object.
+If a URL was provided, follow the `page-builder` agent (or the `page-builder` skill if installed): scope from the
+feature's test cases, explore every needed state, confirm the element inventory, then generate and smoke-test.

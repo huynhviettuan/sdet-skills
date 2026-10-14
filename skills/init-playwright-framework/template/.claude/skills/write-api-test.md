@@ -4,6 +4,10 @@
 
 Use this skill when creating a new API test case.
 
+> Implementing documented test cases (`docs/test-cases/<feature>.md`)? Follow the `test-writer` agent or the
+> `test-script-writer` skill. Preconditions come from data fixtures (`src/fixtures/data-fixtures.ts`) that create
+> through services and clean up in teardown.
+
 ## Critical Rules
 
 ### ✅ ALWAYS Use Custom Fixtures

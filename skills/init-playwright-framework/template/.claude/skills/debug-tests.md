@@ -4,6 +4,11 @@
 
 Use this skill when a test is failing, flaky, or behaving unexpectedly — whether locally or in CI.
 
+> This file is the Playwright command reference for this repo. For the full method — evidence before re-running,
+> classifying the cause, the reproduction ladder with flake-rate measurement, pollution bisecting, and what to do
+> when the cause is the product, the environment, or the framework — use the `debug-failed-tests` skill if
+> installed.
+
 ## When NOT to Use
 
 | Situation                       | Use instead                               |

@@ -20,6 +20,10 @@
         "test:api:staging": "cross-env TEST_ENV=staging npx playwright test --project=api --config=playwright.config.ts",
         "test:api:production": "cross-env TEST_ENV=production npx playwright test --project=api --config=playwright.config.ts",
         "prepare": "husky install",
+        "api:inventory": "node scripts/openapi-tool.mjs inventory",
+        "api:schemas": "node scripts/openapi-tool.mjs schemas",
+        "api:coverage": "node scripts/openapi-tool.mjs coverage",
+        "audit": "node scripts/audit-suite.mjs . --fail-on block",
         "format": "prettier --write .",
         "check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
         "lint": "npx eslint ."

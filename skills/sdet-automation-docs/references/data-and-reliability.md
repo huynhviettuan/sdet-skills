@@ -8,6 +8,7 @@ Contents:
 - [ACCOUNT_STRATEGY.md](#account_strategymd)
 - [DATA_CLEANUP.md](#data_cleanupmd)
 - [DATABASE_TESTING.md](#database_testingmd)
+- [FILE_TESTING.md](#file_testingmd)
 - [TEST_ISOLATION.md](#test_isolationmd)
 - [PARALLEL_EXECUTION.md](#parallel_executionmd)
 - [FLAKY_TEST_POLICY.md](#flaky_test_policymd)
@@ -82,6 +83,35 @@ Use direct DB access only when justified:
 
 Avoid DB assertions when user/API-level verification is sufficient. Never couple UI tests to the schema without a
 recorded reason.
+
+---
+
+## FILE_TESTING.md
+
+For features that import, export, upload, or download files (CSV, Excel, PDF, Word, images, ZIP).
+
+**Fixtures (input files)**
+
+- Keep small, purpose-named input files in the repo (`orders-valid-3-rows.csv`, `orders-missing-header.csv`); one
+  file per scenario, not one giant file reused everywhere.
+- Generate large or variable files at runtime (row count, unique values) instead of committing them.
+- Cover: valid file, empty file, header only, wrong delimiter/encoding (UTF-8 BOM, Latin-1), oversized file, wrong
+  type with the right extension, special characters and formula-like cell values (`=SUM(...)` in CSV exports).
+
+**Downloads (output files)**
+
+- Wait for the download event / completed response, not a fixed sleep, then save to a **per-test temp directory**
+  that the fixture deletes in teardown — never a shared downloads folder parallel tests overwrite.
+- Assert on **parsed content**, not file size or byte equality: parse CSV/Excel into rows, extract PDF/Word text,
+  then compare business fields. Byte comparison breaks on timestamps and metadata.
+- Assert the file name pattern, content type, and that exported data respects the caller's permissions (no other
+  tenant's rows).
+
+**Uploads**
+
+- Upload through the input element / API, then assert the observable result (rows imported, validation report
+  shown, file listed and downloadable) — not just that the request returned 200.
+- Partial-failure behavior: which rows are rejected and how the user learns why.
 
 ---
 

@@ -355,7 +355,7 @@ needed — no god class that knows how to click, type, select, and pick dates al
 
 ## Adapter
 
-**Files:** [`src/helpers/helper-functions.ts`](../../src/helpers/helper-functions.ts),
+**Files:** [`src/helpers/helper-functions.ts`](../../src/helpers/functions/helper-functions.ts),
 [`src/common/browser.ts`](../../src/common/browser.ts)
 
 Wrappers that adapt third-party APIs to framework-specific interfaces:

@@ -9,9 +9,9 @@ Requirements:
 
 -   Service class extends `BaseService` and follows the controller pattern.
 -   Add request/response types under `src/models`.
--   Add endpoints to the endpoints constant (`@constants/endpoints.constant`).
--   Register the service in `src/fixtures/fixtures.ts`.
+-   Register the service in `src/fixtures/service-fixtures.ts` and add a row to `docs/registry/services.md`.
 -   Use path aliases, never relative imports.
 
-If a Swagger/OpenAPI URL or path was provided, read `.claude/skills/create-service-from-swagger.md` and generate the
-service, types, and fixtures from the spec instead.
+If a Swagger/OpenAPI URL or path was provided, follow the `api-service-gen` agent (or the `service-builder` skill if
+installed): map the spec 1:1 — one method per operation named after its operationId — and finish with
+`npm run api:coverage`.

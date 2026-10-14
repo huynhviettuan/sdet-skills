@@ -55,7 +55,6 @@ __PROJECT_NAME__/
 │   │   ├── containers/         # Page section containers (Header, Main, Footer) — empty, add your first one
 │   │   ├── form.component.ts   # Form element factory (cached inputs/buttons)
 │   │   ├── table.component.ts  # Table navigation, sorting, cell access
-│   │   ├── modals/modal.component.ts # Modal dialog abstraction
 │   │   └── notification.component.ts
 │   ├── elements/
 │   │   ├── base/               # BaseControl, Clickable, Editable

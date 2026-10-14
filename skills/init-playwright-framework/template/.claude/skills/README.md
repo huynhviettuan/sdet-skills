@@ -111,7 +111,7 @@ Per-test, as needed:   manage-test-data            (factories + cleanup)
 -   **Skill vs guidance** — a skill is a _step-by-step recipe_ for building or testing something. Conceptual background
     and pattern explanations live in [`../../docs/guidance/`](../../docs/guidance/).
 -   **Fixtures** — every test must import `test` and `expect` from `@fixtures/fixtures`. See
-    [ADR-002](../../docs/decisions/ADR-002-custom-fixtures.md).
+    [`../rules/05-imports.md`](../rules/05-imports.md).
 -   **Path aliases** — always prefer `@pages/*`, `@elements/*`, etc. over relative imports.
 -   **Naming** — skills use `verb-noun.md`. Names are stable so users can invoke them by slash command without
     surprises.

@@ -40,6 +40,9 @@ jobs:
             - name: Run lint
               run: npm run lint
 
+            - name: Test-suite audit (no blocking findings)
+              run: npm run audit
+
     api-tests:
         name: API Tests
         runs-on: ubuntu-latest

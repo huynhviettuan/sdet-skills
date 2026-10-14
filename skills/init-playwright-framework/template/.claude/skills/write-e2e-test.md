@@ -4,6 +4,10 @@
 
 Use this skill when creating a new E2E test case.
 
+> Implementing documented test cases (`docs/test-cases/<feature>.md`)? Follow the `test-writer` agent or the
+> `test-script-writer` skill: it maps preconditions, steps, expected results, and data rows to tests and verifies
+> them. This file covers the Playwright mechanics.
+
 ## Critical Rules
 
 ### ✅ ALWAYS Use Custom Fixtures

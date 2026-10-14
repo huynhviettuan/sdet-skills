@@ -55,8 +55,10 @@ From whatever format the story is in, capture:
 | **Business rules**      | Constraints not in ACs (e.g. "tokens expire after 15min")           |
 | **Out of scope**        | Anything the story explicitly excludes                              |
 
-If the story is freeform prose, distill it into the table above before continuing. Numbered acceptance criteria become
-**AC-1, AC-2, …** and are referenced from every test case derived from them.
+If the story is freeform prose, distill it into the table above before continuing. Acceptance criteria get stable IDs
+**`AC-<AREA>-NNN`** (`AREA` = uppercase domain noun such as `AUTH`, `ORDER`, `CONTRACT`; `NNN` zero-padded, never
+reused) and are referenced from every test case derived from them. If the story already carries AC IDs (e.g. from a
+`project-docs` package or the ticket), keep them — never renumber.
 
 ### Example extraction
 
@@ -66,13 +68,13 @@ If the story is freeform prose, distill it into the table above before continuin
 
 Becomes:
 
-| AC   | Statement                                                     |
-| ---- | ------------------------------------------------------------- |
-| AC-1 | Valid credentials → successful sign-in + workspace access     |
-| AC-2 | Invalid credentials → generic error message                   |
-| AC-3 | Non-existent email → same generic error (no user enumeration) |
-| AC-4 | Password input is masked                                      |
-| AC-5 | Forgot-password link is accessible from the sign-in screen    |
+| AC          | Statement                                                     |
+| ----------- | ------------------------------------------------------------- |
+| AC-AUTH-001 | Valid credentials → successful sign-in + workspace access     |
+| AC-AUTH-002 | Invalid credentials → generic error message                   |
+| AC-AUTH-003 | Non-existent email → same generic error (no user enumeration) |
+| AC-AUTH-004 | Password input is masked                                      |
+| AC-AUTH-005 | Forgot-password link is accessible from the sign-in screen    |
 
 ## Step 2: Explore the Screen
 
@@ -93,21 +95,25 @@ Use this to **propose** coverage the user can confirm.
 For each AC, write **one or more test cases**. One AC often becomes multiple cases because it implies both a happy path
 and edge cases. Example:
 
-| AC                                  | Test cases that cover it                             |
-| ----------------------------------- | ---------------------------------------------------- |
-| AC-1: Valid credentials → workspace | TC-E2E-001 (happy path)                              |
-| AC-2: Invalid credentials → error   | TC-E2E-002 (wrong password)                          |
-| AC-3: No user enumeration           | TC-E2E-003 (non-existent email — same error as AC-2) |
-| AC-4: Password masked               | TC-E2E-008 (`type="password"` attribute)             |
-| AC-5: Forgot-password link          | TC-E2E-007 (link navigates)                          |
+| AC                                         | Test cases that cover it                                         |
+| ------------------------------------------ | ---------------------------------------------------------------- |
+| AC-AUTH-001: Valid credentials → workspace | TC-AUTH-001 (E2E happy path)                                     |
+| AC-AUTH-002: Invalid credentials → error   | TC-AUTH-002 (E2E wrong password), TC-AUTH-010 (API 401)          |
+| AC-AUTH-003: No user enumeration           | TC-AUTH-003 (E2E), TC-AUTH-011 (API — same body as AC-AUTH-002)  |
+| AC-AUTH-004: Password masked               | TC-AUTH-008 (E2E `type="password"`)                              |
+| AC-AUTH-005: Forgot-password link          | TC-AUTH-007 (E2E link navigates)                                 |
 
 Every test case body must reference the AC(s) it covers:
 
 ```markdown
-### TC-SI-E2E-002 — Sign in with wrong password
+### TC-AUTH-002 — Sign in with wrong password
 
-**Covers:** AC-2 ...
+**Covers:** AC-AUTH-002 **Layer:** E2E ...
 ```
+
+Prefer covering rules, validation, and negative paths at the **API** layer and keeping E2E for the user journey —
+see "lowest reliable layer" in the automation docs. For systematic derivation (boundaries, decision tables, state
+transitions), use the `test-case-design` skill if it is installed.
 
 ## Step 4: Add Coverage the AC Didn't Specify
 
@@ -134,15 +140,15 @@ required vs which were added defensively.
 
 Output location: `docs/test-cases/<feature>.md`
 
-Use the template at the end of this skill, derived from [docs/test-cases/sign-in.md](../../docs/test-cases/sign-in.md).
+Use the template at the end of this skill.
 
 ### Test-case ID convention
 
-`TC-<FEATURE-PREFIX>-<TYPE>-<NNN>`
+`TC-<AREA>-<NNN>` — the same scheme as `AC-<AREA>-NNN`, so a test case and the criteria it verifies share an area.
 
--   `FEATURE-PREFIX` — 2-3 letter feature code (`SI` for Sign In, `USR` for Users, `INV` for Invitation)
--   `TYPE` — `E2E` or `API`
--   `NNN` — zero-padded sequence within the type (`001`, `002`, …)
+-   `AREA` — uppercase domain noun (`AUTH`, `USER`, `INVITE`, `ORDER`); security cases use `TC-SEC-<AREA>-NNN`
+-   `NNN` — zero-padded sequence within the area (`001`, `002`, …); never reused or renumbered
+-   The layer is a field (`**Layer:** E2E | API`), not part of the ID — a case can move layers without changing its ID
 
 ### Priority levels
 
@@ -162,12 +168,13 @@ Before declaring the doc done, present a brief summary:
 
 ```
 Feature: Sign In
-ACs covered: 5/5 (AC-1 through AC-5)
+ACs covered: 5/5 (AC-AUTH-001 → 005)
 Test cases generated:
-  E2E: 8 cases (TC-SI-E2E-001 → 008) — covers AC-1, AC-2, AC-3, AC-4, AC-5 + 3 inferred
-  API: 7 cases (TC-SI-API-001 → 007) — covers AC-2, AC-3 + 5 inferred (validation, security)
+  E2E: 8 cases — covers AC-AUTH-001..005 + 3 inferred
+  API: 7 cases — covers AC-AUTH-002, -003 + 5 inferred (validation, security)
+  IDs: TC-AUTH-001 → 015
 Gaps flagged for user:
-  - AC-1 says "workspace access" — exact redirect target not in the story
+  - AC-AUTH-001 says "workspace access" — exact redirect target not in the story
   - No mention of rate limiting — left out, can add if confirmed
 ```
 
@@ -184,7 +191,7 @@ The test case doc is now the contract. The automated specs follow:
 Specs MUST reference the TC ID in the test name so failures are traceable back to the AC:
 
 ```ts
-test('TC-SI-E2E-002 — should reject wrong password', async ({ signInPage, notification }) => {
+test('TC-AUTH-002 — should reject wrong password', async ({ signInPage, notification }) => {
     // ...
 });
 ```
@@ -192,7 +199,7 @@ test('TC-SI-E2E-002 — should reject wrong password', async ({ signInPage, noti
 ## Critical Rules
 
 -   ✅ **Read the user story first** when one exists — don't paraphrase before extracting ACs.
--   ✅ **Every AC-driven test case cites its AC** in the body (`**Covers:** AC-N`).
+-   ✅ **Every AC-driven test case cites its AC** in the body (`**Covers:** AC-<AREA>-NNN`).
 -   ✅ **Inferred cases are labeled inferred** — never mixed in as if the user story required them.
 -   ✅ **Cover negative paths** even if the user story doesn't list them — flag them as inferred.
 -   ✅ **Trace TC IDs in spec names** so test failures link back to the AC.
@@ -213,10 +220,10 @@ Story:** <path or URL, e.g. `docs/user-stories/<feature>.md`> **Last updated:** 
 
 ## Acceptance Criteria (from user story)
 
-| AC   | Statement |
-| ---- | --------- |
-| AC-1 | ...       |
-| AC-2 | ...       |
+| AC              | Statement |
+| --------------- | --------- |
+| AC-<AREA>-001   | ...       |
+| AC-<AREA>-002   | ...       |
 
 ## Test Data
 
@@ -234,9 +241,9 @@ Story:** <path or URL, e.g. `docs/user-stories/<feature>.md`> **Last updated:** 
 
 ## E2E Test Cases (UI)
 
-### TC-<PFX>-E2E-001 — <Short title>
+### TC-<AREA>-001 — <Short title>
 
-**Covers:** AC-1 **Preconditions:** ...
+**Covers:** AC-<AREA>-001 **Layer:** E2E **Preconditions:** ...
 
 **Steps:**
 
@@ -250,9 +257,9 @@ Story:** <path or URL, e.g. `docs/user-stories/<feature>.md`> **Last updated:** 
 
 ---
 
-### TC-<PFX>-E2E-002 — ...
+### TC-<AREA>-002 — ...
 
-**Covers:** AC-2
+**Covers:** AC-<AREA>-002 **Layer:** E2E
 
 ...
 
@@ -260,16 +267,15 @@ Story:** <path or URL, e.g. `docs/user-stories/<feature>.md`> **Last updated:** 
 
 ## API Test Cases
 
-### TC-<PFX>-API-001 — <Short title>
+### TC-<AREA>-0NN — <Short title>
 
-**Covers:** AC-N **Endpoint:** `<METHOD /path>`
+**Covers:** AC-<AREA>-NNN **Layer:** API **Endpoint:** `<METHOD /path>`
 
 **Body:**
 
 ```json
 { "...": "..." }
 ```
-````
 
 **Expected:**
 
@@ -290,14 +296,11 @@ page object / API service accordingly:
 -   [ ] Toast / error copy matches `NotificationMessages.*`
 -   [ ] Post-action redirect target
 -   [ ] HTTP status codes for validation errors (`400` vs `422`)
-
-```
+````
 
 ## Related Documentation
 
 -   [`explore-screens.md`](explore-screens.md) — UI + API discovery (Step 2 of this workflow)
 -   [`write-e2e-test.md`](write-e2e-test.md) — generates Playwright E2E specs from this doc
 -   [`write-api-test.md`](write-api-test.md) — generates Playwright API specs from this doc
--   [`docs/test-cases/sign-in.md`](../../docs/test-cases/sign-in.md) — reference implementation following this skill
 -   [`docs/test-cases/README.md`](../../docs/test-cases/README.md) — test-case folder conventions
-```

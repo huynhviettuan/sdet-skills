@@ -56,3 +56,23 @@ app's actual sign-in flow exists.
 See [`template/CLAUDE.md`](template/CLAUDE.md) and [`template/docs/README.md`](template/docs/README.md) for the
 full architecture/documentation map that ships with every scaffolded repo — they're the best single overview of
 what's in `template/` and why.
+
+## Related skills
+
+- **`refactor-test-suite`** — its audit script ships in `scripts/` (`npm run audit`); the template audits clean.
+- **`init-selenium-java-framework`** — the Selenium + RestAssured / Java / TestNG counterpart.
+
+- **`test-script-writer`** — implements documented test cases as specs; the template's `test-writer` agent defers to
+  it when installed.
+- **`page-builder`** / **`service-builder`** — the next step after scaffolding: page objects from the live app and
+  test cases; services generated 1:1 from the OpenAPI spec. The template's bundled `page-builder` / `api-service-gen`
+  agents and `/new-page` / `/new-service` commands defer to them when installed.
+
+- **`sdet-framework-architect`** — the architecture rules this template implements; use it to review or extend the
+  scaffolded framework.
+- **`sdet-automation-docs`** — strategy-level documentation the template doesn't scaffold (risk scope, data and
+  account strategy, flaky/retry policy, CI stages, quality gates); place it under `docs/automation/`.
+- **`test-case-design`** — systematic test cases for `docs/test-cases/`, using the same `AC-`/`TC-` ID scheme as
+  the bundled `generate-test-cases` skill.
+- **`performance-testing`** / **`security-testing`** — add load tests and security tests/scans alongside the
+  functional suite.

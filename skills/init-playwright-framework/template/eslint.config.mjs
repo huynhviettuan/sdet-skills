@@ -7,7 +7,7 @@ import tseslint from 'typescript-eslint';
 export default tseslint.config(
     // Global ignores
     {
-        ignores: ['lib/**/*', '**/*.cjs', 'node_modules/**']
+        ignores: ['lib/**/*', '**/*.cjs', 'node_modules/**', 'scripts/**/*.mjs'] // scripts/*.mjs: vendored tools kept identical to their source
     },
 
     // ──────────────────────────────────────────────

@@ -4,6 +4,10 @@
 
 Use this skill when creating a new page object for E2E testing.
 
+> Building from a live screen and the feature's test cases? Follow the `page-builder` agent (or the `page-builder`
+> skill if installed) — it scopes from the test cases, explores every state, confirms an element inventory, and uses
+> this file for the code structure.
+
 ## Critical Rules
 
 ### ✅ Follow Frontend Structure
@@ -58,7 +62,7 @@ export class SignInHeaderContainer {
 
     constructor() {
         this.container = $('.sign-in-header');
-        this.lblTitle = new Label(this.container.locator('h1'));
+        this.lblTitle = new Label({ locator: this.container.locator('h1') });
         this.lnkLogo = new Link({ parentLocator: this.container, label: 'Logo' });
     }
 }
@@ -133,7 +137,7 @@ export class UsersMainContainer {
             label: 'Add User'
         });
 
-        this.tblUsers = new Table(this.container.locator('table'));
+        this.tblUsers = new Table(this.container) // Table appends `table` to its parent itself;
     }
 
     async searchUser(query: string): Promise<void> {
@@ -290,7 +294,7 @@ export class SignInFooterContainer {
 
     constructor() {
         this.container = $('.sign-in-footer');
-        this.lblCopyright = new Label(this.container.locator('.copyright'));
+        this.lblCopyright = new Label({ locator: this.container.locator('.copyright') });
         this.lnkTerms = new Link({ parentLocator: this.container, label: 'Terms' });
         this.lnkPrivacy = new Link({ parentLocator: this.container, label: 'Privacy' });
     }
@@ -515,7 +519,7 @@ export class ProductsMainContainer {
 
         this.txtSearch = this.searchForm.getInput({ placeholder: 'Search...' });
         this.btnSearch = this.searchForm.getButton({ label: 'Search' });
-        this.tblProducts = new Table(this.container.locator('table'));
+        this.tblProducts = new Table(this.container) // Table appends `table` to its parent itself;
     }
 
     async searchProduct(name: string): Promise<void> {
@@ -544,6 +548,7 @@ export class ProductsMainContainer {
 -   `chk` - Checkboxes
 -   `drp` - Dropdowns
 -   `tbl` - Tables
+-   `img` - Images
 
 ### Methods
 
@@ -567,8 +572,17 @@ this.txtEmail = this.form.getInput({ label: 'Email address' });
 this.btnSubmit = this.form.getButton({ label: 'Log in' });
 ```
 
-Priority order when choosing a locator strategy:
+Priority order when choosing a locator strategy (always built from the container):
 
-1. **`id`** — most stable, survives text changes
-2. **`label`** / **`placeholder`** — readable, matches what the user sees
-3. **`index`** — last resort, brittle if DOM order changes
+1. **Test id** — `this.container.getByTestId('submit')` (attribute from `testIdAttribute`)
+2. **Role + accessible name** — `this.container.getByRole('button', { name: 'Save' })`
+3. **Label** — `this.container.getByLabel('Email')`
+4. **Placeholder** — `this.container.getByPlaceholder('Search...')`
+5. **Stable visible text** — `this.container.getByText('Total', { exact: true })`
+6. **Stable CSS / `id`** — `this.container.locator('#email-input')`
+7. **XPath** — last resort, with a comment saying why
+
+Pass the result through the element's `locator:` option (`new Button({ locator: ... })`) — it works on any DOM. The
+`label` / `id` / `index` options build locators from this framework's wrapper conventions (`.input`, `.select`,
+`.checkbox`); use them only after confirming the target app's DOM follows those conventions. `index` is never a
+primary identifier.

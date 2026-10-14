@@ -14,42 +14,42 @@ This folder contains manual test cases in Markdown format.
 
 ## Structure
 
-Each test case should include:
+One file per feature (`<feature>.md`). Each test case includes:
 
--   **Test Case ID**: Unique identifier
--   **Title**: Clear, descriptive name
--   **Preconditions**: Setup requirements
--   **Steps**: Step-by-step actions
--   **Expected Results**: What should happen
--   **Actual Results**: What actually happened (during manual testing)
--   **Status**: Pass/Fail/Blocked
+-   **ID**: `TC-<AREA>-NNN` (e.g. `TC-AUTH-001`; security cases `TC-SEC-<AREA>-NNN`) — never reused or renumbered
+-   **Title**: the expected behavior, not the steps
+-   **Covers**: the `AC-<AREA>-NNN` ID(s) it verifies, or `Inferred — <category>`
+-   **Layer**: `E2E` or `API`
+-   **Preconditions**: the state required, not how to create it
+-   **Steps**: actions
+-   **Expected**: concrete, observable outcomes
+-   **Priority**: P0–P3
+
+Execution results (pass/fail per run) belong in the test report or test management tool, not in this file.
 
 ## Example
 
 ```markdown
-# TC-001: User Login with Valid Credentials
+### TC-AUTH-001 — User signs in with valid credentials
 
-## Preconditions
+**Covers:** AC-AUTH-001 **Layer:** E2E **Priority:** P0
 
--   User account exists in the system
--   User is on the login page
+**Preconditions:**
 
-## Steps
+-   An active user account exists
 
-1. Enter valid email address
-2. Enter valid password
-3. Click "Log in" button
+**Steps:**
 
-## Expected Results
+1. Sign in with the account's email and password
 
--   User is redirected to dashboard
--   Success message is displayed
--   User session is created
+**Expected:**
 
-## Status
-
-✅ Pass
+-   User lands on the workspace dashboard
+-   The user's name is shown in the header
 ```
+
+The ID scheme matches the shared one used by the `project-docs`, `test-case-design`, and `sdet-automation-docs`
+skills (`FR-` / `BR-` / `AC-` / `TC-`), so stories, test cases, and specs trace end to end.
 
 ## Guidelines
 

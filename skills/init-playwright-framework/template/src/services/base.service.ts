@@ -54,6 +54,17 @@ export class BaseService {
         return `${API_DOMAIN}${this.basePath}${subPath}`;
     }
 
+    /**
+     * Fills an OpenAPI path template, keeping the spec path verbatim in the calling method:
+     * `this.pathOf('/pet/{petId}', { petId })` → `/pet/42`. Values are URI-encoded.
+     */
+    protected pathOf(template: string, params: Record<string, string | number> = {}): string {
+        return template.replace(/\{([^}]+)\}/g, (_, name: string) => {
+            if (params[name] === undefined) throw new Error(`Missing path parameter "${name}" for ${template}`);
+            return encodeURIComponent(String(params[name]));
+        });
+    }
+
     private createUrl({ url, uri, id }: RequestArgs): string {
         const baseUrl = url ?? this.endpoint(uri ?? '');
         return id ? `${baseUrl}/${id}` : baseUrl;
@@ -135,8 +146,35 @@ export class BaseService {
         const options = this.buildRequestOptions(args);
         const { statusCode, response } = await this.sendRequest(method, url, options);
         const text = await response.text();
-        const data = text ? (JSON.parse(text) as T) : (undefined as T);
-        return { statusCode, data, response };
+        return BaseService.withLazyData<T>({ statusCode, response }, text, `${method.toUpperCase()} ${url}`);
+    }
+
+    /**
+     * `data` is parsed on first access, so a call whose body is never read (status checks, teardown deletes) can't
+     * fail on a body that isn't JSON — servers sometimes send plain text labelled application/json. Reading an invalid
+     * body fails with the request and the raw text.
+     */
+    private static withLazyData<T>(
+        result: Omit<ServiceResponse<T>, 'data'>,
+        text: string,
+        request: string
+    ): ServiceResponse<T> {
+        let parsed = false;
+        let value: T;
+        return Object.defineProperty(result, 'data', {
+            enumerable: true,
+            get: (): T => {
+                if (!parsed) {
+                    try {
+                        value = (text ? JSON.parse(text) : undefined) as T;
+                    } catch {
+                        throw new Error(`${request} returned a body that is not valid JSON: ${text.slice(0, 200)}`);
+                    }
+                    parsed = true;
+                }
+                return value;
+            }
+        }) as ServiceResponse<T>;
     }
 
     async get(request: RequestArgs = {}): Promise<{ statusCode: number; response: APIResponse }> {

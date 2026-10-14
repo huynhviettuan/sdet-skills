@@ -2,7 +2,12 @@
 
 ## When to Use
 
-Use this skill when creating a new API service for making HTTP requests.
+Use this skill for `BaseService` mechanics and for a **manual** service when no OpenAPI spec describes the
+endpoints.
+
+> **A spec exists? Don't write the service by hand.** Use [`create-service-from-swagger.md`](./create-service-from-swagger.md)
+> (or the `service-builder` skill if installed): services are generated 1:1 from the spec — one method per
+> operation, named exactly after its `operationId`. The CRUD names below apply only to manual services.
 
 ## Design Principle: Controller Pattern
 
@@ -36,7 +41,9 @@ auth state.
 
 The `send<T>()` method returns `ServiceResponse<T>` with parsed `data` — callers don't need `ResponseHelper.toJson()`.
 
-### ✅ Method Names Follow CRUD Conventions
+### ✅ Method Names Follow CRUD Conventions (manual services only)
+
+Generated services use `operationId` verbatim instead — see [`create-service-from-swagger.md`](./create-service-from-swagger.md).
 
 | HTTP                    | Method name        | Signature                                                |
 | ----------------------- | ------------------ | -------------------------------------------------------- |
@@ -314,15 +321,8 @@ test.describe('Users API', () => {
 });
 ```
 
-## Swagger-to-Code Checklist
+## Swagger-to-Code
 
-When converting a Swagger/OpenAPI spec to a service:
-
-1. **One service per tag** — `tag: "Users"` → `UsersService`
-2. **basePath from server URL** — `servers[0].url + /users` → `super('/users')`
-3. **One method per operation** — `operationId: getUsers` → `getAll()`
-4. **Request body → interface** — `schema: CreateUserRequest` → `src/models/users/users.interface.ts`
-5. **Response body → interface** — `schema: User` → same file
-6. **Path params → method args** — `{id}` → `id: string`
-7. **Query params → optional params object** — `?page=1&perPage=20` → `params?: { page?: number; perPage?: number }`
-8. **Register in fixtures** — add to `src/fixtures/service-fixtures.ts`
+Converting a spec is a separate, mechanical workflow with its own rules (operationId method names, verbatim paths via
+`this.pathOf(...)`, spec-derived types and response schemas, coverage check): follow
+[`create-service-from-swagger.md`](./create-service-from-swagger.md).
