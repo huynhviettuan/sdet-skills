@@ -35,17 +35,23 @@ On Windows PowerShell 5.1 use `curl.exe` (plain `curl` is a different command) o
 
 ## Calls Claude makes
 
+With the agent tool server (`pnpm -s mcp`, agent ADR-0011) each row has a tool: `whoami` (`GET /api/me`),
+`get_test_case`, `check_executable` (local schema + approved-revision + traceability check), `propose_executable`
+(runs that check first), `request_run`, `get_run` (`waitSeconds` ≤ 120 polls for you), `get_triage`,
+`get_reproduction`. Story submission and suites have no tool: the `AI_AGENT` role can't use them.
+
 | Purpose | Call | Body | Success |
 |---|---|---|---|
-| Submit a story | `POST /api/stories` | `{ externalId, title, description?, acceptanceCriteria: [{ id, text }], targetRelease?, environmentId? }` | `201` (`200` if deduplicated) |
-| Re-draft a stored story | `POST /api/test-cases/draft` | `{ storyId, environmentId? }` | `201` / `200` |
+| Who the key belongs to | `GET /api/me` | — | `{ actorId, tenantId, projectId, roles }` |
+| Submit a story (people only with an `AI_AGENT` key) | `POST /api/stories` | `{ externalId, title, description?, acceptanceCriteria: [{ id, text }], targetRelease?, environmentId? }` | `201` (`200` if deduplicated) |
+| Re-draft a stored story (people only, as above) | `POST /api/test-cases/draft` | `{ storyId, environmentId? }` | `201` / `200` |
 | Read a case | `GET /api/test-cases/:caseId` | — | `{ caseId, storyId, revisions[] }` |
 | Propose an executable | `POST /api/test-cases/:caseId/executables` | `{ spec }` | `201` executable row |
 | Request a run | `POST /api/test-runs` | `{ caseId, environmentId, approvalId? }` | `202` queued, `200` when it ended at policy (e.g. `BLOCKED`) |
 | Read a run | `GET /api/test-runs/:runId` | — | run report |
 | Read triage | `GET /api/test-runs/:runId/triage` | — | latest triage (`404` until it exists) |
 | Read reproduction | `GET /api/test-runs/:runId/reproduction` | — | markdown |
-| Suites | `POST /api/suites`, `POST /api/suites/:id/cases`, `POST /api/suites/:id/runs`, `GET /api/suite-runs/:id` | see [Suites](#suites) | |
+| Suites (QA roles; not `AI_AGENT`) | `POST /api/suites`, `POST /api/suites/:id/cases`, `POST /api/suites/:id/runs`, `GET /api/suite-runs/:id` | see [Suites](#suites) | |
 
 ## Calls that belong to people
 
@@ -167,6 +173,6 @@ A suite run is terminal when every case is `PASSED`, `FAILED`, `INCONCLUSIVE` or
 
 ## Errors
 
-Errors are `{ code, message }` with HTTP status: `VALIDATION` 400, `UNAUTHENTICATED` 401, `FORBIDDEN` 403,
+Errors are `{ error, message }` with HTTP status: `VALIDATION` 400, `UNAUTHENTICATED` 401, `FORBIDDEN` 403,
 `NOT_FOUND` 404, `CONFLICT` / `IMMUTABLE` / `ILLEGAL_TRANSITION` 409, rate limit 429 (120 requests/minute per key;
 wait for `retry-after`). Report `FORBIDDEN` as a permission boundary — never retry it with a different key.

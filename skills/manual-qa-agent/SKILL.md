@@ -3,13 +3,14 @@ name: manual-qa-agent
 description: >
   Drive the Manual QA Agent (the governed QA service: approved versioned sources, cited test-case drafts,
   clarification reviews, constrained executable specs, browser runs with deterministic verdicts and evidence,
-  advisory triage, gated Jira filing) from Claude Code through its HTTP API, as a propose-only participant: submit
-  stories, relay clarification questions, propose executable specs written with test-script-writer, request and
-  poll runs, read triage and reproduction, and route what the agent can't run to the framework skills. Stops at
-  every human gate — never approves, resolves, or files. Use this skill whenever the user mentions the manual QA
-  agent, its API or keys, case_/run_/review_ ids, executable specs, or wants stories turned into governed test
-  cases, approved cases run in the agent, or agent failures triaged. Trigger on phrases like "submit to the QA
-  agent", "propose an executable", "run the case in the agent", "agent triage", "pipeline from story to run".
+  advisory triage, gated Jira filing) from Claude Code as a propose-only participant, through its MCP tool server or
+  HTTP API: prepare stories, relay clarification questions, propose executable specs written with
+  test-script-writer, request and poll runs, read triage and reproduction, and route what the agent can't run to
+  the framework skills. Stops at every human gate — never approves, resolves, or files. Use this skill whenever the
+  user mentions the manual QA agent, its API or keys, case_/run_/review_ ids, executable specs, or wants stories
+  turned into governed test cases, approved cases run in the agent, or agent failures triaged. Trigger on phrases
+  like "submit to the QA agent", "propose an executable", "run the case in the agent", "agent triage", "pipeline
+  from story to run".
 ---
 
 # Manual QA Agent
@@ -29,11 +30,18 @@ handing every decision to the person who owns it.
 
 ## Before the first call
 
-1. **Endpoint and key from the user**: `API` base URL and one API key. Prefer a key for an `AI_AGENT` actor — the
-   server then enforces propose-only. If the user gives a person's key (QA engineer), you still act as propose-only;
-   never ask for or use a lead, product-owner or admin key.
-2. `GET /healthz` → `{"ok":true}`. Keep the key out of files, commits, URLs and chat; read it from an environment
-   variable (`QA_KEY`).
+1. **Prefer the agent tool server.** If `qa-agent` MCP tools are available (`whoami`, `get_test_case`,
+   `check_executable`, `propose_executable`, `request_run`, `get_run`, `get_triage`, `get_reproduction`), use them:
+   they run with the `AI_AGENT` key, so the server itself refuses anything the AI role may not do. Call `whoami` to
+   confirm the project. To set it up, the user runs (from the agent's README; `<project>-agent` key from
+   `pnpm qa seed`):
+   ```bash
+   claude mcp add qa-agent --env QA_API_URL=<api> --env QA_AGENT_KEY=<agent key> -- pnpm -s --dir <agent-repo> mcp
+   ```
+2. **Without the tool server**, use the HTTP API (`api-workflow.md`) with the base URL and an `AI_AGENT` key from the
+   user, read from an environment variable (`QA_KEY`) — never written to files, commits, URLs or chat. If the user
+   only has a person's key (QA engineer), you still act as propose-only; never ask for or use a lead, product-owner
+   or admin key. Check `GET /healthz` and `GET /api/me`.
 3. Confirm the target environment id (e.g. `staging`). Production environments refuse execution by policy — don't
    try.
 
@@ -42,10 +50,10 @@ handing every decision to the person who owns it.
 | # | Stage | Claude does | Then waits for |
 |---|---|---|---|
 | 1 | Requirements | Prepares source documents (`project-docs` / the team's docs) one rule per block, keeping BR/AC IDs | **Product owner** ingests/approves them |
-| 2 | Stories | Submits stories with acceptance criteria (`POST /api/stories`), one AC per testable behavior | — |
+| 2 | Stories | Prepares story JSON, one AC per testable behavior, and the submit command (`POST /api/stories`) | **A person** submits them — the `AI_AGENT` role can't (agent OQ-13) |
 | 3 | Readiness | `DRAFT_CREATED` → reports the case and its `sourceRefs`; `REVIEW_REQUESTED` → relays the question **verbatim** with its `reviewId` | **Product owner** answers; the story re-runs |
 | 4 | Drafts | Compares each draft with the designed case (`test-case-design`); writes suggested edits for the reviewer | **QA engineer** edits and approves the case |
-| 5 | Executable | Explores the live page, writes the spec (`test-script-writer` → executable spec), runs `check-spec.mjs`, proposes it | **A different person** approves it |
+| 5 | Executable | Explores the live page, writes the spec (`test-script-writer` → executable spec), runs `check-spec.mjs` for the review checks, then `check_executable` / `propose_executable` | **A different person** approves it |
 | 6 | Run | Requests the run, polls to a terminal status, reports verdict, reason and failed assertions | Lead approval if `BLOCKED` on a destructive step |
 | 7 | Failures | Reads triage + reproduction; deep-dives with `debug-failed-tests`; drafts the cause analysis | **Human** confirms the cause; **lead** approves any bug filing |
 | 8 | Leftovers | Routes cases the format can't express to framework code (`routing.md`) | — |
