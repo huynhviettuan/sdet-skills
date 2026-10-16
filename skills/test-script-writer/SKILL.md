@@ -9,7 +9,8 @@ description: >
   its expectation is broken. Use this skill whenever the user wants to automate test cases, write test scripts or
   specs from test cases, convert manual tests to automation, or implement TC-XXX. Trigger on phrases like "automate
   these test cases", "write tests for TC-", "implement the test scripts", "generate specs from test cases",
-  "convert manual cases". Playwright/TypeScript and Selenium+RestAssured/Java/TestNG.
+  "convert manual cases". Playwright/TypeScript, Selenium+RestAssured/Java/TestNG, or Manual QA Agent executable
+  specs (JSON).
 ---
 
 # Test Script Writer
@@ -28,8 +29,15 @@ and that a reader can trace back to the case and its acceptance criterion.
     TypeScript (`init-playwright-framework`)
   - [`references/code-templates-selenium-java.md`](references/code-templates-selenium-java.md) — Selenium +
     RestAssured / Java / TestNG (`init-selenium-java-framework`)
+- [`references/executable-spec.md`](references/executable-spec.md) — the Manual QA Agent target: map an approved
+  case to its constrained JSON step format, locators, assertions, secrets and cleanup, what it can't express, a
+  worked example verified on the agent's demo app, and the pre-proposal check.
 
-**Detect the stack first:** `package.json` with `@playwright/test` → TypeScript; `pom.xml` with TestNG → Java.
+**Detect the target first:** `package.json` with `@playwright/test` → TypeScript; `pom.xml` with TestNG → Java; the
+case lives in the Manual QA Agent (a `case_…` id, or the user asks to run it there) → executable spec. For the
+executable-spec target, steps 2–5 below follow `executable-spec.md` instead: prerequisites are the live page's
+locators and the environment's data hooks, and verification is the bundled check plus a run through
+`manual-qa-agent`.
 
 ## Workflow
 
@@ -75,3 +83,4 @@ and that a reader can trace back to the case and its acceptance criterion.
 - **`debug-failed-tests`** — when a new test fails and the cause isn't obvious.
 - **`sdet-framework-architect`** — composition root, fixture-owned teardown, and scoping rules the tests follow.
 - **`init-playwright-framework`** / **`init-selenium-java-framework`** — the scaffolds the templates target.
+- **`manual-qa-agent`** — propose, get approved, and run executable specs in the agent; route cases it can't run.

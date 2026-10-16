@@ -88,3 +88,5 @@ wrong, or the requirement may have changed (then update the AC and the test toge
 - **`refactor-test-suite`** — when the same structural cause (sleeps, shared state, raw locators) recurs across many
   tests, fix it suite-wide.
 - **`performance-testing`** — when the "timeout" is real slowness under load, not a test problem.
+- **`manual-qa-agent`** — runs that failed in the Manual QA Agent: its triage and reproduction are the starting
+  evidence; its verdict and the human-confirmed cause stay with the agent.

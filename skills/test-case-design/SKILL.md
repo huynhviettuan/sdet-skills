@@ -85,6 +85,7 @@ Shared with `project-docs` and `sdet-automation-docs`: test cases are `TC-<AREA>
 
 - **`project-docs`** — source of AC, BR, state machines, and permissions; gaps found here go back as OQs.
 - **`test-script-writer`** — implements the cases designed here as automated tests (one per case / data row).
+- **`manual-qa-agent`** — submits these cases as stories and runs the approved ones in the Manual QA Agent.
 - **`sdet-automation-docs`** — risk classification (P0–P3), traceability matrix, and CI suites that consume these
   cases.
 - **`security-testing`** — abuse cases and the access-control matrix extend the negative cases designed here.

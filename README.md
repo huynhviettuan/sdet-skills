@@ -33,6 +33,10 @@ Start a new repo with that architecture
         ▼
 Turn the TC-… cases into automated tests
   └─► test-script-writer      one test per case / data row, factories + teardown, every expected result asserted
+                              (framework code, or executable specs for the Manual QA Agent)
+
+Governed runs in the Manual QA Agent (approved sources, human gates, evidence):
+  └─► manual-qa-agent         stories → cited drafts → executable specs → runs → triage; routes the rest to frameworks
 
 Non-functional, alongside any of the above:
   ├─► performance-testing     SLOs, workload model, scripts, runs, analysis, report
@@ -56,6 +60,7 @@ An existing suite that doesn't follow these rules:
 | Build page objects for a screen from the live app + test cases | `page-builder` |
 | Generate API services from an OpenAPI/Swagger spec (or draft one) | `service-builder` |
 | Implement documented test cases as automated tests | `test-script-writer` |
+| Submit stories, propose executable specs, run and triage cases in the Manual QA Agent | `manual-qa-agent` (+ `test-script-writer`) |
 | Load, stress, soak, capacity testing; perf results analysis | `performance-testing` |
 | Authorization/tenant isolation tests, security scans in CI, finding triage | `security-testing` |
 | Investigate a failing, flaky, or CI-only test; triage a red run | `debug-failed-tests` |
@@ -93,7 +98,12 @@ The documentation skills share one ID scheme so requirements trace through to te
 - [`test-script-writer`](skills/test-script-writer/SKILL.md) — implements documented test cases as tests (Playwright
   or Selenium/RestAssured Java): prerequisite check, preconditions through data factories with automatic teardown,
   steps through page objects/services, every expected result asserted, data rows as separate tests, TC/AC
-  traceability, and verification that each test passes repeatedly and can fail.
+  traceability, and verification that each test passes repeatedly and can fail. Also writes executable specs
+  (constrained JSON steps) for the Manual QA Agent.
+- [`manual-qa-agent`](skills/manual-qa-agent/SKILL.md) — drives the Manual QA Agent's API as a propose-only
+  participant: stories and clarifications, executable-spec proposals (with a bundled checker that uses the agent's
+  own schema), runs, triage and reproduction, and routing of what the agent can't run to the framework skills; stops
+  at every human gate.
 - [`project-docs`](skills/project-docs/SKILL.md) — turns briefs, notes, and legacy docs into a modular Markdown
   documentation package (business rules, state machines, ADRs, acceptance criteria, AGENTS.md/CLAUDE.md, open
   questions) that serves as source of truth for humans and AI coding agents.
@@ -112,7 +122,6 @@ The documentation skills share one ID scheme so requirements trace through to te
 - [`debug-failed-tests`](skills/debug-failed-tests/SKILL.md) — systematic investigation of failing and flaky tests:
   evidence checklist, five cause categories, a reproduction ladder with flake-rate measurement and pollution
   bisecting, cause → fix → anti-fix tables, and templates for defect reports, environment tickets, and quarantine.
-
 - [`refactor-test-suite`](skills/refactor-test-suite/SKILL.md) — audits and incrementally refactors an existing
   suite: rule catalogue with IDs, dependency-free audit script (TS/JS + Java) with suppressions and a CI ratchet,
   before/after recipes for both stacks, migration plan (baseline, ordering, strangler adoption, per-step
