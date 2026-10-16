@@ -44,16 +44,12 @@ import { expect, test } from '@fixtures/fixtures';
     import { expect, test } from '@fixtures/fixtures';
     import { StatusCodes } from 'http-status-codes';
 
+    // Services arrive authenticated: `src/fixtures/service-fixtures.ts` resolves the token once per worker (an `apiToken`
+    // fixture calling the spec's login operation) and creates each service with it — see the `service-builder` skill.
+    // Tests never fetch or set tokens.
     test.describe('API - [Feature Name]', () => {
-        let token: string;
-
-        test.beforeAll(async ({ apiCommands }) => {
-            token = await apiCommands.getAuthorizationToken(Config.auth.superAdminEmail);
-        });
-
         test('[Test description]', async ({ usersService }) => {
             // Arrange
-            usersService.setToken(token);
             const userId = '123';
 
             // Act
@@ -94,10 +90,7 @@ import { expect, test } from '@fixtures/fixtures';
 ### Create and Verify Resource
 
 ```ts
-test('should create and retrieve user', async ({ usersService, apiCommands }) => {
-    const token = await apiCommands.getAuthorizationToken(Config.auth.superAdminEmail);
-    usersService.setToken(token);
-
+test('should create and retrieve user', async ({ usersService }) => {
     // Create
     const { statusCode: createStatus, data: created } = await usersService.create({
         name: DataGenerator.randomName(),
@@ -115,7 +108,7 @@ test('should create and retrieve user', async ({ usersService, apiCommands }) =>
 ### Schema Validation
 
 ```ts
-import { validateJsonSchema } from '@helpers/validate-schema.helper';
+import { validateJsonSchema } from '@helpers/services/validate-schema.helper';
 
 const { data } = await usersService.getAll();
 await validateJsonSchema('GET_users', 'users', data);
@@ -124,7 +117,7 @@ await validateJsonSchema('GET_users', 'users', data);
 ### Generate Test Data
 
 ```ts
-import { DataGenerator } from '@helpers/generate-data-functions';
+import { DataGenerator } from '@helpers/functions/data-generator';
 
 const testUser = {
     name: DataGenerator.randomName(),
@@ -161,10 +154,8 @@ test('test user', async ({ service }) => {
 ### ✅ Good - Clear, descriptive, controller pattern
 
 ```ts
-test('should return active user when user exists', async ({ usersService, apiCommands }) => {
-    // Arrange
-    const token = await apiCommands.getAuthorizationToken(Config.auth.superAdminEmail);
-    usersService.setToken(token);
+test('should return active user when user exists', async ({ usersService }) => {
+    // Arrange (usersService arrives authenticated from the fixture)
     const userId = '123';
 
     // Act

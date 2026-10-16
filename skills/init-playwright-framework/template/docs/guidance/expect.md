@@ -1,11 +1,15 @@
 # Custom Expect Matchers
 
-Custom expect matchers that work directly with element classes (Button, Input, etc.) without needing to access
-`.element`.
+`expect` from `@fixtures/fixtures` accepts element classes (Button, Input, …) wherever Playwright accepts a `Locator`,
+without `.element`.
 
-All element matchers delegate to Playwright's native `expect(locator)` assertions internally, which means they
-**auto-retry** until the assertion passes or the timeout is reached — just like Playwright's built-in locator
-assertions. Both positive and negated (`.not`) forms retry correctly.
+It does this by **unwrapping**, not by redefining matchers: `expect(element)` becomes `expect(element.element)` and
+Playwright's own locator assertions run — auto-retrying, with `.not`, `expect.soft`, `expect.configure` and Playwright's
+failure messages. Raw locators work unchanged.
+
+> **Never register a matcher under a Playwright name** (`toBeVisible`, `toHaveText`, …) with `expect.extend`.
+> Registration is global: it replaces the built-in for every caller, including raw locators, so a wrapper that calls
+> `expect(locator).toHaveText()` ends up calling itself. New matchers need new names (see the utility matchers below).
 
 ## Available Matchers
 
@@ -53,7 +57,7 @@ await expect(signInPage.main.listItems).toHaveCount(5);
 
 ## Full Matcher Reference
 
-### Element Matchers (accept `BaseControl`, auto-retry)
+### Element Matchers (Playwright's locator assertions; accept `BaseControl` or `Locator`)
 
 | Matcher                                 | What it checks                              |
 | --------------------------------------- | ------------------------------------------- |
@@ -85,11 +89,13 @@ await expect(signInPage.main.listItems).toHaveCount(5);
 
 ### Utility Matchers
 
-| Matcher                        | Accepts             | What it checks                    |
-| ------------------------------ | ------------------- | --------------------------------- |
-| `toBeOneOfValues(array)`       | any value           | `array.includes(received)`        |
-| `toBeSorted(direction)`        | `string[]`          | Checks ascending/descending order |
-| `toBeExistInDownloadsFolder()` | `string` (filename) | File exists in `src/downloads/`   |
+| Matcher                                                                         | Accepts             | What it checks                     |
+| ------------------------------------------------------------------------------- | ------------------- | ---------------------------------- |
+| `toBeOneOfValues(array)`                                                        | any value           | `array.includes(received)`         |
+| `toBeSorted(direction)`                                                         | `string[]`          | Checks ascending/descending order  |
+| `toBeExistInDownloadsFolder()`                                                  | `string` (filename) | File exists in `src/downloads/`    |
+| `toContainPdfText(text)`, `toHavePdfPageCount(n)`                               | `PdfHelper`         | PDF content (see pdf-testing.md)   |
+| `toContainWordText(text)`, `toHaveWordHeading(text)`, `toHaveWordTableCount(n)` | `WordHelper`        | Word content (see word-testing.md) |
 
 ## Complete Example
 
@@ -148,8 +154,9 @@ await expect('report.pdf').toBeExistInDownloadsFolder();
 
 ## Implementation
 
-Custom matchers are defined in `src/fixtures/expect-fixtures.ts` and automatically available when importing from
-`@fixtures/fixtures`.
+`src/fixtures/expect-fixtures.ts`: the utility matchers are registered with `expect.extend` under their own names; the
+exported `expect` is a thin proxy that unwraps `BaseControl` arguments (call, `soft`, `configure`).
+`src/fixtures/fixtures.ts` re-exports it directly — passing it through `mergeExpects` would drop the unwrapping.
 
 ## Related
 

@@ -62,6 +62,21 @@ Check these by reading code and record them in the "Manual findings" section of 
 
 ---
 
+## Editor and build-time enforcement
+
+The scaffolds enforce the rules a compiler or linter can see, with messages that start with the rule ID:
+
+| Rule | Playwright template (`eslint.config.mjs`) | Java template (`ArchitectureRulesTest`, ArchUnit) |
+|---|---|---|
+| `R-NO-SLEEP` | `waitForTimeout`, `setTimeout` in tests; `waitForTimeout` in `src/` | `Thread.sleep` outside `ui.wait` |
+| `R-RAW-UI-IN-TEST` | `page.locator/getBy*/click/fill…` in tests | tests depending on `org.openqa.selenium` |
+| `R-RAW-HTTP-IN-TEST` | `request.get/post…` in tests | tests depending on `io.restassured` |
+| `R-COMPOSITION` | `@playwright/test` imported in tests; `new …Page/Service/Container/Section(` in tests | tests constructing pages, elements, services, drivers |
+| `R-SHARED-STATE` | `test.describe.serial` | static `WebDriver` fields; non-final fields in test classes |
+| `R-FOCUS` | `playwright/no-focused-test` | — |
+
+The audit stays the CI gate: it also sees teardown in test bodies, secrets, locator style and retries.
+
 ## Suppressing a finding
 
 Some matches are correct code: a bounded poll interval inside a retry helper, a delete that *is* the test's
@@ -84,6 +99,7 @@ The script classifies files by path, and rules apply per role:
 | test | `*.spec.ts`, `*.test.ts`, `tests/**`, `src/test/java/**` |
 | page | `pages/`, `containers/`, `components/`, `screens/`, `sections/` (files directly under `components/` count as generic widgets for `R-POSITION`) |
 | composition | `fixtures/`, `context/`, `testbase/` |
+| framework (tooling) | `architecture/` — architecture-rule tests such as the Java template's ArchUnit rules |
 | framework | everything else (config, elements, services, helpers) |
 
 Repos with other layouts still get most findings; adjust the paths in `roleOf()` if a role is misclassified.

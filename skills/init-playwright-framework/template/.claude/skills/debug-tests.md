@@ -207,11 +207,15 @@ Received: 401
 1. Enable API debug logging: `DEBUG_API=true npx playwright test`
 2. Check token: `console.log(service.token)`
 
-**Fix:** Ensure `setToken()` is called before the request.
+**Fix:** The token comes from the worker-scoped `apiToken` fixture in `src/fixtures/service-fixtures.ts`, which
+creates each service with `setToken(apiToken)`. Check that the service is registered there (not constructed in the
+test) and that the credentials in `.env` are valid for this environment.
 
 ```ts
-const token = await apiCommands.getAuthorizationToken(Config.auth.superAdminEmail);
-usersService.setToken(token);
+// src/fixtures/service-fixtures.ts
+usersService: async ({ apiToken }, use) => {
+    await use(new UsersService().setToken(apiToken));
+}
 ```
 
 ## Step 3: Investigation Tools

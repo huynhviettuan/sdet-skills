@@ -24,6 +24,7 @@
         <json-schema-validator.version>1.5.9</json-schema-validator.version>
         <aspectj.version>1.9.25</aspectj.version>
         <slf4j.version>2.0.20</slf4j.version>
+        <archunit.version>1.4.1</archunit.version>
 
         <!-- Overridable on the command line, e.g. mvn test -Dthreads=8 -Dgroups=smoke -->
         <threads>4</threads>
@@ -70,6 +71,13 @@
             <groupId>io.qameta.allure</groupId>
             <artifactId>allure-rest-assured</artifactId>
             <version>${allure.version}</version>
+        </dependency>
+        <dependency>
+            <!-- Architecture rules (src/test/java/.../architecture): the audit's rule IDs, enforced at test time -->
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit</artifactId>
+            <version>${archunit.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

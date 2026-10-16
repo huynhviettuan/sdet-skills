@@ -41,7 +41,7 @@ MailSubjects.payment.receipt;
 ```typescript
 import { MailSubjects } from '@constants/mail-subjects.constant';
 import { expect, test } from '@fixtures/fixtures';
-import { DataGenerator } from '@helpers/generate-data-functions';
+import { DataGenerator } from '@helpers/functions/data-generator';
 import { Mail } from '@mail/mail';
 
 test('should receive verification email', async () => {
@@ -209,7 +209,7 @@ import { BrowserInstance } from '@common/browser';
 import { Endpoints } from '@constants/endpoints.constant';
 import { MailSubjects } from '@constants/mail-subjects.constant';
 import { expect, test } from '@fixtures/fixtures';
-import { DataGenerator } from '@helpers/generate-data-functions';
+import { DataGenerator } from '@helpers/functions/data-generator';
 import { Mail } from '@mail/mail';
 
 test.describe('User Registration with Email Verification', () => {

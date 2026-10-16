@@ -296,16 +296,11 @@ async search(query: string, page: number = 1): Promise<ServiceResponse<User[]>> 
 ## Usage in Tests
 
 ```ts
+// Services arrive authenticated: `src/fixtures/service-fixtures.ts` resolves the token once per worker (an `apiToken`
+// fixture calling the spec's login operation) and creates each service with it — see the `service-builder` skill.
+// Tests never fetch or set tokens.
 test.describe('Users API', () => {
-    test.beforeAll(async ({ apiCommands }) => {
-        const token = await apiCommands.getAuthorizationToken(Config.auth.superAdminEmail);
-        // Token set per-test via fixture or beforeEach
-    });
-
-    test('should create and retrieve user', async ({ usersService, apiCommands }) => {
-        const token = await apiCommands.getAuthorizationToken(Config.auth.superAdminEmail);
-        usersService.setToken(token);
-
+    test('should create and retrieve user', async ({ usersService }) => {
         // Create
         const { statusCode: createStatus, data: created } = await usersService.create({
             name: DataGenerator.randomName(),

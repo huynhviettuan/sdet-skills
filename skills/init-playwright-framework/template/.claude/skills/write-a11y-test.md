@@ -37,7 +37,7 @@ test('page should have no critical violations', async ({ a11y }) => {
 ### ✅ Import AccessibilityHelper for Static Methods
 
 ```ts
-import { AccessibilityHelper } from '@helpers/accessibility.helper';
+import { AccessibilityHelper } from '@helpers/services/accessibility.helper';
 ```
 
 ## Architecture
@@ -64,7 +64,7 @@ Place in `tests/e2e/accessibility/[page-name]-a11y.spec.ts`:
 import { BrowserInstance } from '@common/browser';
 import { Endpoints } from '@constants/endpoints.constant';
 import { expect, test } from '@fixtures/fixtures';
-import { AccessibilityHelper } from '@helpers/accessibility.helper';
+import { AccessibilityHelper } from '@helpers/services/accessibility.helper';
 
 test.describe('[Page Name] — Accessibility', () => {
     test.beforeEach(async ({ goto }) => {
@@ -250,7 +250,7 @@ Examples:
 
 -   [ ] Test file in `tests/e2e/accessibility/[page]-a11y.spec.ts`
 -   [ ] Uses `a11y` fixture from `@fixtures/fixtures`
--   [ ] Imports `AccessibilityHelper` from `@helpers/accessibility.helper`
+-   [ ] Imports `AccessibilityHelper` from `@helpers/services/accessibility.helper`
 -   [ ] Baseline full-page scan with `filterByImpact('serious')`
 -   [ ] WCAG level tested if compliance is required
 -   [ ] Error / interactive states tested separately

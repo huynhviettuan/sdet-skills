@@ -13,7 +13,7 @@ Powered by `date-fns`. Accepts moment-style format strings (e.g. `DD/MM/YYYY`) �
 format is `DD/MM/YYYY`.
 
 ```ts
-import { DateTimeHelper } from '@helpers/date-time-functions';
+import { DateTimeHelper } from '@helpers/functions/date-time';
 
 DateTimeHelper.today(); // Current date (DD/MM/YYYY)
 DateTimeHelper.today('YYYY-MM-DD'); // Current date (custom format)
@@ -37,7 +37,7 @@ Workbooks are cached after first load — repeated reads on the same instance ar
 external writes if needed.
 
 ```ts
-import { ExcelHelper } from '@helpers/excel.helper';
+import { ExcelHelper } from '@helpers/services/excel.helper';
 
 const excel = ExcelHelper.open('data.xlsx', 'Sheet1');
 await excel.readCell('A1');
@@ -59,7 +59,7 @@ excel.invalidateCache(); // Force reload from disk
 ### DataGenerator (`@helpers/generate-data-functions`)
 
 ```ts
-import { DataGenerator } from '@helpers/generate-data-functions';
+import { DataGenerator } from '@helpers/functions/data-generator';
 
 DataGenerator.randomString(10);
 DataGenerator.randomNumber(1, 100); // Uses faker.number.int()
@@ -72,7 +72,7 @@ DataGenerator.randomAddress();
 ### FileHelper (`@helpers/generate-data-functions`)
 
 ```ts
-import { FileHelper } from '@helpers/generate-data-functions';
+import { FileHelper } from '@helpers/functions/data-generator';
 
 FileHelper.clone('file.xlsx', 'src/data', 'src/downloads');
 FileHelper.exists('path/to/file');
@@ -82,7 +82,7 @@ FileHelper.delete('path/to/file');
 ### ArrayHelper (`@helpers/helper-functions`)
 
 ```ts
-import { ArrayHelper } from '@helpers/helper-functions';
+import { ArrayHelper } from '@helpers/functions/helper-functions';
 
 // Sequential execution (ordered)
 await ArrayHelper.forEachSync(items, async (item, index) => {
@@ -98,7 +98,7 @@ await ArrayHelper.forEachAsync(items, async (item, index) => {
 ### StringHelper (`@helpers/helper-functions`)
 
 ```ts
-import { StringHelper } from '@helpers/helper-functions';
+import { StringHelper } from '@helpers/functions/helper-functions';
 
 StringHelper.decodeHtml('&lt;div&gt;Test&lt;/div&gt;');
 StringHelper.normalizeParams({ tags: ['a', 'b'] }); // { tags: 'a,b' }
@@ -116,7 +116,7 @@ StringHelper.normalizeParams({ tags: ['a', 'b'] }); // { tags: 'a,b' }
 | `waitFor(url, timeout?)`         | Synchronizing on a network response triggered by a UI action   |
 
 ```ts
-import { ResponseHelper } from '@helpers/helper-functions';
+import { ResponseHelper } from '@helpers/functions/helper-functions';
 
 // Browser-intercepted response → typed object
 const data = await ResponseHelper.interceptedToJson<User>(response);
@@ -187,7 +187,7 @@ expect(body.token).toBeTruthy();
 ### FileWriter (`@helpers/helper-functions`)
 
 ```ts
-import { FileWriter } from '@helpers/helper-functions';
+import { FileWriter } from '@helpers/functions/helper-functions';
 
 await FileWriter.writeJson('output.json', jsonString);
 ```
@@ -195,7 +195,7 @@ await FileWriter.writeJson('output.json', jsonString);
 ### Schema Validation
 
 ```ts
-import { validateJsonSchema } from '@helpers/validate-schema.helper';
+import { validateJsonSchema } from '@helpers/services/validate-schema.helper';
 
 // Validate against existing schema file (src/data/schemas/<path>/<name>_schema.json)
 await validateJsonSchema('GET_users', 'users', responseData);

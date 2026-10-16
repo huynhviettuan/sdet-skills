@@ -72,7 +72,8 @@ Java. The contract and workflow are identical; only paths and syntax differ.
    and a row per service in `docs/registry/services.md`. Configuration (`API_DOMAIN`, credentials) goes to the
    stack's config (env / `.env.example` / `config/<env>.properties` for non-secrets), never hardcoded.
 8. **Verify** — compile (`npx tsc --noEmit` or `mvn -q test-compile`); `<tool> coverage specs/<api>.json --services
-   <services dir>` must report 0 missing / 0 extra; run one generated smoke test per service against a test
+   <services dir> [--tags <generated tags>]` must report 0 missing / 0 extra (`--tags` scopes "missing" to the tags
+   you generated; extra and duplicated are always checked); run one generated smoke test per service against a test
    environment.
 
 ## Non-negotiable rules

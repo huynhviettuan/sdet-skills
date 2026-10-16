@@ -212,15 +212,12 @@ test.describe('Sign In', () => {
 ### API Test
 
 ```typescript
-import { Config } from '@constants/config.constant';
 import { expect, test } from '@fixtures/fixtures';
 import { StatusCodes } from 'http-status-codes';
 
+// usersService arrives authenticated: service-fixtures.ts resolves the token once per worker.
 test.describe('Users API', () => {
-    test('should create user', async ({ usersService, apiCommands }) => {
-        const token = await apiCommands.getAuthorizationToken(Config.auth.superAdminEmail);
-        usersService.setToken(token);
-
+    test('should create user', async ({ usersService }) => {
         const { statusCode, data } = await usersService.create({
             name: 'John Doe',
             email: 'john@example.com'

@@ -70,7 +70,7 @@ registry entries, the inventory.
    element classes; the inventory table it produces is Gate B material.
 3. **`service-builder`** per tag the cases touch: operationId methods, spec-derived types/schemas, auth fixture,
    coverage report. No spec → capture traffic and draft an UNVERIFIED spec; that's also Gate B material.
-4. Verify: compile, each locator unique in each state, smoke spec per page, `openapi-tool coverage` clean.
+4. Verify: compile, each locator unique in each state, smoke spec per page, `openapi-tool coverage --tags <the tags in scope>` clean.
 
 ## Gate B — inventory
 
@@ -100,7 +100,7 @@ Consumes: the implemented tests. Produces: the verification table in the status 
 [ ] parallel run green (workers > 1 / parallel=methods)
 [ ] every new test fails when its expected value is broken (break, run, restore — sample at least one per file)
 [ ] audit-suite.mjs --fail-on block clean; warnings listed
-[ ] openapi coverage clean (if services were built)
+[ ] openapi coverage --tags <scope> clean (if services were built)
 ```
 
 Red tests → **`debug-failed-tests`**: classify, one honest fix if it's a test/framework cause; a product cause is a

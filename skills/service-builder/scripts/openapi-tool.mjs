@@ -7,8 +7,9 @@
  *   node openapi-tool.mjs schemas   <spec> [--out-dir src/data/schemas]
  *       Write one JSON Schema per JSON 2xx response: <out-dir>/<folder>/<methodName>_<status>_schema.json
  *       (the naming read by validateJsonSchema(`${methodName}_${status}`, folder, body)).
- *   node openapi-tool.mjs coverage  <spec> [--services src/services]
+ *   node openapi-tool.mjs coverage  <spec> [--services src/services] [--tags pet,store]
  *       Compare spec operations with `@operationId <id>` tags in service files (.ts or .java). Exit 1 on any gap.
+ *       --tags limits "missing" to the given tags (a feature-scoped build); extra and duplicated are always checked.
  *
  * <spec> is a file path or http(s) URL, JSON or YAML (YAML needs the `yaml` or `js-yaml` package installed).
  * Supports OpenAPI 3.0 / 3.1 and Swagger 2.0.
@@ -261,8 +262,9 @@ async function listSourceFiles(dir) {
     return out;
 }
 
-async function coverage(spec, servicesDir) {
+async function coverage(spec, servicesDir, tags) {
     const inv = buildInventory(spec);
+    const inScope = (o) => !tags || tags.includes(o.tag);
     const found = new Map();
     const skipped = new Map();
     for (const file of await listSourceFiles(servicesDir)) {
@@ -278,12 +280,15 @@ async function coverage(spec, servicesDir) {
         }
     }
     const specIds = new Set(inv.operations.map((o) => o.operationId));
-    const missing = inv.operations.filter((o) => !found.has(o.operationId) && !skipped.has(o.operationId));
+    const missing = inv.operations.filter(
+        (o) => inScope(o) && !found.has(o.operationId) && !skipped.has(o.operationId)
+    );
     const extra = [...found.keys(), ...skipped.keys()].filter((id) => !specIds.has(id));
     const duplicated = [...found.entries()].filter(([, files]) => files.length > 1);
     return {
-        total: inv.operations.length,
-        mapped: inv.operations.filter((o) => found.has(o.operationId)).length,
+        total: inv.operations.filter(inScope).length,
+        mapped: inv.operations.filter((o) => inScope(o) && found.has(o.operationId)).length,
+        outOfScope: inv.operations.filter((o) => !inScope(o)).length,
         skipped: [...skipped.entries()].filter(([id]) => specIds.has(id)),
         missing,
         extra,
@@ -334,8 +339,10 @@ async function main() {
         warnings.forEach((w) => console.warn(`warning: ${w}`));
         console.log(`${written.length} schema file(s)`);
     } else if (cmd === 'coverage') {
-        const r = await coverage(spec, arg('--services', path.join('src', 'services')));
-        console.log(`coverage: ${r.mapped}/${r.total} operations mapped, ${r.skipped.length} skipped`);
+        const tags = arg('--tags')?.split(',').map((t) => t.trim()).filter(Boolean);
+        const r = await coverage(spec, arg('--services', path.join('src', 'services')), tags);
+        const scope = tags ? ` in tags ${tags.join(', ')} (${r.outOfScope} out of scope)` : '';
+        console.log(`coverage: ${r.mapped}/${r.total} operations mapped${scope}, ${r.skipped.length} skipped`);
         r.skipped.forEach(([id, reason]) => console.log(`  SKIPPED  ${id} — ${reason}`));
         r.missing.forEach((o) => console.log(`  MISSING  ${o.operationId}  (${o.method} ${o.path} → ${o.service}.${o.methodName})`));
         r.extra.forEach((id) => console.log(`  EXTRA    @operationId ${id} not in spec`));

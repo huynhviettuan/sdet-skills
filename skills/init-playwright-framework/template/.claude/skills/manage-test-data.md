@@ -44,22 +44,21 @@ Without this pattern you get:
 For one-off needs in a single spec:
 
 ```ts
-import { DataGenerator } from '@helpers/generate-data-functions';
-import { ResponseHelper } from '@helpers/helper-functions';
+import { DataGenerator } from '@helpers/functions/data-generator';
+import { ResponseHelper } from '@helpers/functions/helper-functions';
 import { expect, test } from '@fixtures/fixtures';
 import { StatusCodes } from 'http-status-codes';
 
+> Prefer the **factory fixture** below (and the `test-script-writer` skill's data-fixtures template): describe-level
+> `let` state is shared between tests and breaks under parallel runs (audit rule R-SHARED-STATE). This
+> `afterEach` form is shown only for reading legacy code.
+
 test.describe('Users', () => {
     let createdUserId: string | undefined;
-    let token: string;
-
-    test.beforeAll(async ({ apiCommands }) => {
-        token = await apiCommands.getAuthorizationToken(Config.auth.superAdminEmail);
-    });
 
     test.afterEach(async ({ userService }) => {
         if (createdUserId) {
-            await userService.deleteUser(token, createdUserId).catch(() => undefined);
+            await userService.deleteUser(createdUserId).catch(() => undefined);
             createdUserId = undefined;
         }
     });
@@ -70,7 +69,7 @@ test.describe('Users', () => {
             name: DataGenerator.randomName(),
             email: DataGenerator.randomEmail('users-spec')
         };
-        const { response } = await userService.createUser(token, userData);
+        const { response } = await userService.createUser(userData);
         createdUserId = (await ResponseHelper.toJson<{ id: string }>(response)).id;
 
         // Act
@@ -92,8 +91,8 @@ function.
 
 ```ts
 import { Config } from '@constants/config.constant';
-import { DataGenerator } from '@helpers/generate-data-functions';
-import { ResponseHelper } from '@helpers/helper-functions';
+import { DataGenerator } from '@helpers/functions/data-generator';
+import { ResponseHelper } from '@helpers/functions/helper-functions';
 import { UserService } from '@services/user.service';
 
 export type CreatedUser = {
@@ -134,18 +133,25 @@ export class UserFactory {
 Usage:
 
 ```ts
-test('should edit user name', async ({ userService, apiCommands, usersPage }) => {
-    const token = await apiCommands.getAuthorizationToken(Config.auth.superAdminEmail);
-    const factory = new UserFactory(userService, token);
+// src/fixtures/data-fixtures.ts — the fixture owns cleanup, so tests never clean up in their body
+userFactory: async ({ userService }, use) => {
+    const created: Array<{ cleanup(): Promise<void> }> = [];
+    await use({
+        async create(overrides) {
+            const user = await new UserFactory(userService).create(overrides);
+            created.push(user);
+            return user;
+        }
+    });
+    for (const user of created) await user.cleanup(); // runs even when the test failed
+}
 
-    const user = await factory.create({ name: 'Old Name' });
+// test
+test('should edit user name', async ({ userFactory, usersPage }) => {
+    const user = await userFactory.create({ name: 'Old Name' });
 
-    try {
-        await usersPage.main.editUserName(user.email, 'New Name');
-        await expect(usersPage.main.getUserNameCell(user.email)).toHaveText('New Name');
-    } finally {
-        await user.cleanup(); // ALWAYS runs
-    }
+    await usersPage.main.editUserName(user.email, 'New Name');
+    await expect(usersPage.main.getUserNameCell(user.email)).toHaveText('New Name');
 });
 ```
 

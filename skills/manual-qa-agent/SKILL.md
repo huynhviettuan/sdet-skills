@@ -38,6 +38,8 @@ handing every decision to the person who owns it.
    ```bash
    claude mcp add qa-agent --env QA_API_URL=<api> --env QA_AGENT_KEY=<agent key> -- pnpm -s --dir <agent-repo> mcp
    ```
+   Hosted or shared setups use the HTTP mode instead (`pnpm -s mcp --http`, agent ADR-0013): the endpoint holds no
+   key, and every request sends the caller's own `AI_AGENT` key as `Authorization: Bearer <key>`.
 2. **Without the tool server**, use the HTTP API (`api-workflow.md`) with the base URL and an `AI_AGENT` key from the
    user, read from an environment variable (`QA_KEY`) — never written to files, commits, URLs or chat. If the user
    only has a person's key (QA engineer), you still act as propose-only; never ask for or use a lead, product-owner
@@ -50,7 +52,7 @@ handing every decision to the person who owns it.
 | # | Stage | Claude does | Then waits for |
 |---|---|---|---|
 | 1 | Requirements | Prepares source documents (`project-docs` / the team's docs) one rule per block, keeping BR/AC IDs | **Product owner** ingests/approves them |
-| 2 | Stories | Prepares story JSON, one AC per testable behavior, and the submit command (`POST /api/stories`) | **A person** submits them — the `AI_AGENT` role can't (agent OQ-13) |
+| 2 | Stories | Prepares story JSON, one AC per testable behavior, and the submit command (`POST /api/stories`) | **A person** submits them — by decision, not by limitation (agent ADR-0012) |
 | 3 | Readiness | `DRAFT_CREATED` → reports the case and its `sourceRefs`; `REVIEW_REQUESTED` → relays the question **verbatim** with its `reviewId` | **Product owner** answers; the story re-runs |
 | 4 | Drafts | Compares each draft with the designed case (`test-case-design`); writes suggested edits for the reviewer | **QA engineer** edits and approves the case |
 | 5 | Executable | Explores the live page, writes the spec (`test-script-writer` → executable spec), runs `check-spec.mjs` for the review checks, then `check_executable` / `propose_executable` | **A different person** approves it |

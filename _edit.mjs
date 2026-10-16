@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+const rep = (p, old, neu) => { const s = fs.readFileSync(p, 'utf8'); if (!s.includes(old)) throw new Error('anchor missing: ' + p); fs.writeFileSync(p, s.replace(old, neu)); };
+rep('skills/refactor-test-suite/references/migration-plan.md',
+"- When a rule reaches zero, switch CI to `--fail-on block` (and later `--fail-on warn`) and add the equivalent lint\n  rule (ESLint `no-restricted-syntax` / ArchUnit) so editors flag it before CI does.",
+"- When a rule reaches zero, switch CI to `--fail-on block` (and later `--fail-on warn`) and add the equivalent lint\n  rule so editors flag it before CI does. Both scaffolds ship them, keyed to the same rule IDs — copy them into the\n  repo: ESLint `no-restricted-imports` / `no-restricted-syntax` blocks in the Playwright template's\n  `eslint.config.mjs`, and `src/test/java/.../architecture/ArchitectureRulesTest.java` (ArchUnit) in the Java\n  template.");
+rep('skills/refactor-test-suite/references/rules.md',
+"## Suppressing a finding",
+"## Editor and build-time enforcement\n\nThe scaffolds enforce the rules a compiler or linter can see, with messages that start with the rule ID:\n\n| Rule | Playwright template (`eslint.config.mjs`) | Java template (`ArchitectureRulesTest`, ArchUnit) |\n|---|---|---|\n| `R-NO-SLEEP` | `waitForTimeout`, `setTimeout` in tests; `waitForTimeout` in `src/` | `Thread.sleep` outside `ui.wait` |\n| `R-RAW-UI-IN-TEST` | `page.locator/getBy*/click/fill…` in tests | tests depending on `org.openqa.selenium` |\n| `R-RAW-HTTP-IN-TEST` | `request.get/post…` in tests | tests depending on `io.restassured` |\n| `R-COMPOSITION` | `@playwright/test` imported in tests; `new …Page/Service/Container/Section(` in tests | tests constructing pages, elements, services, drivers |\n| `R-SHARED-STATE` | `test.describe.serial` | static `WebDriver` fields; non-final fields in test classes |\n| `R-FOCUS` | `playwright/no-focused-test` | — |\n\nThe audit stays the CI gate: it also sees teardown in test bodies, secrets, locator style and retries.\n\n## Suppressing a finding");
+rep('skills/init-selenium-java-framework/template/.claude/rules/04-verify-after-changes.md',
+"mvn test -Dtest=<AffectedTest>\n```",
+"mvn test -Dtest=<AffectedTest>\nmvn test -Dtest=ArchitectureRulesTest\n```\n\n`ArchitectureRulesTest` (ArchUnit) enforces the audit's rule IDs on compiled code: no Selenium or RestAssured in\ntests, no constructing pages/services/drivers in tests, no `Thread.sleep` outside `ui.wait`, no static `WebDriver`,\nno mutable fields in test classes.");
+rep('skills/init-selenium-java-framework/template/CLAUDE.md',
+"mvn -q test-compile\nmvn test -Dtest=<ChangedTest>\n",
+"mvn -q test-compile\nmvn test -Dtest=<ChangedTest>\nmvn test -Dtest=ArchitectureRulesTest          # composition, no raw Selenium/HTTP in tests, no sleeps\nnode scripts/audit-suite.mjs . --fail-on block\n");

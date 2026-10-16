@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  repo:
+    name: Repo consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/check-repo.mjs
+      - name: Validate plugin with the Claude Code CLI
+        env:
+          CLAUDE_CODE: '@anthropic-ai/claude-code@2.1.287'
+        run: |
+          for target in . .claude-plugin/plugin.json skills agents commands; do
+            npx -y "$CLAUDE_CODE" plugin validate --strict "$target"
+          done
+
+  playwright-template:
+    name: Playwright template compiles, lints and audits clean
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Scaffold into a temp directory
+        run: |
+          cp -r skills/init-playwright-framework/template "$RUNNER_TEMP/pw"
+          sed -i 's/__PROJECT_NAME__/ci-check/g' "$RUNNER_TEMP/pw/package.json" "$RUNNER_TEMP/pw/README.md" "$RUNNER_TEMP/pw/CLAUDE.md"
+      - name: Install
+        working-directory: ${{ runner.temp }}/pw
+        run: npm install --no-audit --no-fund
+      - name: Typecheck
+        working-directory: ${{ runner.temp }}/pw
+        run: npx tsc --noEmit
+      - name: Lint
+        working-directory: ${{ runner.temp }}/pw
+        run: npx eslint .
+      - name: Audit
+        working-directory: ${{ runner.temp }}/pw
+        run: node scripts/audit-suite.mjs . --fail-on block
+
+  java-template:
+    name: Selenium/Java template compiles and audits clean
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Compile (main + tests, including architecture rules)
+        working-directory: skills/init-selenium-java-framework/template
+        run: mvn -B -q test-compile
+      - name: Architecture rules (ArchUnit)
+        working-directory: skills/init-selenium-java-framework/template
+        run: mvn -B -q test -Dtest='ArchitectureRulesTest' -Dgroups= -Dsurefire.failIfNoSpecifiedTests=false
+      - name: Audit
+        working-directory: skills/init-selenium-java-framework/template
+        run: node scripts/audit-suite.mjs . --fail-on block

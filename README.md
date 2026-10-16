@@ -180,9 +180,17 @@ characters) kept short, plus `references/*.md` for depth that loads only when ne
 `skills/service-builder/scripts/openapi-tool.mjs` is also shipped in both templates
 (`skills/init-playwright-framework/template/scripts/` and `skills/init-selenium-java-framework/template/scripts/`) —
 change all three together. Likewise `skills/refactor-test-suite/scripts/audit-suite.mjs` is shipped in both
-templates' `scripts/`; both templates must audit clean (`node scripts/audit-suite.mjs . --fail-on block`). Before pushing, validate the
-plugin:
+templates' `scripts/`; both templates must audit clean (`node scripts/audit-suite.mjs . --fail-on block`).
+
+Before pushing, run the checks CI runs (`.github/workflows/ci.yml` also compiles, lints and audits both templates):
+
+```bash
+node scripts/check-repo.mjs
+```
 
 ```bash
 claude plugin validate .
 ```
+
+Record user-visible changes in [CHANGELOG.md](CHANGELOG.md) and bump `version` in `.claude-plugin/plugin.json` when
+releasing. Licensed under [MIT](LICENSE).

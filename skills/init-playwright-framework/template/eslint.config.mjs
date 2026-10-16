@@ -119,6 +119,14 @@ export default tseslint.config(
                     allowTypedFunctionExpressions: true,
                     allowHigherOrderFunctions: true
                 }
+            ],
+            // Audit rules (scripts/audit-suite.mjs) enforced in the editor. Messages carry the rule ID.
+            'no-restricted-syntax': [
+                'error',
+                {
+                    selector: "CallExpression[callee.property.name='waitForTimeout']",
+                    message: 'R-NO-SLEEP: wait on a real signal (locator state, response, URL), never a fixed timeout.'
+                }
             ]
         }
     },
@@ -147,7 +155,45 @@ export default tseslint.config(
             'playwright/expect-expect': 'warn',
             'playwright/no-force-option': 'warn',
             'playwright/no-networkidle': 'warn',
-            'playwright/missing-playwright-await': 'error'
+            'playwright/missing-playwright-await': 'error',
+
+            // Audit rules (scripts/audit-suite.mjs) enforced in the editor. Messages carry the rule ID;
+            // the audit remains the CI gate and covers what these selectors can't see.
+            'no-restricted-imports': [
+                'error',
+                {
+                    paths: [
+                        {
+                            name: '@playwright/test',
+                            message: "R-COMPOSITION: import { test, expect } from '@fixtures/fixtures'."
+                        }
+                    ]
+                }
+            ],
+            'no-restricted-syntax': [
+                'error',
+                {
+                    selector:
+                        "MemberExpression[object.name='page'][property.name=/^(locator|getBy[A-Z]\\w*|\\$\\$?|click|fill|check|press|type|selectOption)$/]",
+                    message: 'R-RAW-UI-IN-TEST: reach the UI through a page object fixture, not `page` directly.'
+                },
+                {
+                    selector: "MemberExpression[object.name='request'][property.name=/^(get|post|put|patch|delete|head|fetch)$/]",
+                    message: 'R-RAW-HTTP-IN-TEST: call the API through a service fixture, not `request` directly.'
+                },
+                {
+                    selector: 'NewExpression[callee.name=/(Page|Service|Container|Section)$/]',
+                    message: 'R-COMPOSITION: get page objects and services from fixtures; never construct them in a test.'
+                },
+                {
+                    selector: "CallExpression[callee.name='setTimeout']",
+                    message: 'R-NO-SLEEP: wait on a real signal (expect.poll, web-first assertion, response), never a timer.'
+                },
+                {
+                    selector: "MemberExpression[object.property.name='describe'][property.name='serial']",
+                    message: 'R-SHARED-STATE: tests must run alone; create data per test through a factory fixture.'
+                }
+            ]
         }
     },
 

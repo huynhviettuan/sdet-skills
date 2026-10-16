@@ -46,6 +46,8 @@ If a skill isn't installed, follow the conventions below and the code that alrea
 ```bash
 mvn -q test-compile
 mvn test -Dtest=<ChangedTest>
+mvn test -Dtest=ArchitectureRulesTest          # composition, no raw Selenium/HTTP in tests, no sleeps
+node scripts/audit-suite.mjs . --fail-on block
 node scripts/openapi-tool.mjs coverage specs/<api>.json --services src/main/java/com/example/qa/api/services
 ```
 

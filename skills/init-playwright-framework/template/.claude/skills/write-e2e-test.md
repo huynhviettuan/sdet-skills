@@ -121,7 +121,7 @@ refreshed data), gate the assertion on the network — not a timer. Set up the w
 `Promise.all`:
 
 ```ts
-import { ResponseHelper } from '@helpers/helper-functions';
+import { ResponseHelper } from '@helpers/functions/helper-functions';
 
 const [response] = await Promise.all([
     ResponseHelper.waitFor('/user-organization/auth/signin'),
@@ -163,7 +163,7 @@ await page.main.dropZone.dropData({ 'text/plain': 'pasted content' });
 ### Generate Test Data
 
 ```ts
-import { DataGenerator } from '@helpers/generate-data-functions';
+import { DataGenerator } from '@helpers/functions/data-generator';
 const email = DataGenerator.randomEmail('test');
 const name = DataGenerator.randomName();
 ```

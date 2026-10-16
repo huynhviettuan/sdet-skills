@@ -38,7 +38,9 @@ On Windows PowerShell 5.1 use `curl.exe` (plain `curl` is a different command) o
 With the agent tool server (`pnpm -s mcp`, agent ADR-0011) each row has a tool: `whoami` (`GET /api/me`),
 `get_test_case`, `check_executable` (local schema + approved-revision + traceability check), `propose_executable`
 (runs that check first), `request_run`, `get_run` (`waitSeconds` ≤ 120 polls for you), `get_triage`,
-`get_reproduction`. Story submission and suites have no tool: the `AI_AGENT` role can't use them.
+`get_reproduction`. Story submission and suites have no tool: the `AI_AGENT` role can't use them (story submission
+stays with people by decision, agent ADR-0012). Over HTTP (`pnpm -s mcp --http`, ADR-0013) the same tools are served
+at `POST /mcp`, with the caller's key on every request.
 
 | Purpose | Call | Body | Success |
 |---|---|---|---|

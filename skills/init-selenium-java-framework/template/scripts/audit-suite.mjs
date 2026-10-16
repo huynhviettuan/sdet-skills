@@ -21,6 +21,7 @@ const SKIP_DIRS = new Set(['node_modules', '.git', 'target', 'build', 'dist', 't
 function roleOf(rel) {
     const p = rel.replace(/\\/g, '/');
     if (/(^|\/)(fixtures)\//.test(p) || /(^|\/)(context|testbase)\//.test(p)) return 'composition';
+    if (/(^|\/)architecture\//.test(p)) return 'framework'; // architecture-rule tests (ArchUnit) are tooling, not tests
     if (/\.(spec|test)\.[jt]s$/.test(p) || /(^|\/)tests?\//.test(p) && /\.[jt]s$/.test(p) || /src\/test\/java\/.*\.java$/.test(p)) return 'test';
     if (/(^|\/)(pages?|containers?|components?|screens?|sections?)\//.test(p)) return 'page';
     return 'framework';

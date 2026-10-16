@@ -159,6 +159,10 @@ public class PetService extends BaseService {
 }
 ```
 
+The excerpt shows four of the eight `pet` operations. The full class also has `updatePet` (PUT `/pet`, body `Pet`),
+`findPetsByTags` (query object with `List<String> tags`) and `updatePetWithForm` (path `petId` + query `name`,
+`status`) in the same shape, plus the skipped `uploadFile` below: coverage `--tags pet` reports 7/8 mapped, 1 skipped.
+
 RestAssured fills `{petId}` from `pathParam`, so the spec path stays verbatim and grep-identical to the spec.
 `BaseService` splits `API_DOMAIN` into base URI and base path (e.g. `https://petstore3.swagger.io` + `/api/v3`).
 
@@ -237,7 +241,7 @@ public PetService pet() {
 
 ```bash
 node scripts/openapi-tool.mjs schemas specs/petstore.json --out-dir src/test/resources/schemas
-node scripts/openapi-tool.mjs coverage specs/petstore.json --services src/main/java/com/example/qa/api/services
+node scripts/openapi-tool.mjs coverage specs/petstore.json --services src/main/java/com/example/qa/api/services --tags pet
 ```
 
 ---
