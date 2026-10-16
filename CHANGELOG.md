@@ -17,8 +17,19 @@ All notable changes to the sdet-skills plugin. Versions follow the `version` in 
 - `manual-qa-agent` skill: the agent's HTTP tool-server mode (agent ADR-0013) and the story-submission decision
   (agent ADR-0012).
 
+- From the Gym CRM pilot (`automation-pipeline/references/unattended.md` has the numbers): what may run unattended
+  and two CI templates (`templates/nightly-triage.yml`, `templates/author-from-test-cases.yml`, not yet run in
+  CI); "Sessions per role" in the test-script-writer templates; the Playwright template pins the browser locale and
+  lints API models to `type`-only; guidance for landmark-less component libraries, portals, streamed rendering,
+  cookie sessions with Origin checks, sign-in endpoints missing from the spec, APIs without delete, framework-generated
+  operationIds, shared rate limits, and checking the API before routing a case to manual.
+
 ### Fixed
 
+- `openapi-tool coverage` read the word "@operationId" in prose as a tag; tags now count only at the start of a JSDoc
+  line.
+- Audit: a deliberately wrong credential in a negative test (`password: 'wrong…'`) is no longer reported as a
+  secret; real-looking values still are.
 - Playwright template: custom `expect` matchers registered under Playwright's own names replaced the built-ins
   globally, so `toHaveText` / `toBeVisible` failed for elements **and** raw locators. `expect` now unwraps element
   classes to their Locator and uses Playwright's matchers; `toBeSorted` no longer sorts its input in place (it always
@@ -28,6 +39,12 @@ All notable changes to the sdet-skills plugin. Versions follow the `version` in 
 - Audit: `architecture/` folders are tooling, not tests.
 - `service-builder`: the Java template excerpt now says which `pet` operations it omits; the skill no longer claims
   per-tag coverage without the option that provides it.
+
+### Known issues
+
+- Playwright template: `BrowserInstance.getRequest()` opens a new API request context per call and never disposes
+  it. Harmless in the pilot's runs; disposing it after the body is read would break code that reads the response
+  later, so it needs a design change rather than a one-line fix.
 
 ## [1.1.0] — 2026-10-16
 

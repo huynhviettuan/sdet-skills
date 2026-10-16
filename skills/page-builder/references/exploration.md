@@ -65,7 +65,9 @@ For each screen in scope:
    ```
 
 4. **Walk each state** from the scope table (checklist below), re-reading the tree after every transition — many
-   regions only render in some states.
+   regions only render in some states. With streamed server rendering (React/Next.js) the content first arrives in a
+   hidden placeholder (`<div hidden id="S:0">`) and is moved into place moments later: read the tree once the page has
+   settled, or an element can look like it sits outside its region when it doesn't.
 5. **Check uniqueness** of each candidate locator within its container in each state (`find`, or
    `container.querySelectorAll(selector).length` in `javascript_tool`).
 6. **Record network calls** per interaction (next section).

@@ -272,9 +272,10 @@ async function coverage(spec, servicesDir, tags) {
         // Each JSDoc block: `@operationId <id>` marks a generated method; adding `@skipped <reason>` marks an
         // operation deliberately not generated (reported, not counted as mapped).
         for (const block of text.matchAll(/\/\*\*([\s\S]*?)\*\//g)) {
-            const id = block[1].match(/@operationId\s+([^\s*]+)/)?.[1];
+            // Tags count only at the start of a JSDoc line, so prose that mentions "@operationId" isn't read as one.
+            const id = block[1].match(/^\s*\*?\s*@operationId\s+([^\s*]+)/m)?.[1];
             if (!id) continue;
-            const reason = block[1].match(/@skipped\s+([^\n*]+)/)?.[1]?.trim();
+            const reason = block[1].match(/^\s*\*?\s*@skipped\s+([^\n*]+)/m)?.[1]?.trim();
             if (reason) skipped.set(id, reason);
             else found.set(id, [...(found.get(id) ?? []), file]);
         }

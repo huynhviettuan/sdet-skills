@@ -34,6 +34,13 @@ build.
 
 ---
 
+## Undocumented operations in a documented API
+
+An operation the tests need is missing from an otherwise good spec (typically auth: sign-in mounted by a library
+beside the API). Hand-write the method in a small separate service **without** an `@operationId` tag, mark it "not in
+the spec" in its doc comment, and record a drift finding for the API team. Don't add it to the spec file yourself —
+the spec stays the API team's document.
+
 ## No spec
 
 When the API has no OpenAPI document, don't hand-write ad hoc services — produce a draft spec first, then generate

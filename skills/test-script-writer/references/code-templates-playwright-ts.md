@@ -8,6 +8,7 @@ PetService, types, schemas) come from `page-builder` and `service-builder`.
 Contents:
 
 - [Data factory fixture](#data-factory-fixture)
+- [Sessions per role](#sessions-per-role)
 - [UI spec](#ui-spec)
 - [API spec](#api-spec)
 - [Blocked and known-bug cases](#blocked-and-known-bug-cases)
@@ -68,6 +69,53 @@ export const test = mergeTests(
     // ...the other fixtures
 );
 ```
+
+---
+
+## Sessions per role
+
+When cases run as several roles, or sign-in is rate limited, sign each role in **once** and reuse the session — a
+UI sign-in per test multiplies run time and trips the limit. Verified on the Gym CRM pilot (6 roles, 60-row
+permission matrix: 6 API sign-ins per run instead of 64 UI sign-ins).
+
+`playwright.config.ts` — a setup project the UI project depends on:
+
+```ts
+{ name: 'setup', testDir: './tests/setup/.', testMatch: /.*\.setup\.ts/ },
+{ name: 'e2e', testDir: './tests/e2e/.', dependencies: ['setup'], use: { /* … */ } },
+```
+
+`tests/setup/auth.setup.ts` — one saved session per role (`.auth/` is gitignored):
+
+```ts
+import { authFile, Staff, type StaffRole } from '@constants/roles.constant';
+import { expect, test } from '@fixtures/fixtures';
+import { saveRoleSession } from '@helpers/services/session.helper';
+
+for (const role of Object.keys(Staff) as StaffRole[]) {
+    test(`session for ${role}`, async () => {
+        expect(await saveRoleSession(role)).toBe(authFile(role));
+    });
+}
+```
+
+`saveRoleSession` signs in through the API (the auth service) and writes a storageState file holding the session
+cookie for the app's host. Tests pick the role per `describe`:
+
+```ts
+test.describe('Permission matrix — manager', () => {
+    test.use({ storageState: authFile('manager') });
+    // …one test per matrix row
+});
+```
+
+Tests about signing in itself start signed out: `test.use({ storageState: { cookies: [], origins: [] } })`.
+Tests that deliberately hit a rate limit go in their own project with `dependencies: ['e2e']`, so they run last.
+
+When a case needs an account **in a specific state** (disabled, outside its allowed hours, a permission switched
+off), create it through the API in a factory fixture and put it into that state in the test's Arrange step — the
+pilot automated four cases the executable-step format had left manual this way. If the API cannot delete what the
+factory created, the teardown neutralises it instead (disable, archive) and every record gets a unique key.
 
 ---
 

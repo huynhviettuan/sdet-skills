@@ -21,7 +21,8 @@ stage's actual work is the skill named for it.
 **How to use this skill:** read [`references/stages.md`](references/stages.md) once (what each stage consumes,
 produces, verifies, and which skill does it), then run the stages. [`references/status-file.md`](references/status-file.md)
 is the format of `docs/automation-status.md`, the single source of truth for progress; create it at intake and
-update it after every stage.
+update it after every stage. [`references/unattended.md`](references/unattended.md) says what may run without a person
+(nightly triage; authoring as a PR when pages and services exist) and links the CI templates in `templates/`.
 
 ## Intake
 
@@ -67,6 +68,8 @@ Stop the stage and report instead of guessing when:
   case `Blocked by OQ-…`, continue with the others;
 - the baseline run of an existing suite is red → triage with `debug-failed-tests`; never refactor a red test;
 - the app or API is unreachable, or credentials are missing → do docs-only work and label everything UNVERIFIED;
+- a shared limit (sign-in rate limit, API quota) throttles the run → reuse sessions, isolate the limit-hitting
+  tests, and ask the owner to raise the limit for test IPs; never retry around it;
 - a locator can't be made unique, or the OpenAPI spec and the real API disagree → inventory question / spec-drift
   finding, not a workaround in test code;
 - verification fails after one honest fix attempt per test → leave the test marked `fixme` with the evidence, record

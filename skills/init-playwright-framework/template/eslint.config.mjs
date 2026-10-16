@@ -107,6 +107,21 @@ export default tseslint.config(
     },
 
     // ──────────────────────────────────────────────
+    // API models generated from OpenAPI (src/models/<tag>/): `type`, never `interface` — only type aliases are
+    // assignable to BaseService's JSONObject request body. Framework model folders keep their interfaces.
+    // ──────────────────────────────────────────────
+    {
+        files: ['src/models/**/*.ts'],
+        ignores: [
+            'src/models/{accessibility,database,elements,mail,notifications,requests,test-data}/**',
+            'src/models/*.interface.ts'
+        ],
+        rules: {
+            '@typescript-eslint/consistent-type-definitions': ['error', 'type']
+        }
+    },
+
+    // ──────────────────────────────────────────────
     // Source files only (src/) — stricter rules
     // ──────────────────────────────────────────────
     {

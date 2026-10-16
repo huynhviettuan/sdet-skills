@@ -55,7 +55,8 @@ Counts: automated 2 · in progress 1 · blocked 1 · routed 1 · manual 0
 
 Rules:
 
-- One row per case (per data row when rows are separate tests). `Status` is one of `planned`, `in progress`,
+- One row per case (per data row when rows are separate tests); for a large data-driven set (a 60-row permission
+  matrix) one row per group with the count, listing exceptions individually. `Status` is one of `planned`, `in progress`,
   `automated`, `blocked` (with OQ), `routed` (agent/manual, with reason), `fixme` (with evidence link).
 - `Verified` records what was actually run, not what should be.
 - Never delete history from "Stops and decisions"; append.

@@ -65,7 +65,13 @@ Repeated `INCONCLUSIVE` on the same step with an unchanged page is a flakiness s
 
 Each manual case records why it isn't executable; that reason decides where it goes. Build the target with the
 framework skills (`init-playwright-framework` / `init-selenium-java-framework`, then `page-builder`,
-`service-builder`, `test-script-writer`):
+`service-builder`, `test-script-writer`).
+
+**Check the API before writing a reason.** Most "manual" cases are limits of the step format, not of the product: if
+the API can put an account or record into the needed state (disable it, set its allowed hours, switch a permission
+off, create the data), a framework test can automate the case. In the Gym CRM pilot, 5 of the 9 cases the showcase had
+labelled manual — two as "needs a controllable clock", two as "two people in sequence" — were automated that way;
+only one (a 12-hour idle timeout) really needed a clock.
 
 | Reason | Why the format can't | Framework approach |
 |---|---|---|

@@ -87,6 +87,11 @@ Consumes: approved cases, built pages/services. Produces: specs/tests, data fact
   point; `[TC-…]` titles and AC tags.
 - Target "Manual QA Agent" → the executable-spec reference instead, then stage 7.
 - Blocked cases get `test.fixme` / `enabled = false` with the TC id and reason; nothing silently skipped.
+- Several roles, or a sign-in rate limit → one saved session per role from a setup project, never a UI sign-in per
+  test (test-script-writer → "Sessions per role"). Tests that deliberately hit a limit get their own project that runs
+  last.
+- Before routing a case to "manual", check whether the API can create the state it needs (manual-qa-agent →
+  routing).
 - Update `Automation:` fields in the case file.
 
 ## 5 Verify
@@ -105,6 +110,10 @@ Consumes: the implemented tests. Produces: the verification table in the status 
 
 Red tests → **`debug-failed-tests`**: classify, one honest fix if it's a test/framework cause; a product cause is a
 finding, not a test edit. After one failed attempt, `fixme` with evidence and move on.
+
+A parallel run that is **slower** than one worker means the app, not the runner, is the bottleneck — record it; don't
+raise workers. Repeat runs of tests that sign in can trip a shared rate limit: a failure that appears only in the
+last repeat is checked against that before it is called flaky.
 
 Keep the failure output of every red run (`--reporter=line` plus `test-results/`) before re-running — a failure seen
 only on the first, cold run (browser download, first navigation) that doesn't recur in 20+ repeats is recorded in

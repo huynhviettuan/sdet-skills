@@ -50,7 +50,12 @@ The JSDoc of every method carries the exact spec operationId (not the camelCased
  */
 ```
 
-`coverage` matches on `@operationId`, so never remove or edit these lines by hand.
+`coverage` matches on `@operationId`, so never remove or edit these lines by hand. Tags count only at the start of a
+JSDoc line, so a comment may mention "@operationId" in prose without being read as one.
+
+**Framework-generated operationIds** (NestJS `UsersController_create`, Spring `createUsingPOST`) are still used
+verbatim — `usersControllerCreate` — because traceability to the spec beats nicer names. Raise an OQ asking the API
+team to set explicit operationIds (`@ApiOperation({ operationId })` in NestJS); regeneration then renames on purpose.
 
 ---
 
@@ -189,6 +194,13 @@ Read `securitySchemes` and the global/per-operation `security` from the inventor
 | `oauth2` client credentials | Worker-scoped fixture requests a token from the token URL with client id/secret from env → `setToken` |
 | `oauth2` implicit / authorization code, `openIdConnect` | Not automatable headlessly — use a test token from env or the environment's test login endpoint; raise an OQ if neither exists |
 | operation with `security: []` | Public — tests that call it must not depend on credentials; still covered by the same service instance |
+| `apiKey` **in cookie** (session cookie, e.g. `better-auth.session_token`) | Worker-scoped fixture signs in once, takes the cookie from `set-cookie`, and services send it as a `cookie` header: `service.setHeaders({ cookie, origin })` |
+
+**Cookie-session APIs usually check `Origin`** (CSRF protection): state-changing calls without the web app's origin
+fail with 403 ("Cross-origin request rejected") even with a valid session. Send `origin: Config.app.baseUrl` from
+the same fixture. **When the sign-in operation is not in the spec** (common with auth libraries mounted beside the
+API), write a small hand-written `AuthService` with **no** `@operationId` tag (it stays out of coverage), say so in
+its doc comment, and record the spec drift as a finding.
 
 One credential per role (admin, user…) when the API authorizes by role: expose `petServiceAs(role)` or one fixture
 per role, so permission tests (see `security-testing`) can call the same operation as different users.

@@ -90,7 +90,9 @@ const RULES = [
         id: 'R-SECRETS', severity: 'block', title: 'Hard-coded credential or token',
         checks: [
             { lang: /\.(ts|js|java|properties|json|ya?ml|env)$/, roles: ['test', 'page', 'framework', 'composition'],
-                re: /(password|passwd|secret|api[_-]?key|token)\s*['"]?\s*[:=]\s*['"][^'"$\s{][^'"]{3,}['"]|Bearer\s+[A-Za-z0-9\-_.]{12,}/i }
+                re: /(password|passwd|secret|api[_-]?key|token)\s*['"]?\s*[:=]\s*['"][^'"$\s{][^'"]{3,}['"]|Bearer\s+[A-Za-z0-9\-_.]{12,}/i,
+                // A deliberately wrong credential in a negative test is test data, not a leaked secret.
+                when: (l) => !/(password|passwd|secret|api[_-]?key|token)\s*['"]?\s*[:=]\s*['"](wrong|invalid|incorrect|bad|not-the-right)[^'"]*['"]/i.test(l) }
         ]
     },
     {

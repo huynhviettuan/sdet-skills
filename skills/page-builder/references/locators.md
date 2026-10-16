@@ -31,6 +31,12 @@ private final Locator root = Locator.root(By.cssSelector("section.main"));   // 
 public final Button btnSave = new Button(root.find(Bys.button("Save")));       // element: from the root
 ```
 
+**No landmark for a region?** Component libraries often render navigation as plain `div`s. Use the library's own
+stable attribute for the root — shadcn/ui marks its parts with `data-slot` (`[data-slot="sidebar"]`), Radix with
+`data-radix-*` — before falling back to layout classes, and request a landmark or test id from developers.
+Menus, popovers and dialogs from these libraries render in a **portal** outside the region that opened them: give the
+portal its own root (`[role="menu"]`, `[role="dialog"]`) instead of looking inside the trigger's container.
+
 ---
 
 ## Priority

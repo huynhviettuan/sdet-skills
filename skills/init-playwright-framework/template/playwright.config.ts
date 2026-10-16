@@ -26,6 +26,8 @@ export default defineConfig({
             args: ['--start-maximized']
         },
         testIdAttribute: 'data-testid',
+        // Pinned so the app renders the same language on every machine (many apps follow the browser locale).
+        locale: process.env.LOCALE ?? 'en-US',
         screenshot: 'only-on-failure',
         ignoreHTTPSErrors: true
     },

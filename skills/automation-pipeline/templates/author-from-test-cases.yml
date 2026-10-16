@@ -1,0 +1,82 @@
+# Author tests for changed test cases, as a PR (sdet-skills automation-pipeline → references/unattended.md).
+# Copy to .github/workflows/ in the automation repo. Not yet run in CI: trigger once with workflow_dispatch first.
+# Stages 4–6 only: cases that need new page objects or services stop with a Gate B request. Never merges.
+name: Author tests from changed test cases
+
+on:
+  push:
+    branches: [main]
+    paths: ['docs/test-cases/**']
+  workflow_dispatch:
+    inputs:
+      feature:
+        description: Feature (test-case file name without .md)
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  CLAUDE_CODE: '@anthropic-ai/claude-code@2.1.287'
+
+jobs:
+  author:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      BASE_URL: ${{ vars.BASE_URL }}
+      API_DOMAIN: ${{ vars.API_DOMAIN }}
+      PASSWORD: ${{ secrets.TEST_PASSWORD }}
+      CI: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/checkout@v4
+        with:
+          repository: huynhviettuan/sdet-skills
+          path: .sdet-skills
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      - name: Pick the feature
+        id: scope
+        run: |
+          if [ -n "${{ github.event.inputs.feature }}" ]; then
+            echo "feature=${{ github.event.inputs.feature }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "feature=$(git diff --name-only HEAD~1 HEAD -- docs/test-cases | head -1 | xargs -r basename -s .md)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Author on a branch
+        if: steps.scope.outputs.feature != ''
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          FEATURE: ${{ steps.scope.outputs.feature }}
+        run: |
+          git switch -c "automation/$FEATURE-${{ github.run_id }}"
+          npx -y "$CLAUDE_CODE" -p \
+            "/automate $FEATURE — run stages 4 to 6 only (implement, verify, deliver) for the cases in
+            docs/test-cases/$FEATURE.md. If any case needs a page object or service that does not exist yet, do not
+            create it: list those cases in docs/automation-status.md as a Gate B request and continue with the rest.
+            Commit your work on the current branch. Do not push, merge or edit test expectations in existing tests." \
+            --plugin-dir .sdet-skills \
+            --permission-mode dontAsk \
+            --allowedTools "Read" "Grep" "Glob" "Edit(src/**)" "Edit(tests/**)" "Edit(docs/**)" "Write(src/**)" "Write(tests/**)" "Write(docs/**)" \
+              "Bash(npx playwright test:*)" "Bash(npx tsc:*)" "Bash(npx eslint:*)" "Bash(node scripts/audit-suite.mjs:*)" \
+              "Bash(git add:*)" "Bash(git commit:*)" "Bash(git status:*)" "Bash(git diff:*)" \
+            --max-budget-usd 15
+
+      # Gate C stays with a person: the job opens a PR and stops.
+      - name: Open the PR
+        if: steps.scope.outputs.feature != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FEATURE: ${{ steps.scope.outputs.feature }}
+        run: |
+          git push -u origin HEAD
+          gh pr create --title "Automation: $FEATURE" --body-file docs/automation-status.md --base main

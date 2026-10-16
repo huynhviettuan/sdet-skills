@@ -1,0 +1,69 @@
+# Nightly run + triage (sdet-skills automation-pipeline → references/unattended.md).
+# Copy to .github/workflows/ in the automation repo. Not yet run in CI: trigger once with workflow_dispatch first.
+# Secrets: ANTHROPIC_API_KEY, plus the test environment's variables (BASE_URL, API_DOMAIN, PASSWORD, ...).
+name: Nightly tests and triage
+
+on:
+  schedule:
+    - cron: '0 1 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+env:
+  CLAUDE_CODE: '@anthropic-ai/claude-code@2.1.287'
+
+jobs:
+  nightly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      BASE_URL: ${{ vars.BASE_URL }}
+      API_DOMAIN: ${{ vars.API_DOMAIN }}
+      PASSWORD: ${{ secrets.TEST_PASSWORD }}
+      CI: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: huynhviettuan/sdet-skills
+          path: .sdet-skills
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      # 1. The verdict comes from the test run, never from the model.
+      - name: Run the suite
+        id: run
+        continue-on-error: true
+        run: npx playwright test --project=e2e --retries=0 --reporter=json > results.json
+
+      # 2. Only when something failed: advisory triage, read-only on the code.
+      - name: Triage failures
+        if: steps.run.outcome == 'failure'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          mkdir -p triage
+          npx -y "$CLAUDE_CODE" -p \
+            "Use the debug-failed-tests skill on the failed tests in results.json. For each failure: classify the cause
+            (product, test, environment, data) with the evidence, re-run it alone at most twice to check flakiness, and
+            say who should act. Do not edit tests, expectations or configuration. Write the report to triage/report.md." \
+            --plugin-dir .sdet-skills \
+            --permission-mode dontAsk \
+            --allowedTools "Read" "Grep" "Glob" "Bash(npx playwright test:*)" "Write(triage/**)" \
+            --max-budget-usd 5 \
+            --output-format json > triage/session.json
+
+      # 3. One issue a person reads; nothing is changed automatically.
+      - name: Open the triage issue
+        if: steps.run.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --title "Nightly test failures — $(date -u +%F)" \
+            --label test-triage --body-file triage/report.md

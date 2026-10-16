@@ -87,6 +87,7 @@ Suspect the framework when many unrelated tests fail the same way, or the error 
 | Third-party dependency | Failures on calls to an external service | Stub at the external boundary in test env |
 | Resource starvation in CI | Slow durations, timeouts only at high parallelism | Right-size runners / workers; don't raise timeouts globally |
 | Shared environment used by others | Data changed mid-run | Dedicated or ephemeral environment; unique test data |
+| Shared rate limit (sign-in, API quota per IP or key) | Passes alone, fails on repeat or at higher parallelism, often only in the last tests of a burst; the API returns 429 (`retry-after`) while the UI may show an unrelated message such as "wrong password" | Sign in once per role and reuse the session; run limit-hitting tests in their own project, last; ask the owner to raise the limit for test IPs. Never retry around it |
 
 ---
 
