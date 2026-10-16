@@ -47,6 +47,10 @@ When tests go red:
 
 An existing suite that doesn't follow these rules:
   └─► refactor-test-suite     baseline → audit (rule IDs) → plan → small verified steps → CI ratchet
+
+All of the above as one job, with human gates:
+  └─► automation-pipeline     /automate <scope> · sdet-automation-agent — assess → document → [gate] → scaffold
+                              → build → [gate] → implement → verify → branch + status report → [merge]
 ```
 
 | You want to… | Use |
@@ -65,6 +69,7 @@ An existing suite that doesn't follow these rules:
 | Authorization/tenant isolation tests, security scans in CI, finding triage | `security-testing` |
 | Investigate a failing, flaky, or CI-only test; triage a red run | `debug-failed-tests` |
 | Audit / clean up / migrate an existing (legacy) test suite; enforce test coding rules | `refactor-test-suite` |
+| Automate a feature or product end to end, from docs to a verified branch | `/automate` → `automation-pipeline` |
 
 The documentation skills share one ID scheme so requirements trace through to tests:
 
@@ -122,10 +127,22 @@ The documentation skills share one ID scheme so requirements trace through to te
 - [`debug-failed-tests`](skills/debug-failed-tests/SKILL.md) — systematic investigation of failing and flaky tests:
   evidence checklist, five cause categories, a reproduction ladder with flake-rate measurement and pollution
   bisecting, cause → fix → anti-fix tables, and templates for defect reports, environment tickets, and quarantine.
+- [`automation-pipeline`](skills/automation-pipeline/SKILL.md) — the orchestration layer: stage contract (what each
+  stage consumes, produces, verifies, and which skill does it), gates, stop rules, and the status-file format that
+  makes a run resumable; followed by the plugin's `sdet-automation-agent` and `/automate`.
 - [`refactor-test-suite`](skills/refactor-test-suite/SKILL.md) — audits and incrementally refactors an existing
   suite: rule catalogue with IDs, dependency-free audit script (TS/JS + Java) with suppressions and a CI ratchet,
   before/after recipes for both stacks, migration plan (baseline, ordering, strangler adoption, per-step
   verification, done criteria).
+
+## The automation agent
+
+`/automate <feature> [--stack playwright|selenium-java|qa-agent] [--url <app>] [--spec <openapi>]` runs the whole
+pipeline as one job, and `sdet-automation-agent` is the same job as a subagent. Both follow the
+[`automation-pipeline`](skills/automation-pipeline/SKILL.md) skill: the other skills do each stage's work; the
+pipeline adds the order, three human gates (approve the test cases, confirm the element/API inventory, merge the
+PR), stop rules (missing requirement, unreachable app, ambiguous locator, red baseline, anything destructive), and
+a resumable `docs/automation-status.md`. It works on a branch and never merges.
 
 ## Install
 

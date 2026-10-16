@@ -1,6 +1,6 @@
 {
   "name": "sdet-skills",
-  "description": "SDET / test-automation skills for Claude Code",
+  "description": "SDET / test-automation skills and an automation agent for Claude Code",
   "owner": {
     "name": "huynhviettuan"
   },
@@ -8,7 +8,7 @@
     {
       "name": "sdet-skills",
       "source": "./",
-      "description": "Framework architecture, Playwright and Selenium/RestAssured Java scaffolding, page-object and OpenAPI service builders, test-script writer, Manual QA Agent pipeline, test-suite refactoring, project and automation docs, test case design, performance and security testing, failed-test debugging."
+      "description": "End-to-end automation agent (/automate) over: framework architecture, Playwright and Selenium/RestAssured Java scaffolding, page-object and OpenAPI service builders, test-script writer, Manual QA Agent integration, test-suite refactoring, project and automation docs, test case design, performance and security testing, failed-test debugging."
     }
   ]
 }

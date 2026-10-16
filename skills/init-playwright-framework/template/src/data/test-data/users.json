@@ -1,0 +1,20 @@
+{
+  "users": [
+    {
+      "id": "user-001",
+      "email": "admin@example.test",
+      "password": "${PASSWORD}",
+      "role": "admin",
+      "name": "Admin User",
+      "status": "active"
+    },
+    {
+      "id": "user-002",
+      "email": "user@example.test",
+      "password": "${PASSWORD}",
+      "role": "user",
+      "name": "Standard User",
+      "status": "active"
+    }
+  ]
+}

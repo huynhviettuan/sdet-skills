@@ -1,11 +1,10 @@
 import { expect } from '@fixtures/expect-fixtures';
+import { FileWriter } from '@helpers/functions/helper-functions';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import * as fs from 'fs/promises';
 import { createSchema } from 'genson-js';
 import path from 'path';
-
-import { FileWriter } from '@helpers/functions/helper-functions';
 
 const SCHEMAS_DIR = path.join('src', 'data', 'schemas');
 
