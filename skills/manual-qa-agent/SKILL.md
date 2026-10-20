@@ -52,9 +52,9 @@ handing every decision to the person who owns it.
 | # | Stage | Claude does | Then waits for |
 |---|---|---|---|
 | 1 | Requirements | Prepares source documents (`project-docs` / the team's docs) one rule per block, keeping BR/AC IDs | **Product owner** ingests/approves them |
-| 2 | Stories | Prepares story JSON, one AC per testable behavior, and the submit command (`POST /api/stories`) | **A person** submits them — by decision, not by limitation (agent ADR-0012) |
+| 2 | Stories | Prepares story JSON, one AC per testable behavior (the agent drafts one case per story; extra ACs come back as coverage gaps), and the submit command (`POST /api/stories`) | **A person** submits them — by decision, not by limitation (agent ADR-0012) |
 | 3 | Readiness | `DRAFT_CREATED` → reports the case and its `sourceRefs`; `REVIEW_REQUESTED` → relays the question **verbatim** with its `reviewId` | **Product owner** answers; the story re-runs |
-| 4 | Drafts | Compares each draft with the designed case (`test-case-design`); writes suggested edits for the reviewer | **QA engineer** edits and approves the case |
+| 4 | Drafts | Compares each draft with the designed case (`test-case-design`), including its techniques, test conditions and coverage-check gaps; writes suggested edits for the reviewer | **QA engineer** edits and approves the case |
 | 5 | Executable | Explores the live page, writes the spec (`test-script-writer` → executable spec), runs `check-spec.mjs` for the review checks, then `check_executable` / `propose_executable` | **A different person** approves it |
 | 6 | Run | Requests the run, polls to a terminal status, reports verdict, reason and failed assertions | Lead approval if `BLOCKED` on a destructive step |
 | 7 | Failures | Reads triage + reproduction; deep-dives with `debug-failed-tests`; drafts the cause analysis | **Human** confirms the cause; **lead** approves any bug filing |

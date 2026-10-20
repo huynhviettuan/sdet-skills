@@ -96,12 +96,32 @@ a question the agent asks is a real gap.
   "content": {
     "title": "…", "priority": "P1",
     "preconditions": ["…"], "testData": ["…"], "assumptions": [], "missingRequirements": [],
-    "steps": [{ "action": "…", "expected": "…", "sourceRefs": ["AC-LOGIN@v1"] }]
+    "steps": [{ "action": "…", "expected": "…", "sourceRefs": ["AC-LOGIN@v1"] }],
+    "requirementRefs": ["story:AC-LOGIN-02", "AC-LOGIN@v1"],
+    "techniques": ["equivalence_partitioning", "error_guessing"],
+    "testTypes": ["negative", "security"],
+    "testConditions": ["unknown email", "known email, wrong password"]
   },
   "sourceRefs": ["AC-LOGIN@v1"],
   "authorId": "…"
 }
 ```
+
+Design fields (agent ADR-0014, prompt `draft-v2`):
+
+| Field | Contents |
+|---|---|
+| `requirementRefs` | What the case verifies: `story:<AC id>` or `sourceId@version` |
+| `techniques` | From a fixed list: `specification_based`, `equivalence_partitioning`, `boundary_value_analysis`, `decision_table`, `cause_effect`, `state_transition`, `use_case`, `permission_matrix`, `pairwise`, `classification_tree`, `syntax`, `error_guessing` |
+| `testTypes` | `positive`, `negative`, `boundary`, `security`, `regression` |
+| `testConditions` | The partitions, boundaries, rule columns and transitions the case was derived from |
+
+The agent checks drafts in code: a draft naming no technique is `MALFORMED`, a `requirementRefs` entry that is
+neither a retrieved source nor a story criterion is `UNGROUNDED`, and every acceptance criterion the draft neither
+traces nor lists as missing is appended to `missingRequirements` as `"<AC id>: not covered by this draft (coverage
+check)"`. Revisions drafted before ADR-0014 (and reviewer edits without these fields) read with them empty. The
+keyless stand-in model claims only `specification_based` / `positive` — expect thin design fields in demos without a
+live model.
 
 Statuses: `DRAFT → IN_REVIEW → APPROVED → RETIRED`, `NEEDS_CLARIFICATION`, `REJECTED`. `APPROVED` means the
 definition was approved by a person — not that the product passes. Only an `APPROVED` latest revision can receive an

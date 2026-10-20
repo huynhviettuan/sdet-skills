@@ -39,7 +39,9 @@ framework test is the developer-facing check.
 
 **The approved case revision in the agent is the spec** — read it with `GET /api/test-cases/<caseId>` and take the
 latest revision with `status: "APPROVED"`: its `steps[]` (`action`, `expected`, `sourceRefs`), `preconditions`,
-`testData`, and its top-level `sourceRefs`. The `test-case-design` document (`docs/test-cases/<feature>.md`) supplies
+`testData`, and its top-level `sourceRefs`. Since agent ADR-0014 a revision also lists `requirementRefs` (what it
+verifies), `techniques` and `testConditions`: one assertion per condition, and `story:<AC id>` refs from
+`requirementRefs` are valid step `sourceRefs`. The `test-case-design` document (`docs/test-cases/<feature>.md`) supplies
 detail the agent's case may leave out (exact data, partitions); if the two disagree, stop and report it — the
 approved revision is what the run will be judged against.
 

@@ -33,7 +33,23 @@ Compare each drafted case with the designed case (`test-case-design`) and list, 
 - expected results the draft is missing or states vaguely ("works", "shows an error") — with the exact text from the
   source;
 - steps or data the designed case has (partitions, boundary values) that the draft doesn't;
-- assumptions the draft makes that no source states.
+- assumptions the draft makes that no source states;
+- **design** (agent ADR-0014): whether `techniques` fit the requirement's structure (a numeric limit without
+  `boundary_value_analysis`, a rule combination without `decision_table`, roles without `permission_matrix`), and
+  whether every `testConditions` entry is something a source states — a technique never justifies an expected
+  result on its own;
+- **coverage**: each `missingRequirements` entry ending in "(coverage check)" is an acceptance criterion the draft
+  doesn't test. The agent drafts one case per story, so the fix is usually another story (or a split) for that
+  criterion, not a longer case.
+
+Comparing with the designed case's `Technique:` line:
+
+| Agent `techniques` | `test-case-design` |
+|---|---|
+| `equivalence_partitioning`, `boundary_value_analysis`, `decision_table`, `state_transition`, `pairwise`, `error_guessing` | same names |
+| `use_case` | Scenario / use-case testing |
+| `permission_matrix` | CRUD and lifecycle matrix (roles × operations) |
+| `cause_effect`, `classification_tree`, `syntax`, `specification_based` | no section of its own — judge them against the requirement directly |
 
 The QA engineer edits and approves. A case with several data rows becomes one case per row.
 
