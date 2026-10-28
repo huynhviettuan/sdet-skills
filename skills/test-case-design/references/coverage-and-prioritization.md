@@ -4,13 +4,48 @@ Deciding how much to test, in what order, and how to keep the suite lean as it g
 
 Contents:
 
+- [Requirement catalogue](#requirement-catalogue)
 - [Coverage targets by risk](#coverage-targets-by-risk)
 - [Priority](#priority)
 - [Suite selection](#suite-selection)
+- [Regression scope](#regression-scope)
 - [Layer assignment](#layer-assignment)
 - [Coverage summary per feature](#coverage-summary-per-feature)
+- [One set of records, several views](#one-set-of-records-several-views)
 - [Maintaining the suite](#maintaining-the-suite)
 - [Review checklist](#review-checklist)
+
+---
+
+## Requirement catalogue
+
+A **dated snapshot** of the product's requirement IDs, by kind, with the documents and the date or commit it was
+taken from (`docs/test-cases/catalogue.md`):
+
+| Kind | Example IDs |
+|---|---|
+| Functional requirements | FR-CUS-001 |
+| Business rules | BR-CONTRACT-005, BR-404 |
+| Acceptance criteria | AC-CONTRACT-010 |
+| Decisions and assumptions the product documents | D-082, A-377 |
+| Non-functional and API contract | NFR-SEC-001, API-ERR-001 |
+
+- A case citing an ID that is not in the catalogue is **wrong, not the catalogue** — it catches typos and stale
+  references. Refresh the snapshot deliberately (new date, reviewed diff), never by adding IDs to make cases pass.
+- Coverage is measured **per ID**: the IDs no case names, by kind. The target for acceptance criteria is zero; every
+  other uncovered ID is listed as a gap with its risk, never silently dropped.
+- **An ID is a dated snapshot of its text.** When the text behind an ID changes, the cases written before the change
+  are **stale** until someone re-reads them against the new text — mark them, don't assume they still hold.
+
+```bash
+python <skill-dir>/scripts/check_cases.py docs/test-cases --catalogue docs/test-cases/catalogue.md --trace traceability.csv
+```
+
+checks IDs, required fields, basis, catalogue references and AC coverage (errors), and lists uncovered IDs, missing
+evidence quotes, vague and status-only expected results (advisory). The lexical checks are hints: a check like
+"is this result observable" flagged 16 % of a team's real expected results, almost all falsely, when measured on a
+held-out set — so they never fail the run, and a tool tuned on the cases it is scored on proves nothing about its
+accuracy.
 
 ---
 
@@ -42,7 +77,12 @@ P3  cosmetic / rare edge
 ```
 
 A P0 feature has P2 test cases (a rarely used optional field) and a P2 feature can have a P0 case (an
-authorization check).
+authorization check). Typical P0s: money computed wrong, something consumed twice, an authorization bypass, silent
+data loss.
+
+Case priority (the order to **run** in) is a different scale from a defect's priority (the order to **fix** in) and
+from severity (impact); those belong to the bug report (`qa-reporting`). Run P0 first and stop to report on a P0
+failure.
 
 ---
 
@@ -56,6 +96,25 @@ authorization check).
 | Release | P0 + P1 automated + manual P0 cases not automated + exploratory charters for changed areas | Before release |
 
 Tag cases (`@smoke`, `@P0`, `@area`) so suites are selections, not copies.
+
+---
+
+## Regression scope
+
+Written with the cases, generated from them, two ways:
+
+- **By area changed** — a table of area → case IDs ("Contracts: pricing, approval, lifecycle → TC-CON-001 …
+  TC-CON-040").
+- **By requirement** — each automated test is tagged with the IDs it verifies (`@req:BR-CONTRACT-005`), so a change
+  to one requirement selects exactly its cases.
+
+Either way, **always add** every P0 case and every case guarding a defect (a fixed bug's regression case, or a case
+with an open known bug).
+
+**Known bugs are bound to steps.** A case whose expected result is blocked by an open defect names the defect and
+the step(s) it breaks. In a run, a failure at those steps is an *expected failure* (the case stays red-but-known
+until the fix, then must pass); a failure at any other step is a **real failure**, and a pass means "retest the bug
+— it may be fixed". The label sits beside the verdict and never replaces it.
 
 ---
 
@@ -96,9 +155,27 @@ Every AC has at least one TC; a TC with no AC is either missing a requirement (r
 
 ---
 
+## One set of records, several views
+
+When cases are read by people **and** run by an automated suite, keep one machine-readable set of case records
+(the Markdown files in this format, or data files) and generate everything else from it, so the views never drift:
+
+| View | Contents |
+|---|---|
+| Test design document | requirement analysis and the OQ register, techniques and why, the coverage model (design tables), the cases, traceability, gaps and assumption cases, risk-based order with the smoke set, regression scope |
+| Test case list / CSV | every case; execution columns from the last real run, or "Not Run" ([column order](test-case-format.md#test-management-tool-mapping)) |
+| Traceability CSV | requirement ID → case IDs (`check_cases.py --trace`) |
+
+The generator also checks the views agree: every `api`/`ui` case has a test, every `manual` case has none, no test
+names an unknown case. Every figure in the design document is a count from the records; nobody types a number.
+
+---
+
 ## Maintaining the suite
 
-- **Requirement change** → find TCs by the changed BR/AC ID, update or obsolete them in the same change.
+- **Requirement change** → find TCs by the changed BR/AC ID, mark them stale, re-read them against the new text,
+  update or obsolete them in the same change; refresh the catalogue snapshot.
+- **OQ answered** → the answer goes into the requirement; the dependent cases switch to `specified` with a quote.
 - **Escaped defect** → add the missing case (and ask which technique would have found it).
 - **Duplicates** → two cases with the same preconditions, action, and expected result: merge.
 - **Never-failing, low-risk cases** at an expensive layer → move down a layer or retire.
@@ -109,14 +186,19 @@ Every AC has at least one TC; a TC with no AC is either missing a requirement (r
 ## Review checklist
 
 ```text
-[ ] Every AC of the feature has ≥ 1 TC; every TC names the AC/BR it verifies
-[ ] Techniques chosen per risk level; coverage summary filled
-[ ] Boundaries tested on every constrained input (P0/P1)
-[ ] Decision tables for multi-condition rules; gaps raised as OQs
-[ ] Invalid state transitions covered for entities with a lifecycle
-[ ] Negative cases assert rejection AND no state change
-[ ] Expected results are concrete, observable, from the requirement
-[ ] One behavior per case; cases independent
-[ ] Priority and layer assigned; automation candidates flagged
+[ ] Every AC of the feature has ≥ 1 TC; every TC names catalogue IDs only (check_cases.py clean)
+[ ] Every case has a Basis; assumption cases say which result is assumed and link the OQ
+[ ] Specified expected results carry a verbatim Evidence quote; product terms spelled as the product spells them
+[ ] Clear clauses of unclear criteria designed; only the unclear clause went to an OQ
+[ ] Techniques chosen per risk level, with why; coverage summary filled
+[ ] Boundaries on every stated limit (P0/P1), including beyond the range; no case for an unstated limit
+[ ] Decision tables for multi-condition rules, including the "other" column; gaps raised as OQs
+[ ] Valid and invalid state transitions for entities with a lifecycle
+[ ] Permissions: privilege boundary per action, signed-out, in-module actions, the API; data scope
+[ ] Pairwise tables verified by program, with the reason pairwise is enough
+[ ] Negative cases assert rejection AND no state change; no status-only or fragment-only checks
+[ ] One behavior per case; cases independent; dates relative to the run
+[ ] Priority, level (manual with reason) and smoke set assigned; regression scope written
+[ ] Known bugs bound to the steps they break; no execution results in design files
 [ ] No secrets or real personal data in test data
 ```

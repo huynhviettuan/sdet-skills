@@ -18,12 +18,16 @@ receive their client, and only the framework's thin bases are ever extended (enf
 ## Which skill when
 
 ```text
+A pile of existing project documents to understand
+  └─► project-knowledge-base  cited digests → overview, flows, rules, roles, analysis, index
+        │
+        ▼
 Product requirements unclear or undocumented
   └─► project-docs            business rules, state machines, AC, ADRs, AGENTS.md
         │
         ▼
 What exactly do we test for this story / rule?
-  └─► test-case-design        techniques → TC-<AREA>-NNN cases linked to AC/BR
+  └─► test-case-design        techniques → TC-<AREA>-NNN cases with basis, quoted evidence, catalogue IDs
         │
         ▼
 How is automation organized, run, and governed?
@@ -70,8 +74,9 @@ All of the above as one job, with human gates:
 
 | You want to… | Use |
 |---|---|
+| Read, summarize and analyze all of a project's existing documents into a searchable, cited knowledge base (flows, rules, roles, conflicts, gaps) | `project-knowledge-base` |
 | Turn a brief / stakeholder notes into a source-of-truth doc set | `project-docs` |
-| Write or review test cases for a story, ticket, or rule | `test-case-design` |
+| Write or review test cases for a story, ticket, or rule; check cases against a requirement catalogue; verified pairwise | `test-case-design` |
 | Decide what to automate and at which layer; document the automation project | `sdet-automation-docs` |
 | Design or review page objects, services, fixtures, DI | `sdet-framework-architect` |
 | Scaffold a new Playwright/TypeScript test repo | `init-playwright-framework` |
@@ -131,12 +136,19 @@ The documentation skills share one ID scheme so requirements trace through to te
   participant: stories and clarifications, executable-spec proposals (with a bundled checker that uses the agent's
   own schema), runs, triage and reproduction, and routing of what the agent can't run to the framework skills; stops
   at every human gate.
+- [`project-knowledge-base`](skills/project-knowledge-base/SKILL.md) — turns a folder of existing documents (Markdown,
+  Word, PDF, Excel, PowerPoint, HTML, screenshots) into a navigable knowledge base: overview, glossary, roles and
+  permissions, domain model and lifecycles, every business flow with diagrams, rules, requirements, integrations,
+  decisions, an analysis of conflicts, gaps and ambiguities with open questions, a testing view and an index — every
+  statement cited to its source line; incremental when documents change.
 - [`project-docs`](skills/project-docs/SKILL.md) — turns briefs, notes, and legacy docs into a modular Markdown
   documentation package (business rules, state machines, ADRs, acceptance criteria, AGENTS.md/CLAUDE.md, open
   questions) that serves as source of truth for humans and AI coding agents.
 - [`test-case-design`](skills/test-case-design/SKILL.md) — derives test cases with equivalence partitioning,
-  boundary values, decision tables, state transitions, pairwise, scenarios, and CRUD × role matrices; writes them
-  in a traceable format with priority, layer, and coverage summary.
+  boundary values, decision tables, state transitions, verified pairwise, scenarios, permission matrices, account
+  journeys, syntax and metamorphic testing; writes them traceable to a dated requirement catalogue, each with a
+  basis (specified or assumption) and quoted evidence, priority, level, open questions and regression scope;
+  `check_cases.py` and `pairwise.py` check the result.
 - [`sdet-automation-docs`](skills/sdet-automation-docs/SKILL.md) — documents a test-automation project as a Senior
   SDET: risk-based scope, test-layer decisions, standards, data/account strategy, flaky/retry policy, CI stages,
   quality gates, and traceability.

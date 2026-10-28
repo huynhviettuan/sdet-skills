@@ -8,8 +8,8 @@ description: >
   project, documenting an existing project before further development, writing a PRD or business-rules document,
   setting up AGENTS.md/CLAUDE.md for AI-agent development, or propagating a changed requirement through existing
   docs. Trigger on phrases like "document this project", "write the PRD", "set up docs before coding", "business
-  rules doc", "spec this feature", "create AGENTS.md", "source of truth docs". Stack-agnostic. For documenting a
-  test-automation project specifically, use `sdet-automation-docs` instead (it builds on this skill's formats).
+  rules doc", "spec this feature", "create AGENTS.md", "source of truth docs". Stack-agnostic. For a
+  test-automation project use `sdet-automation-docs`; to digest existing documents as-is, `project-knowledge-base`.
 ---
 
 # Project Docs
@@ -37,7 +37,8 @@ which **RULES** must never be violated, and when a feature is **DONE**.
 
 1. **Analyze every source first** — briefs, notes, docs, spreadsheets, screenshots, existing app/code, schemas, API
    docs. Tag each extracted statement SOURCE REQUIREMENT / MODEL RECOMMENDATION / ASSUMPTION / OPEN QUESTION (see
-   `topic-guidance.md`).
+   `topic-guidance.md`). For a large or messy document set, build a `project-knowledge-base` first: its cited
+   digests, flows and analysis (conflicts, gaps, open questions) are the input this step needs.
 2. **Summarize and analyze** — actors, business entities, end-to-end flows, business rules, state machines,
    permissions, fixed workflow vs configurable values, integrations, security/data concerns.
 3. **Surface contradictions and gaps** — every one becomes an `OQ-NNN` entry; never resolve it by guessing.

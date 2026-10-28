@@ -31,7 +31,17 @@ Contents:
 | `Layer: API` / `UI` / `Integration` | Implement at that layer; don't move a case to the UI because it's easier to see |
 
 If a case has no `Layer`, apply "lowest reliable layer" (`test-case-design` → layer assignment) and say which you
-chose in the report.
+chose in the report. `Level: api | ui` is the same field under its newer name; `Level: manual — <reason>` is never
+automated.
+
+Cases written with the newer fields (`test-case-design` → test-case format) change three things:
+
+| Field | Effect on the test |
+|---|---|
+| `Basis: assumption` | Implement the "safe either way" expectation exactly as written, and record what the product did as an annotation (`observed: …`) so the OQ register shows current behaviour from the latest run |
+| `Evidence:` quote under an expected result | Put the quote in the assertion's message, so a failure says which requirement sentence broke |
+| `Known bug: DEF-231 (step 2)` | Expected failure **only at that step** — see [cases you can't implement yet](#cases-you-cant-implement-yet) |
+| `Exclusive: yes` | Run it serially (Playwright `test.describe.configure({ mode: 'serial' })` in its own project / TestNG `singleThreaded` group / pytest `xdist_group`), never alongside other tests on the environment |
 
 ---
 
@@ -142,6 +152,8 @@ A negative expected result ("is not added", "is rejected", "returns 404") needs:
 - Tags / groups: priority (`@P0`…`@P3` / `P0`…), `@smoke` for P0 journeys; features via `test.describe` /
   `@Feature`.
 - AC link: annotation (TS) / `@Link` (Java) — Allure and the Playwright report show it.
+- Requirement tags: one `@req:<ID>` tag per ID in the case's `Verifies:` (TS tag / TestNG group / pytest marker
+  `req("BR-CON-005")`), so a change to one requirement selects exactly its tests (`--grep @req:BR-CON-005`).
 - After implementing, update the case: `Automation: Automated — tests/e2e/todo.spec.ts` (or the Java class) and the
   feature's coverage summary.
 
@@ -152,7 +164,7 @@ A negative expected result ("is not added", "is rejected", "returns 404") needs:
 | Situation | Do |
 |---|---|
 | Blocked by an open question | TS: `test.fixme('[TC-…] … (blocked by OQ-012)', …)`; Java: `@Test(enabled = false, description = "[TC-…] … (blocked by OQ-012)")` — visible in reports, never silently absent |
-| Known product bug | Implement the correct expectation and mark expected-to-fail with the defect: TS `test.fail()` + annotation `{ type: 'issue', description: 'DEF-231' }`; Java: keep red per team policy or `@Test(enabled = false)` with the defect in the description |
+| Known product bug | Implement the correct expectation. Expected-to-fail must be **bound to the step the case names**: assert everything before it normally, and wrap only that step's assertion (TS `test.fail()` scoped to a test that ends at that step, or `expect.soft` + an annotation `{ type: 'issue', description: 'DEF-231 step 2' }`; Java: keep red per team policy or `@Test(enabled = false)` with the defect and step in the description; pytest `xfail(strict=True, raises=…)` around that step). A failure at any other step is a real failure; a pass means retest the bug |
 | Expected result ambiguous | Raise an OQ against the case; don't guess |
 | Missing testability hook (no test id, no API for setup) | Request it (`page-builder` → requests to developers); implement with the interim approach and a TODO pointing to the request |
 

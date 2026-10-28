@@ -14,6 +14,9 @@ for what it touches.
 [ ] Related skills link both ways; README "Which skill when", task table and skill list updated
 [ ] CHANGELOG.md entry under [Unreleased] (CI fails a PR that changes skills/, agents/ or commands/ without one)
 [ ] node scripts/check-repo.mjs clean; claude plugin validate --strict passes
+[ ] A skill script that checks or generates something ships a scripts/selftest.py (fixtures built in a temp
+    folder, every planted problem asserted) and a step in the CI skill-scripts job; break the check once to see
+    the self-test fail
 ```
 
 ## Definition of done — a supported stack
@@ -53,7 +56,7 @@ node scripts/check-repo.mjs
 claude plugin validate --strict .
 ```
 
-CI also installs, lints, type-checks and audits all three scaffolds.
+CI also installs, lints, type-checks and audits all three scaffolds, and runs every skill's `scripts/selftest.py`.
 
 ## Releasing
 

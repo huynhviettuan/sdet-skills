@@ -38,6 +38,12 @@ FR → BR → AC → Risk → TC → Layer → Automation file → CI stage
 
 Rows with an AC but no TC are coverage gaps; TCs with no AC are candidates for deletion.
 
+Generate the requirement → case half of the matrix instead of typing it: keep the requirement catalogue (a dated
+snapshot of IDs, `test-case-design` → coverage) beside the cases and run
+`python <test-case-design>/scripts/check_cases.py docs/test-cases --catalogue docs/test-cases/catalogue.md --trace
+docs/traceability.csv`. It fails on cases citing unknown IDs and on uncovered ACs; add the automation file and CI
+stage columns from the `@req:` tags in the suite.
+
 ---
 
 ## DEFINITION_OF_READY.md

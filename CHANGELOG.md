@@ -2,6 +2,45 @@
 
 All notable changes to the sdet-skills plugin. Versions follow the `version` in `.claude-plugin/plugin.json`.
 
+## [1.4.0] — 2026-10-28
+
+### Added
+
+- `project-knowledge-base`: turns a folder of project documents (Markdown, Word, PDF, Excel, PowerPoint, HTML, CSV,
+  images) into a cited, navigable knowledge base — digests per source, overview, glossary, roles, domain model and
+  lifecycles, business flows with Mermaid diagrams, rules, requirements, integrations, decisions, cross-source
+  analysis (conflicts, gaps, ambiguities, stale and missing documents, open questions), a testing view and an index.
+  `scripts/ingest.py` (extraction, manifest, outlines, incremental change detection) and `scripts/check_kb.py`
+  (citations resolve to live sources and lines, digests, links and heading anchors, fences; warns on email
+  addresses and phone-like numbers), and `scripts/selftest.py` for both, run in CI. Verified on a 51-file gym CRM
+  document set: 51 digests, 23 pages, 12 flows, 94 graded cross-source findings, checker clean.
+
+### Changed
+
+- `test-case-design`, upgraded with what the Manual QA Agent learned from a 376-case pilot (agent ADR-0015–0026):
+  - **Cases:** each case has a basis (specified or assumption) and a verbatim evidence quote per expected result.
+    Clear clauses of unclear criteria are designed; only the unclear clause goes to an OQ. No case for a limit the
+    documents don't state.
+  - **Records:**
+    - a dated requirement catalogue, with stale cases when the text behind an ID changes;
+    - an OQ register with observed behaviour;
+    - known bugs bound to steps;
+    - regression scope by area and by requirement;
+    - generated views and the 20-column CSV.
+  - **Techniques:** permission matrix (privilege boundary, every layer, signed-out, data scope, exhaustive API
+    sweep), account journeys, syntax testing, metamorphic relations, defect-based sweeps, pairwise verified by
+    program, and "where designs are thin".
+  - **Scripts:** `check_cases.py` (IDs, fields, basis, catalogue references, AC coverage, advisory evidence and
+    vagueness hints, traceability CSV) and `pairwise.py` (generate and verify all-pairs tables with the reason for
+    each value), with `selftest.py`.
+- `test-script-writer` reads the new case fields: `Level`, `Basis: assumption` (record what was observed), evidence
+  quotes in assertion messages, known bugs failing expectedly only at the named step, `Exclusive` cases run
+  serially, one `@req:<ID>` tag per verified requirement.
+- `sdet-automation-docs` generates the requirement → case half of the traceability matrix with `check_cases.py`.
+- `project-docs` points to `project-knowledge-base` when the input is a large pile of existing documents.
+- CI: a `skill-scripts` job runs every skill's `scripts/selftest.py`; CONTRIBUTING requires one for any checking or
+  generating script.
+
 ## [1.3.0] — 2026-10-28
 
 ### Added

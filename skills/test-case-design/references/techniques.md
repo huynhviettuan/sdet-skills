@@ -12,8 +12,14 @@ Contents:
 - [Pairwise / combinatorial testing](#pairwise--combinatorial-testing)
 - [Scenario / use-case testing](#scenario--use-case-testing)
 - [CRUD and lifecycle matrix](#crud-and-lifecycle-matrix)
+- [Permission matrix](#permission-matrix)
+- [Account journeys](#account-journeys)
+- [Syntax testing](#syntax-testing)
+- [Metamorphic relations](#metamorphic-relations)
+- [Defect-based design](#defect-based-design)
 - [Error guessing and data-type heuristics](#error-guessing-and-data-type-heuristics)
 - [Exploratory charters](#exploratory-charters)
+- [Where designs are thin](#where-designs-are-thin)
 
 ---
 
@@ -56,8 +62,15 @@ Boundary 49|50:  49, 50, 51
 Boundary 500|501: 499, 500, 501
 ```
 
-Apply it to non-numeric limits too: string length (0, 1, max-1, max, max+1), list size, file size, date ranges
-(day before / on / after; month end; leap day; DST change), time windows (expiry exactly at the second).
+Apply it to non-numeric limits too: string length (0, 1, max-1, max, max+1, whitespace only), list size, file size,
+date ranges (day before / on / after; month end; leap day; DST change; the timezone day boundary when the rule
+depends on "today"), time windows (expiry exactly at the second). Dates in test data are relative to the run
+("today + 14"), computed once when the run starts so every step sees the same date.
+
+Go **past the stated range** as well: 0 and negative counts, non-numeric and empty input, one character over a
+length limit. These are the boundaries an author skips most often — in a pilot comparing an agent's drafts with a
+team's, they were the largest single difference. But only test a limit the documents state; an unstated limit is an
+OQ, not a case (see [assumption cases](test-case-format.md#assumption-cases-and-open-questions)).
 
 **Coverage:** each boundary and its neighbors. Run as one data-driven test with a row per value.
 
@@ -83,7 +96,9 @@ each remaining column is a test case. Missing or contradictory columns are requi
 Five tests instead of 16 blind combinations, and R4 surfaced the self-approval rule — if the BR doesn't say,
 that's an OQ.
 
-**Coverage:** every rule column once.
+**Coverage:** every rule column once — including the "other" column: the plain path that needs no special handling
+(no discount, no note, no approval) is a column too, and it is the one most often left out. For complex logic
+(many causes feeding several effects) draw a cause–effect graph first, then derive the table from it.
 
 ---
 
@@ -123,15 +138,24 @@ Every ✗ cell is a negative test — usually the cheapest high-value tests in t
 impractical (browser × OS × role × locale × plan…).
 
 **How:** generate a set where every **pair** of parameter values appears in at least one test (most interaction
-defects involve two factors). Use a tool (PICT, AllPairs, pairwise generators in test libraries) and add
-constraints for impossible combinations (Safari × Windows).
+defects involve two factors), with constraints for impossible combinations (Safari × Windows). Then **verify it by
+program** — a hand-edited or generated table that misses a pair is common, and "pairwise" is a claim:
 
-*Example:* 4 parameters × 3 values = 81 combinations → about 9–10 pairwise tests.
+```bash
+python <skill-dir>/scripts/pairwise.py generate factors.json --csv rows.csv   # build + verify
+python <skill-dir>/scripts/pairwise.py verify factors.json rows.csv           # check a table from PICT or by hand
+```
 
-Add specific high-risk combinations explicitly on top of the generated set. Escalate to 3-wise only for areas
-with a history of three-factor defects.
+`factors.json` gives each value **with the reason it was chosen** ("sessions: 1 lower tier edge, 17 any count, 1000
+upper tier edge"), forbidden partial combinations, and required high-risk rows; the output prints the reasons with
+the table, so the design shows why every value is there.
 
-**Coverage:** all value pairs. Not a substitute for decision tables when parameters are *dependent*.
+*Example:* 2 × 3 × 3 × 3 × 2 = 108 combinations covered by about 12 rows.
+
+Write down **why pairwise keeps the intended coverage**: every rule involved depends on at most two of the factors.
+A rule that depends on three factors is covered exhaustively for those three (or 3-wise), not pairwise.
+
+**Coverage:** all value pairs, verified. Not a substitute for decision tables when parameters are *dependent*.
 
 ---
 
@@ -147,6 +171,11 @@ with a history of three-factor defects.
 
 These become the UI E2E journeys; keep them few and make each one count. Rule details inside each step are covered
 by the techniques above at API level.
+
+For cross-module business flows, start from the customer's own scripts when they exist (trial scripts, acceptance
+walkthroughs: lead → consultation → contract → first payment → booking → session → payout): one case per script
+item, named after it, plus the **negative branch at each hand-over** (the contract is rejected, the payment is
+partial, the booking clashes).
 
 ---
 
@@ -164,6 +193,80 @@ create (idempotency / uniqueness).
 
 ---
 
+## Permission matrix
+
+**Use when** roles grant or refuse actions. Role × action, from the documented matrix.
+
+**How:**
+
+- For each action, test the **privilege boundary**: the lowest role that is allowed and the highest role that is
+  not.
+- Check every **layer** the action is reachable from: the menu or screen, the action inside a module (the button on
+  a record, not just the page), a direct URL, and the API. Include the **signed-out** caller. A hidden button with an
+  open endpoint is the classic miss.
+- Beyond grants: **data scope** (own / branch / all), field masks (a role sees a record but not its price), who may
+  approve, role changes taking effect, per-user overrides.
+- Keep the expected matrix as a **dated snapshot** of the documented one, reviewed by hand when it changes. A
+  difference from the product shows up as a failing case to review, never as a silently updated expectation.
+- Change roles only on a role or user the test creates, never on seeded ones.
+
+**Exhaustive sweep (automated, API):** call every operation of the API contract as every role, with a random id and
+an empty body, so no call can change anything. A role holding the operation's permission must get past
+authorization (any answer but 401/403); every other role gets 403. This finds the one endpoint nobody listed.
+
+---
+
+## Account journeys
+
+**Use when** the product has several kinds of user. One case per account type (each seeded role, and each job title
+built on one): the person's **real daily work, end to end, with realistic data**, then the actions that role must
+be refused.
+
+Journeys find what a permission matrix misses: a step that needs a permission nobody in that job holds, or data the
+person can't see at the moment they need it. They are slow; keep one per role and let the matrix carry the cells.
+
+---
+
+## Syntax testing
+
+**Use when** an input has a structure: email, phone, date, postal code, identifiers, codes with a checksum, file
+names, query languages.
+
+**How:** write the structure as rules (prefix, length, allowed characters, separators, checksum). For each rule,
+one valid form and **one violation of that rule only**, so a rejection names its cause. Add the equivalent forms the
+product must treat as the same value (a phone written `+84 90…`, `090…`, `090.xxx`, with spaces or brackets, all
+matching one person).
+
+---
+
+## Metamorphic relations
+
+**Use when** the exact output is hard to know in advance (totals, reports, search, recommendations, anything
+computed over a lot of data), but how two outputs relate is known.
+
+**How:** run twice with a controlled change and assert the relation:
+
+| Relation | Example |
+|---|---|
+| Split equals whole | paying a contract in two receipts leaves the same debt as one receipt of the sum |
+| Sum of parts | a report over a month equals the sum of its weeks |
+| Narrowing never grows | adding a filter never returns more rows |
+| Order doesn't matter | reordering input lines doesn't change a total |
+| Equivalent inputs | searching with and without diacritics finds the same record when search is accent-insensitive |
+| Inverse | creating then cancelling a booking restores the session balance |
+
+Each relation is one case; it finds wrong arithmetic without anyone computing the expected number by hand.
+
+---
+
+## Defect-based design
+
+For every defect found (in testing or production), ask which technique would have caught it, then **sweep the same
+pattern elsewhere**: one field accepted a `null` → send `null` to every field of every operation; one list ignored
+the branch filter → check every list. The defect gets a regression case; the pattern gets a sweep.
+
+---
+
 ## Error guessing and data-type heuristics
 
 Experience-based extras, applied after the systematic techniques. Checklist by data type:
@@ -176,8 +279,11 @@ Experience-based extras, applied after the systematic techniques. Checklist by d
 | Email/phone | valid edge formats, plus addressing, uppercase, international formats |
 | Money | rounding (0.005), currency precision, totals of many small amounts |
 | Lists | empty, one item, max items, duplicates, sort/pagination edges (last page, exactly page size) |
-| Identifiers | non-existent, deleted, belonging to another user, malformed |
-| Concurrency | double submit, two users editing the same record, action during state change |
+| Identifiers | non-existent, deleted, belonging to another user, malformed in every path parameter (expect 400 or 404, never 500) |
+| Request bodies | a missing, `null` or wrongly typed field (expect a field error code, never the validator's raw sentence); unknown fields; an empty body |
+| Search | wildcard characters (`%`, `_`, `*`), diacritics, leading/trailing spaces, case |
+| Concurrency | double submit, two users editing the same record, action during state change, **two requests that each pass a check only one should pass** (double booking, consuming the last session twice) |
+| Sessions | back button after submit, session expiring mid-flow, two tabs |
 | Network | slow response, timeout, retry after failure, offline (mobile) |
 
 ---
@@ -194,4 +300,20 @@ Time box: 60 min
 Output:   notes, bugs, new OQs, new test case candidates
 ```
 
-Findings that should be checked every release become scripted test cases.
+Findings that should be checked every release become scripted test cases. Use a charter, not an automated case,
+where an automated check would be risky on a shared environment (an administrator removing their own rights).
+
+---
+
+## Where designs are thin
+
+From comparing an agent's drafts with a team's 376 cases for the same product, condition by condition
+(manual-qa-agent ADR-0022–0024). Name these in every design, because they are what gets skipped:
+
+| Skipped | Instead |
+|---|---|
+| Boundaries beyond the stated range | 0, negative, non-numeric, empty, max + 1 characters — [boundary value analysis](#boundary-value-analysis) |
+| The other column of a decision table | the plain path that needs no special handling is a column — [decision tables](#decision-tables) |
+| Adjacent permission layers | signed-out access, actions inside a module, the API behind the screen — [permission matrix](#permission-matrix) |
+| Clear clauses of an unclear criterion | design every clause that is clear, quoted; ask about the one that isn't |
+| The negative branch at each hand-over | [scenario testing](#scenario--use-case-testing) |
