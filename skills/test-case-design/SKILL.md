@@ -33,8 +33,10 @@ transitions) and prevent the duplicates intuition adds.
 
 Scripts (Python ≥ 3.10, no dependencies):
 
-- `scripts/check_cases.py <cases> --catalogue <file>` — IDs unique, required fields, basis, catalogue references,
-  every AC covered (errors); uncovered IDs, missing quotes, vague or status-only results (advisory); `--trace` CSV.
+- `scripts/check_cases.py <cases> --catalogue <file> | --kb <knowledge-base>` — IDs unique, required fields, basis,
+  catalogue references, every AC covered, and with a knowledge base every `[Sxx Lnn]` citation and evidence quote
+  verified against the source line (errors); uncovered IDs, missing quotes, vague or status-only results
+  (advisory); `--trace` CSV.
 - `scripts/pairwise.py generate|verify <factors.json>` — builds an all-pairs table with the reason for each value,
   and proves every allowed pair is covered.
 
@@ -118,7 +120,8 @@ Shared with `project-docs` and `sdet-automation-docs`: test cases are `TC-<AREA>
 
 - **`project-docs`** — source of AC, BR, state machines, and permissions; gaps found here go back as OQs.
 - **`project-knowledge-base`** — when the inputs are a pile of existing documents: its testing view, flow pages and
-  analysis (testable rules, lifecycles, conflicts) are where case design starts.
+  analysis (testable rules, lifecycles, conflicts) are where case design starts; cite its `[Sxx Lnn]` lines in
+  `Verifies` and `Evidence` and run `check_cases.py --kb` so every quote is machine-checked.
 - **`test-script-writer`** — implements the cases designed here as automated tests (one per case / data row).
 - **`manual-qa-agent`** — submits these cases as stories and runs the approved ones in the Manual QA Agent, whose
   case schema (basis, quoted evidence, level, known bugs bound to steps, regression scope) matches this format.

@@ -1,0 +1,50 @@
+name: Skill evals
+
+# Runs a real model against the plugin (costs money, needs a key), so it is started by hand, not on every push.
+on:
+  workflow_dispatch:
+    inputs:
+      case:
+        description: Case name glob (empty = every case)
+        required: false
+        default: ''
+      runs:
+        description: Runs per case
+        required: false
+        default: '2'
+
+permissions:
+  contents: read
+
+jobs:
+  evals:
+    name: claude plugin eval
+    runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      CLAUDE_CODE: '@anthropic-ai/claude-code@2.1.287'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run the suite
+        run: |
+          args=(. --trust-plugin --no-publish --json results.json --threshold 0.8 --runs "${{ inputs.runs }}" --max-cost-usd 15)
+          if [ -n "${{ inputs.case }}" ]; then args+=(--case "${{ inputs.case }}"); fi
+          npx -y "$CLAUDE_CODE" plugin eval "${args[@]}"
+      - name: Summary
+        if: always()
+        run: |
+          node -e '
+            const r = JSON.parse(require("fs").readFileSync("results.json", "utf8"));
+            console.log(`score ${r.aggregates.overallScore} — ${r.aggregates.casesPassed}/${r.aggregates.casesTotal} cases, $${r.costUsd}${r.partial ? " (partial: " + r.partialReason + ")" : ""}`);
+            for (const c of r.cases) console.log(`${c.name}: ${c.aggregates.score}${c.aggregates.delta !== undefined ? " Δ" + c.aggregates.delta : ""}`);
+          ' | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-results
+          path: |
+            results.json
+            evals/results/**/report.html

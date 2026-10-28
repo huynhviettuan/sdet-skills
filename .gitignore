@@ -2,3 +2,6 @@
 .claude/scheduled_tasks.lock
 node_modules/
 target/
+
+# claude plugin eval output
+evals/results/

@@ -57,6 +57,8 @@ claude plugin validate --strict .
 ```
 
 CI also installs, lints, type-checks and audits all three scaffolds, and runs every skill's `scripts/selftest.py`.
+Behavioural evals (`evals/`, see its README) run a real model and are started by hand: the `Skill evals` workflow, or
+`claude plugin eval . --trust-plugin --no-publish` locally. Add a case when a skill gains a rule a model could skip.
 
 ## Releasing
 

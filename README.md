@@ -210,6 +210,13 @@ Copy a skill folder (the whole folder, including `references/` or `template/`) i
 Skills cross-reference each other by name; if you copy only some, the references to missing ones are simply
 skipped.
 
+## Evals
+
+`evals/` holds behavioural checks for `claude plugin eval` (a real model, with and without the plugin): does
+`test-case-design` produce the boundaries, columns and permission cases the pilot found missing; do the new skills
+trigger on how people phrase the request; does `manual-qa-agent` refuse to edit an expectation. See
+[evals/README.md](evals/README.md).
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the definition of done for a skill and for a supported stack. In short: each

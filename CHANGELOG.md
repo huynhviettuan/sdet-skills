@@ -2,6 +2,29 @@
 
 All notable changes to the sdet-skills plugin. Versions follow the `version` in `.claude-plugin/plugin.json`.
 
+## [Unreleased]
+
+### Added
+
+- `evals/`: behavioural evals for `claude plugin eval` — `test-case-design` on a six-rule story (boundaries beyond
+  the range, the no-approval column, a refused-role case at API level, quoted evidence, the vague clause as a
+  question), trigger cases for `project-knowledge-base` and `manual-qa-agent` (with the refusal to edit an
+  expectation), and a must-not-trigger case; a manual `Skill evals` workflow with a JSON summary.
+- `check_cases.py --kb <knowledge-base>`: the catalogue comes from the KB's sources, `[Sxx Lnn]` citations in a case
+  must resolve, and an evidence quote with a citation is verified against the source line.
+
+### Changed
+
+- `project-docs` hands source analysis to `project-knowledge-base` for large document sets and maps each step of its
+  requirement-analysis workflow to the KB page that already holds the input.
+- `manual-qa-agent` and `test-script-writer/references/executable-spec.md` brought up to the Manual QA Agent's
+  ADR-0015–0026, with every shape taken from the agent's code: run-scoped values and captures, draft sets, the full
+  case schema and the mapping to the `test-case-design` format, coverage/exports/questions, case codes, known bugs
+  bound to steps, stale cases, regression scope, suite preflight and report labels (detection, unstable, unproven),
+  the API-testing steps (`session`, `expectJson`, `rows`, `waitFor`, `press`, `upload`, `expectDownload`,
+  `rawBody`, `headers`, `totp`, `testHook`), the agent's own step proposals (`propose_steps`), clause-level drafting
+  and the three model modes. `check-spec.mjs` checks the new step kinds and relays the agent's weak-assertion flags.
+
 ## [1.4.0] — 2026-10-28
 
 ### Added

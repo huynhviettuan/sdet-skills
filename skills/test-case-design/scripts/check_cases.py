@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 """check_cases — check test-case files written in this skill's format against a requirement catalogue.
 
-    python check_cases.py <cases-dir-or-file> [--catalogue <file> ...] [--trace out.csv]
+    python check_cases.py <cases-dir-or-file> [--catalogue <file> ...] [--kb <knowledge-base-dir>] [--trace out.csv]
 
 Cases are Markdown sections "## TC-<AREA>-NNN — Title" with the fields of references/test-case-format.md.
 The catalogue is any set of files listing requirement IDs (FR-, BR-, AC-, NFR-, D-, A-, API-); every ID found in them
 is in the catalogue. Without --catalogue only the cases themselves are checked.
+
+--kb points at a knowledge base built by the project-knowledge-base skill. Then:
+  - every requirement ID found in its sources (_sources/text/) joins the catalogue, so --catalogue may be omitted;
+  - a citation [S07 L120] in a case (Verifies or an Evidence line) must name a live source and a line that exists;
+  - an Evidence quote that carries a citation is checked against that line (whitespace and quote marks normalised,
+    case ignored): a quote that is not there is an error — it is the one claim a reviewer would otherwise take on trust.
 
 Errors (exit 1):
   - a case ID is used twice
@@ -15,9 +21,10 @@ Errors (exit 1):
   - a case verifies an ID that is not in the catalogue (a typo or a stale reference, never a reason to edit the catalogue)
   - an acceptance criterion (AC-) in the catalogue is verified by no case
   - an execution result (Actual result, or a Pass/Fail status) is written into a design file
+  - with --kb: a citation to an unknown or removed source or a line past its end; an evidence quote not found at its line
 Advisory (printed, never fails; lexical checks are not measured against your product, so read them as hints):
   - catalogue IDs of other kinds that no case names (coverage gaps to list with their risk)
-  - a specified case whose expected result has no Evidence quote
+  - a specified case whose expected result has no Evidence quote, or (with --kb) a quote with no citation to check it by
   - an expected result that is vague ("works correctly", "properly", "shows an error", "as expected")
   - an expected result that checks only a status code
 --trace writes requirement ID -> case IDs as CSV (UTF-8 with BOM, so spreadsheets read accented text).
@@ -26,6 +33,7 @@ Advisory (printed, never fails; lexical checks are not measured against your pro
 from __future__ import annotations
 
 import csv
+import json
 import re
 import sys
 from collections import defaultdict
@@ -34,8 +42,55 @@ from pathlib import Path
 REQ_ID = re.compile(r"\b(?:FR|BR|AC|NFR|API|D|A)-(?:[A-Z][A-Z0-9]*-)*\d+[a-z]?\b")
 CASE_HEAD = re.compile(r"^##\s+(TC-[A-Z0-9-]*\d+)\s+[—–-]\s+(.+)$", re.M)
 FIELD = re.compile(r"^([A-Z][A-Za-z ]+?):[ \t]*(.*)$", re.M)
+CITE = re.compile(r"\[(S\d{2,3})\s+L(\d+)(?:\s*[-–]\s*L?(\d+))?\]")
+QUOTE = re.compile(r"[\"“”']([^\"“”']{3,})[\"“”']")
 VAGUE = re.compile(r"works (correctly|fine|as expected)|properly|shows an error|as expected|successfully\.?$|is correct\.?$", re.I)
 STATUS_ONLY = re.compile(r"^(returns?|responds?( with)?|status( code)?( is)?)?\s*(HTTP\s*)?\d{3}( [A-Z][A-Za-z ]+)?\.?$", re.I)
+
+
+def normalise(text: str) -> str:
+    text = text.replace("“", '"').replace("”", '"').replace("’", "'").replace("‘", "'").replace("…", "...")
+    text = re.sub(r"[\*_`]", "", text)
+    return re.sub(r"\s+", " ", text).strip().lower()
+
+
+class KnowledgeBase:
+    """The sources of a knowledge base: ids, extracted lines, and every requirement ID they mention."""
+
+    def __init__(self, root: Path):
+        self.root = root
+        manifest = json.loads((root / "_sources" / "manifest.json").read_text(encoding="utf-8"))
+        self.sources = {f["id"]: f for f in manifest["files"]}
+        self._lines: dict[str, list[str]] = {}
+        self.ids: set[str] = set()
+        for f in self.sources.values():
+            if f.get("change") != "removed" and f.get("text") and (root / f["text"]).exists():
+                self.ids |= set(REQ_ID.findall((root / f["text"]).read_text(encoding="utf-8")))
+
+    def lines(self, source_id: str) -> list[str] | None:
+        if source_id not in self._lines:
+            f = self.sources.get(source_id)
+            if not f or f.get("change") == "removed" or not f.get("text") or not (self.root / f["text"]).exists():
+                return None
+            self._lines[source_id] = (self.root / f["text"]).read_text(encoding="utf-8").splitlines()
+        return self._lines[source_id]
+
+    def check_citation(self, source_id: str, start: int, end: int) -> str | None:
+        f = self.sources.get(source_id)
+        if f is None:
+            return f"cites unknown source {source_id}"
+        if f.get("change") == "removed":
+            return f"cites {source_id}, which was removed from the sources"
+        lines = self.lines(source_id)
+        if lines is not None and end > len(lines):
+            return f"cites {source_id} L{end}, past the end ({len(lines)} lines)"
+        return None
+
+    def quote_at(self, quote: str, source_id: str, start: int, end: int) -> bool:
+        lines = self.lines(source_id)
+        if lines is None:
+            return True
+        return normalise(quote) in normalise(" ".join(lines[start - 1:end]))
 
 
 def parse(files: list[Path]):
@@ -70,10 +125,15 @@ def main() -> int:
     target = Path(args[0])
     files = sorted(target.rglob("*.md")) if target.is_dir() else [target]
     catalogue: set[str] = set()
+    kb: KnowledgeBase | None = None
     i = 1
     while i < len(args):
         if args[i] == "--catalogue":
             catalogue |= set(REQ_ID.findall(Path(args[i + 1]).read_text(encoding="utf-8")))
+            i += 2
+        elif args[i] == "--kb":
+            kb = KnowledgeBase(Path(args[i + 1]).resolve())
+            catalogue |= kb.ids
             i += 2
         else:
             i += 1
@@ -84,6 +144,18 @@ def main() -> int:
     advice: list[str] = []
     seen: dict[str, Path] = {}
     trace: dict[str, list[str]] = defaultdict(list)
+
+    def cite_errors(where: str, text: str) -> list[tuple[str, int, int]]:
+        cites = []
+        for source_id, start, end in CITE.findall(text):
+            start_n, end_n = int(start), int(end or start)
+            if kb is not None:
+                problem = kb.check_citation(source_id, start_n, end_n)
+                if problem:
+                    errors.append(f"{where}: {problem}")
+                    continue
+            cites.append((source_id, start_n, end_n))
+        return cites
 
     for c in cases:
         cid, f = c["id"], c["fields"]
@@ -108,6 +180,7 @@ def main() -> int:
             errors.append(f"{where}: Level manual needs the reason (\"manual - <why it cannot be automated>\")")
         if f.get("actual result") or re.match(r"(pass|fail)", f.get("status", ""), re.I):
             errors.append(f"{where}: execution result in a design file; results come only from a real run")
+        cite_errors(where, f.get("verifies", ""))
         ids = REQ_ID.findall(f.get("verifies", ""))
         for rid in ids:
             trace[rid].append(cid)
@@ -120,6 +193,15 @@ def main() -> int:
                 advice.append(f"{where}: expected result {n} checks only a status code; add what changed or didn't")
             if basis == "specified" and not e["evidence"]:
                 advice.append(f"{where}: expected result {n} has no Evidence quote")
+            if e["evidence"]:
+                cites = cite_errors(f"{where} evidence {n}", e["evidence"])
+                quote = QUOTE.search(e["evidence"])
+                if kb is not None and quote and not cites and not CITE.search(e["evidence"]):
+                    advice.append(f"{where}: evidence {n} has no [Sxx Lnn] citation, so the quote cannot be checked")
+                for source_id, start, end in cites:
+                    if quote and not kb.quote_at(quote.group(1), source_id, start, end):
+                        errors.append(f"{where}: evidence {n} quote not found at {source_id} L{start}"
+                                      + (f"-L{end}" if end != start else "") + f": \"{quote.group(1)[:60]}\"")
 
     if catalogue:
         for rid in sorted(catalogue - set(trace)):
@@ -137,7 +219,8 @@ def main() -> int:
 
     covered = len(set(trace) & catalogue) if catalogue else len(trace)
     total = len(catalogue) if catalogue else len(trace)
-    print(f"{len(cases)} cases in {len(files)} file(s) | {covered}/{total} requirement IDs named by a case")
+    print(f"{len(cases)} cases in {len(files)} file(s) | {covered}/{total} requirement IDs named by a case"
+          + (f" | catalogue from {len(kb.sources)} knowledge-base sources" if kb else ""))
     for a in advice:
         print(f"ADVICE {a}")
     for e in errors:

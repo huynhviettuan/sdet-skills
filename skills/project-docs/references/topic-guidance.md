@@ -24,13 +24,20 @@ Inspect every available source before writing anything: stakeholder brief, meeti
 spreadsheets, screenshots, the current application, competitor references, legacy exports, API docs, database
 schema, existing code, emails/messages, diagrams.
 
+**When the sources are more than a handful of files, don't analyze them here — build a `project-knowledge-base`
+first.** It does the reading once, with every statement cited to its source line, and hands this skill what the
+analysis workflow below needs: the glossary, actors and permissions, the domain model with lifecycles, every flow,
+the rules, the integrations, the decisions, and an analysis of contradictions and gaps with questions already
+numbered. This skill then turns that into the normative package (rules with IDs, state machines, AC, ADRs) instead
+of re-deriving it.
+
 Preserve source terminology and decisions. Tag every statement you write with one of:
 
 ```text
-SOURCE REQUIREMENT     — traceable to a named input
+SOURCE REQUIREMENT     — traceable to a named input (from a KB: keep its [Sxx Lnn] citation)
 MODEL RECOMMENDATION   — your suggestion; needs approval before it becomes a rule
 ASSUMPTION             — believed true, not confirmed; list it so it can be confirmed
-OPEN QUESTION          — unknown; goes to OPEN_QUESTIONS.md
+OPEN QUESTION          — unknown; goes to OPEN_QUESTIONS.md (a KB's KQ-/OQ- items land here)
 ```
 
 Do not silently replace source requirements with generic best practices.
@@ -39,26 +46,27 @@ Do not silently replace source requirements with generic best practices.
 
 ## Requirement analysis workflow
 
-Understand the business flow before touching the data model — do not jump from a brief straight to tables.
+Understand the business flow before touching the data model — do not jump from a brief straight to tables. Each
+step names the knowledge-base page that already holds its input when one exists:
 
 ```text
-Raw sources
- → Extract requirements
- → Normalize terminology (→ GLOSSARY)
- → Identify actors
- → Identify business entities
- → Identify end-to-end flows
- → Extract business rules
- → Identify state machines
- → Identify permissions
- → Identify configurable values
- → Identify integrations
- → Identify reports
- → Identify contradictions and open questions
- → Define scope (in and out)
+Raw sources (or a project-knowledge-base)
+ → Extract requirements                        KB: requirements.md, business-rules.md
+ → Normalize terminology (→ GLOSSARY)          KB: glossary.md
+ → Identify actors                             KB: actors-and-permissions.md
+ → Identify business entities                  KB: domain-model.md
+ → Identify end-to-end flows                   KB: flows/
+ → Extract business rules                      KB: business-rules.md (with the decisions that changed them)
+ → Identify state machines                     KB: domain-model.md lifecycles
+ → Identify permissions                        KB: actors-and-permissions.md matrix
+ → Identify configurable values                KB: decisions.md, glossary.md
+ → Identify integrations                       KB: integrations.md
+ → Identify reports                            KB: requirements.md
+ → Identify contradictions and open questions  KB: analysis.md (KQ-/OQ-)
+ → Define scope (in and out)                   KB: overview.md
  → Define architecture
  → Create implementation plan
- → Map acceptance criteria and tests
+ → Map acceptance criteria and tests           test-case-design, with its requirement catalogue
 ```
 
 ---

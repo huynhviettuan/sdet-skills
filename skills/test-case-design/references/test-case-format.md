@@ -69,7 +69,7 @@ are numbered, and evidence is an indented `Evidence:` line under the result it s
 | Level | yes | `api`, `ui`, or `manual — <why it can't be automated>` |
 | Test data | for boundaries and classes | each value with the partition or boundary it represents; dates relative to the run ("today + 30 days"), never a fixed calendar date that expires |
 | Preconditions, Steps | yes | state, not how to reach it; actions |
-| Expected results | yes | numbered, observable, each with an `Evidence:` quote when Basis is `specified` |
+| Expected results | yes | numbered, observable, each with an `Evidence:` quote when Basis is `specified`; when the requirements live in a `project-knowledge-base`, end the quote with its citation (`— BR-CON-005 [S06 L29]`) and `check_cases.py --kb` verifies the quote against that line |
 | Known bug | when one is open | the defect ID **and the step(s) it breaks**: an automated test fails expectedly only at those steps; a failure anywhere else is a real failure |
 | Exclusive | when needed | the case needs the environment to itself (changes global settings, clears a queue); runners never run it in parallel |
 | Refs | optional | user stories, the customer's trial scripts or feedback, past defects, the product's own test IDs |

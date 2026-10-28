@@ -87,6 +87,8 @@ Scripts (Python ≥ 3.10):
 
 - **`project-docs`** — when the analysis shows the documentation itself must be rewritten as a source of truth, the
   KB is its input.
-- **`test-case-design`** — the testing view and the flows/rules pages are where test design starts.
+- **`test-case-design`** — the testing view and the flows/rules pages are where test design starts; its
+  `check_cases.py --kb <kb>` verifies a case's `[Sxx Lnn]` citations and evidence quotes against this KB's source
+  lines, so a quoted expected result is checked by code, not by a reviewer.
 - **`manual-qa-agent`** — approved sources for the agent can be cut from the KB's rules and acceptance criteria.
 - **`sdet-automation-docs`** — the automation strategy for the project builds on the KB's risk areas.

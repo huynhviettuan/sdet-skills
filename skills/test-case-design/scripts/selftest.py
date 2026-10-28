@@ -140,6 +140,57 @@ def main() -> int:
         if not trace.startswith(b"\xef\xbb\xbf") or b"BR-CON-005" not in trace:
             failures.append("trace.csv lacks the BOM or the BR-CON-005 row")
 
+        kb = root / "kb"
+        (kb / "_sources" / "text").mkdir(parents=True)
+        source = ("<!-- S06: 05_BUSINESS_RULES.md -->\n# Business rules\n\n## Contracts\n\n"
+                  "- **BR-CON-005** A manager may approve a pending contract whose amount is within their approval limit.\n"
+                  "- **BR-CON-006** A contract of more than 1000 sessions is refused.\n"
+                  "- AC-CON-010: Approval records who approved and when.\n")
+        (kb / "_sources" / "text" / "S06-05-business-rules.md").write_text(source, encoding="utf-8")
+        (kb / "_sources" / "manifest.json").write_text(json.dumps({"files": [
+            {"id": "S06", "path": "05_BUSINESS_RULES.md", "status": "ok", "change": "unchanged",
+             "text": "_sources/text/S06-05-business-rules.md"},
+            {"id": "S50", "path": "price-list.xlsx", "status": "ok", "change": "removed", "text": None},
+        ]}), encoding="utf-8")
+        (root / "kbcases").mkdir()
+        (root / "kbcases" / "kb.md").write_text("""# With a knowledge base
+
+## TC-KB-001 — Manager approves within the limit
+
+Verifies:   AC-CON-010, BR-CON-005 [S06 L6]
+Basis:      specified
+Priority:   P0
+Level:      api
+
+Steps:
+1. Approve the contract.
+
+Expected results:
+1. Contract state is APPROVED.
+   Evidence: "may approve a pending contract whose amount is within   their approval limit" — BR-CON-005 [S06 L6]
+2. Approver and time are recorded.
+   Evidence: "records who approved and when" — AC-CON-010
+3. The audit log has an entry.
+   Evidence: "every approval is written to the audit log" — BR-CON-005 [S06 L6]
+4. Nothing else changes.
+   Evidence: "unchanged" [S06 L99]
+5. Prices are kept.
+   Evidence: "price list" [S50 L2]
+""", encoding="utf-8")
+        code, out = run(str(HERE / "check_cases.py"), str(root / "kbcases"), "--kb", str(kb))
+        for want in ("evidence 3 quote not found at S06 L6", "evidence 4: cites S06 L99, past the end (8 lines)",
+                     "evidence 5: cites S50, which was removed", "catalogue from 2 knowledge-base sources"):
+            if want not in out:
+                failures.append(f"--kb missed: {want}")
+        if "evidence 1 quote not found" in out:
+            failures.append("--kb rejected a correct quote (normalisation)")
+        if "evidence 2 has no [Sxx Lnn] citation" not in out:
+            failures.append("--kb did not advise on the quote without a citation")
+        if "verifies BR-CON-005, which is not in the catalogue" in out or "verifies AC-CON-010, which" in out:
+            failures.append("--kb did not build the catalogue from the sources")
+        if "catalogue: BR-CON-006 is named by no case" not in out:
+            failures.append("--kb catalogue lacks BR-CON-006 from the source text")
+
         factors = {
             "factors": {
                 "role": {"Consultant": "lowest allowed", "Manager": "limit applies", "Admin": "no limit"},

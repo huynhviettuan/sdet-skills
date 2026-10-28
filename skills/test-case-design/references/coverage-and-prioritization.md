@@ -41,6 +41,16 @@ taken from (`docs/test-cases/catalogue.md`):
 python <skill-dir>/scripts/check_cases.py docs/test-cases --catalogue docs/test-cases/catalogue.md --trace traceability.csv
 ```
 
+When the project has a knowledge base (`project-knowledge-base`), pass it instead of, or as well as, a catalogue file:
+
+```bash
+python <skill-dir>/scripts/check_cases.py docs/test-cases --kb ../gym-kb --trace traceability.csv
+```
+
+Every requirement ID the KB's sources mention is then in the catalogue, a `[S06 L29]` citation in a case must name a
+live source and an existing line, and an evidence quote with a citation is verified against that line — the quote
+stops being something a reviewer takes on trust.
+
 checks IDs, required fields, basis, catalogue references and AC coverage (errors), and lists uncovered IDs, missing
 evidence quotes, vague and status-only expected results (advisory). The lexical checks are hints: a check like
 "is this result observable" flagged 16 % of a team's real expected results, almost all falsely, when measured on a
