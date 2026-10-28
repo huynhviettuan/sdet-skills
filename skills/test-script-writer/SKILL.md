@@ -29,11 +29,14 @@ and that a reader can trace back to the case and its acceptance criterion.
     TypeScript (`init-playwright-framework`)
   - [`references/code-templates-selenium-java.md`](references/code-templates-selenium-java.md) — Selenium +
     RestAssured / Java / TestNG (`init-selenium-java-framework`)
+  - [`references/code-templates-pytest.md`](references/code-templates-pytest.md) — pytest + Playwright + httpx /
+    Python (`init-pytest-playwright-framework`)
 - [`references/executable-spec.md`](references/executable-spec.md) — the Manual QA Agent target: map an approved
   case to its constrained JSON step format, locators, assertions, secrets and cleanup, what it can't express, a
   worked example verified on the agent's demo app, and the pre-proposal check.
 
-**Detect the target first:** `package.json` with `@playwright/test` → TypeScript; `pom.xml` with TestNG → Java; the
+**Detect the target first:** `package.json` with `@playwright/test` → TypeScript; `pom.xml` with TestNG → Java;
+`pyproject.toml` with `pytest` → Python (full table: `sdet-framework-architect` → `references/stack-contract.md`); the
 case lives in the Manual QA Agent (a `case_…` id, or the user asks to run it there) → executable spec. For the
 executable-spec target, steps 2–5 below follow `executable-spec.md` instead: prerequisites are the live page's
 locators and the environment's data hooks, and verification is the bundled check plus a run through

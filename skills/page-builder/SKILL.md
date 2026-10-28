@@ -32,9 +32,13 @@ what the test cases need, with every locator checked against the real DOM before
     TypeScript (`init-playwright-framework`)
   - [`references/code-templates-selenium-java.md`](references/code-templates-selenium-java.md) — Selenium / Java /
     TestNG (`init-selenium-java-framework`)
+  - [`references/code-templates-pytest-playwright.md`](references/code-templates-pytest-playwright.md) — pytest +
+    Playwright / Python (`init-pytest-playwright-framework`)
 
-**Detect the stack first:** `package.json` with `@playwright/test` → Playwright/TS; `pom.xml` with `selenium-java`
-→ Selenium/Java. Use only that stack's templates; the workflow and rules are the same.
+**Detect the stack first** with the table in `sdet-framework-architect` →
+`references/stack-contract.md` (`package.json` with `@playwright/test` → TypeScript; `pom.xml` with
+`selenium-java` / `rest-assured` → Java; `pyproject.toml` with `pytest` → Python). Use only that stack's templates; the workflow, the composition design and the rules are the same. A stack listed there as
+*planned* has no templates yet: say so and offer a supported scaffold rather than improvising.
 
 ## Workflow
 

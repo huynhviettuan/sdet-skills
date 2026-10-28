@@ -8,7 +8,7 @@
  *       Write one JSON Schema per JSON 2xx response: <out-dir>/<folder>/<methodName>_<status>_schema.json
  *       (the naming read by validateJsonSchema(`${methodName}_${status}`, folder, body)).
  *   node openapi-tool.mjs coverage  <spec> [--services src/services] [--tags pet,store]
- *       Compare spec operations with `@operationId <id>` tags in service files (.ts or .java). Exit 1 on any gap.
+ *       Compare spec operations with `@operationId <id>` tags in service files (.ts, .java, .py, .cs). Exit 1 on any gap.
  *       --tags limits "missing" to the given tags (a feature-scoped build); extra and duplicated are always checked.
  *
  * <spec> is a file path or http(s) URL, JSON or YAML (YAML needs the `yaml` or `js-yaml` package installed).
@@ -257,9 +257,28 @@ async function listSourceFiles(dir) {
     for (const entry of await fs.readdir(dir, { withFileTypes: true }).catch(() => [])) {
         const p = path.join(dir, entry.name);
         if (entry.isDirectory()) out.push(...(await listSourceFiles(p)));
-        else if (/\.(ts|java)$/.test(entry.name)) out.push(p);
+        else if (/\.(ts|java|py|cs)$/.test(entry.name)) out.push(p);
     }
     return out;
+}
+
+/**
+ * Doc blocks that may carry `@operationId` / `@skipped` tags: JSDoc/Javadoc and C# block comments, Python docstrings,
+ * and runs of consecutive line comments (`#`, `//`, `///`) — so a skipped operation can be a comment in any language.
+ */
+function docBlocks(text) {
+    const blocks = [...text.matchAll(/\/\*\*([\s\S]*?)\*\//g), ...text.matchAll(/("""|''')([\s\S]*?)\1/g)].map(
+        (m) => m[m.length - 1]
+    );
+    let run = [];
+    for (const line of [...text.split(/\r?\n/), '']) {
+        if (/^\s*(#|\/\/)/.test(line)) run.push(line);
+        else if (run.length) {
+            blocks.push(run.join('\n'));
+            run = [];
+        }
+    }
+    return blocks;
 }
 
 async function coverage(spec, servicesDir, tags) {
@@ -269,13 +288,13 @@ async function coverage(spec, servicesDir, tags) {
     const skipped = new Map();
     for (const file of await listSourceFiles(servicesDir)) {
         const text = await fs.readFile(file, 'utf-8');
-        // Each JSDoc block: `@operationId <id>` marks a generated method; adding `@skipped <reason>` marks an
+        // Each doc block: `@operationId <id>` marks a generated method; adding `@skipped <reason>` marks an
         // operation deliberately not generated (reported, not counted as mapped).
-        for (const block of text.matchAll(/\/\*\*([\s\S]*?)\*\//g)) {
-            // Tags count only at the start of a JSDoc line, so prose that mentions "@operationId" isn't read as one.
-            const id = block[1].match(/^\s*\*?\s*@operationId\s+([^\s*]+)/m)?.[1];
+        for (const block of docBlocks(text)) {
+            // Tags count only at the start of a doc line, so prose that mentions "@operationId" isn't read as one.
+            const id = block.match(/^\s*(?:\*|#|\/\/\/?)?\s*@operationId\s+([^\s*]+)/m)?.[1];
             if (!id) continue;
-            const reason = block[1].match(/^\s*\*?\s*@skipped\s+([^\n*]+)/m)?.[1]?.trim();
+            const reason = block.match(/^\s*(?:\*|#|\/\/\/?)?\s*@skipped\s+([^\n*]+)/m)?.[1]?.trim();
             if (reason) skipped.set(id, reason);
             else found.set(id, [...(found.get(id) ?? []), file]);
         }

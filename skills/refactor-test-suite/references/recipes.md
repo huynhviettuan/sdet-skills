@@ -236,7 +236,7 @@ Rules: `R-SECRETS`, `R-HARDCODED-URL`.
 
 ## Deep inheritance → composition
 
-Manual finding (no rule ID). Typical legacy shape: `BaseTest → LoggedInTest → AdminTest`, pages extending pages.
+Rule: `R-INHERIT` (warn; the audit flags the shapes below, the reviewer judges the rest). Typical legacy shape: `BaseTest → LoggedInTest → AdminTest`, pages extending pages.
 
 - Turn each "layer" of behavior into a fixture / context capability (logged-in session, admin role) that tests opt
   into, instead of a parent class they must inherit.

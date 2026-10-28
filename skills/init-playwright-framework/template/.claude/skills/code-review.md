@@ -5,6 +5,10 @@
 Use this skill when reviewing code changes (PRs, diffs, or files) in this project — whether reviewing someone else's
 work or self-reviewing before committing.
 
+If the `test-code-review` skill (sdet-skills collection) is available, follow it — `/review-tests` runs the
+deterministic checks first and applies the full checklist with rule IDs; the sections below are this repo's
+conventions, which that review cites under "Framework Patterns".
+
 ## When NOT to Use
 
 | Situation                                      | Use instead                                              |

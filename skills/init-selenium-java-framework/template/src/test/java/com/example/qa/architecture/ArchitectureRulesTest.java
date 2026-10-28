@@ -1,15 +1,21 @@
 package com.example.qa.architecture;
 
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
 
 import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.domain.JavaConstructorCall;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
+import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
+import com.tngtech.archunit.lang.ConditionEvents;
+import com.tngtech.archunit.lang.SimpleConditionEvent;
+import java.util.Set;
 import org.openqa.selenium.WebDriver;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -98,5 +104,34 @@ public class ArchitectureRulesTest {
         check(noClasses().that().resideInAPackage(BASE + ".api..")
                 .should().dependOnClassesThat().resideInAPackage("org.openqa.selenium..")
                 .because("services model the API; browser access belongs to pages"));
+    }
+
+    @Test(description = "R-INHERIT: pages, containers, tests and services compose; only the thin bases are extended")
+    public void compositionNotInheritance() {
+        check(classes().that().resideInAnyPackage(BASE + ".pages..", BASE + ".ui.containers..")
+                .and().areNotEnums().and().areNotInterfaces()
+                .should(extendOnly("java.lang.Object", "java.lang.Record"))
+                .because("R-INHERIT: a page has containers and a container has elements; neither extends another class"));
+        check(classes().that().resideInAPackage(TESTS).and().areNotEnums().and().areNotInterfaces()
+                .and().areTopLevelClasses()
+                .should(extendOnly("java.lang.Object", BASE + ".testbase.BaseTest", BASE + ".testbase.BaseUiTest"))
+                .because("R-INHERIT: test classes extend only the lifecycle base; share setup through TestContext"));
+        check(classes().that().resideInAPackage(BASE + ".api.services..").and().areNotEnums().and().areNotInterfaces()
+                .should(extendOnly("java.lang.Object", BASE + ".api.BaseService"))
+                .because("R-INHERIT: one service per spec tag, each extending BaseService only"));
+    }
+
+    /** The class's direct superclass is one of {@code allowed} (fully qualified names). */
+    private static ArchCondition<JavaClass> extendOnly(String... allowed) {
+        Set<String> permitted = Set.of(allowed);
+        return new ArchCondition<>("extend only " + permitted) {
+            @Override
+            public void check(JavaClass item, ConditionEvents events) {
+                String parent = item.getRawSuperclass().map(JavaClass::getName).orElse("java.lang.Object");
+                if (!permitted.contains(parent)) {
+                    events.add(SimpleConditionEvent.violated(item, item.getName() + " extends " + parent));
+                }
+            }
+        };
     }
 }

@@ -69,5 +69,7 @@ coverage, and stop it from sliding back. Never a big-bang rewrite.
 - **`init-playwright-framework`** / **`init-selenium-java-framework`** — the reference structure to grow inside the
   repo (both audit clean).
 - **`debug-failed-tests`** — triage red and flaky tests before and during the refactor.
+- **`test-code-review`** — reviews each refactor step; its DRY / KISS / YAGNI `S-…` standards cover the readability and reuse
+  concerns the audit can't see.
 - **`sdet-automation-docs`** — document the target standards, flaky policy, and quality gates the refactor
   converges on.

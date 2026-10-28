@@ -1,7 +1,7 @@
 # Rule Catalogue
 
 The rules a test suite is audited and refactored against, with stable IDs. `scripts/audit-suite.mjs` detects them
-heuristically in TypeScript/JavaScript and Java suites; the "Manual" column lists what only a reviewer can judge.
+heuristically in TypeScript/JavaScript, Java and Python suites; the "Manual" column lists what only a reviewer can judge.
 The architecture behind each rule is in `sdet-framework-architect`.
 
 Severity: **block** — fix before new work builds on it (correctness, isolation, security); **warn** — fix as part
@@ -40,7 +40,8 @@ Contents:
 | `R-FORCE` | No forced / scripted actions bypassing interactability | `force: true`, `executeScript(… click …)` | [Sleeps → real signals](recipes.md#sleeps--real-signals) (wait for the overlay/state instead) |
 | `R-WEAK-ASSERT` | Assertions prove the expected value | `toBeTruthy()`, `toBeDefined()` / `assertNotNull(`, `isNotNull();` | [Weak assertions → exact expectations](recipes.md#weak-assertions--exact-expectations) |
 | `R-HARDCODED-URL` | Environment URLs come from configuration | `'https://…'` in tests/pages | [Secrets and URLs → config](recipes.md#secrets-and-urls--configuration) |
-| `R-RETRY-MASK` | Retries don't hide flakiness | `retries: ≥2`, `retryAnalyzer`, `rerunFailingTestsCount ≥2` | [migration-plan.md → retries](migration-plan.md#retries-and-flaky-tests) |
+| `R-RETRY-MASK` | Retries don't hide flakiness | `retries: ≥2`, `retryAnalyzer`, `rerunFailingTestsCount ≥2`, `--reruns ≥2` | [migration-plan.md → retries](migration-plan.md#retries-and-flaky-tests) |
+| `R-INHERIT` | Pages, containers, tests and services compose; only the framework's thin bases are extended | a page/container/section class that extends anything; a test class extending anything but the lifecycle base (`BaseTest`/`BaseUiTest`); a service extending anything but `BaseService` | [Deep inheritance → composition](recipes.md#deep-inheritance--composition); `sdet-framework-architect` → `stack-contract.md` |
 
 ---
 
@@ -66,14 +67,15 @@ Check these by reading code and record them in the "Manual findings" section of 
 
 The scaffolds enforce the rules a compiler or linter can see, with messages that start with the rule ID:
 
-| Rule | Playwright template (`eslint.config.mjs`) | Java template (`ArchitectureRulesTest`, ArchUnit) |
-|---|---|---|
-| `R-NO-SLEEP` | `waitForTimeout`, `setTimeout` in tests; `waitForTimeout` in `src/` | `Thread.sleep` outside `ui.wait` |
-| `R-RAW-UI-IN-TEST` | `page.locator/getBy*/click/fill…` in tests | tests depending on `org.openqa.selenium` |
-| `R-RAW-HTTP-IN-TEST` | `request.get/post…` in tests | tests depending on `io.restassured` |
-| `R-COMPOSITION` | `@playwright/test` imported in tests; `new …Page/Service/Container/Section(` in tests | tests constructing pages, elements, services, drivers |
-| `R-SHARED-STATE` | `test.describe.serial` | static `WebDriver` fields; non-final fields in test classes |
-| `R-FOCUS` | `playwright/no-focused-test` | — |
+| Rule | Playwright template (`eslint.config.mjs`) | Java template (`ArchitectureRulesTest`, ArchUnit) | Python template (ruff `banned-api`, mypy) |
+|---|---|---|---|
+| `R-NO-SLEEP` | `waitForTimeout`, `setTimeout` in tests; `waitForTimeout` in `src/` | `Thread.sleep` outside `ui.wait` | `time.sleep` banned in tests (audit covers `src/` outside `wait.py`) |
+| `R-RAW-UI-IN-TEST` | `page.locator/getBy*/click/fill…` in tests | tests depending on `org.openqa.selenium` | `playwright` imports banned in tests |
+| `R-RAW-HTTP-IN-TEST` | `request.get/post…` in tests | tests depending on `io.restassured` | `httpx` / `requests` banned in tests |
+| `R-COMPOSITION` | `@playwright/test` imported in tests; `new …Page/Service/Container/Section(` in tests | tests constructing pages, elements, services, drivers | (audit: `= XxxPage(` in tests) |
+| `R-SHARED-STATE` | `test.describe.serial` | static `WebDriver` fields; non-final fields in test classes | (audit: module-level mutable state, `global`, ordering marks) |
+| `R-FOCUS` | `playwright/no-focused-test` | — | — |
+| `R-INHERIT` | `class … extends` in `src/pages`, `src/components`; a service extending anything but `BaseService` | pages/containers extend nothing; tests extend only the lifecycle base; services only `BaseService` | (audit) |
 
 The audit stays the CI gate: it also sees teardown in test bodies, secrets, locator style and retries.
 
@@ -96,9 +98,9 @@ The script classifies files by path, and rules apply per role:
 
 | Role | Paths |
 |---|---|
-| test | `*.spec.ts`, `*.test.ts`, `tests/**`, `src/test/java/**` |
+| test | `*.spec.ts`, `*.test.ts`, `tests/**`, `src/test/java/**`, `test_*.py`, `*_test.py` |
 | page | `pages/`, `containers/`, `components/`, `screens/`, `sections/` (files directly under `components/` count as generic widgets for `R-POSITION`) |
-| composition | `fixtures/`, `context/`, `testbase/` |
+| composition | `fixtures/`, `context/`, `testbase/`, `conftest.py` |
 | framework (tooling) | `architecture/` — architecture-rule tests such as the Java template's ArchUnit rules |
 | framework | everything else (config, elements, services, helpers) |
 

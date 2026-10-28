@@ -2,9 +2,28 @@
 
 All notable changes to the sdet-skills plugin. Versions follow the `version` in `.claude-plugin/plugin.json`.
 
-## [Unreleased]
+## [1.3.0] — 2026-10-28
 
 ### Added
+
+- Python stack: `init-pytest-playwright-framework` (pytest, Playwright for Python, httpx, pydantic, jsonschema,
+  xdist, uv; ruff banned-api + mypy strict) and Python templates for `page-builder`, `service-builder` and
+  `test-script-writer`, generated from code verified on TodoMVC and Petstore (9/9, ×3 repeat, 4 workers, can-fail).
+- Stack contract (`sdet-framework-architect/references/stack-contract.md`): composition as the design at every
+  layer, the 14 requirements for a supported stack, supported and planned stacks, stack detection.
+- `R-INHERIT` (composition rule) in the audit for TypeScript, Java and Python, in the TS scaffold's ESLint config
+  and in the Java scaffold's `ArchitectureRulesTest`; Python rules for every audit rule.
+- `openapi-tool coverage` reads Python docstrings, `#`/`//` comment blocks and C# files.
+- Python-only coding standards (`S-PY-…`) in `test-code-review`.
+- CONTRIBUTING.md (definition of done for a skill and for a stack); CI jobs for the Python scaffold and a changelog
+  guard on pull requests.
+
+## [1.2.0] — 2026-10-28
+
+### Added
+
+- `test-code-review`: coding standards grouped under DRY, KISS and YAGNI (`S-…` rules, TypeScript and Java), a review
+  checklist merging the `R-…` rules and the builders' checks, a verified-findings workflow, and `/review-tests`.
 
 - `scripts/check-repo.mjs` and a GitHub Actions workflow: frontmatter, links and anchors, identical shared-script
   copies, and both templates compile / lint / audit clean on every push.

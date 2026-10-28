@@ -27,6 +27,9 @@ seed a brand-new repo or review/refactor an existing one, in any language or too
   mapped to test-automation use cases, each with the SOLID principle it serves.
 - [`references/principles-and-anti-patterns.md`](references/principles-and-anti-patterns.md) — the full SOLID/DRY/
   YAGNI/KISS checklist, a tiered (Block/Warn/Nit) review list, and cross-project reuse rules.
+- [`references/stack-contract.md`](references/stack-contract.md) — composition as the design at every layer (what
+  composes, the only bases that may be extended), the contract a language/framework must meet to be supported, the
+  supported and planned stacks, how to detect a repo's stack, and how to add one.
 - [`references/claude-md-snippet.md`](references/claude-md-snippet.md) — the non-negotiable rules condensed for
   pasting into a `CLAUDE.md`, so they apply in every session. Offer it when the user sets up a new automation repo
   or asks to make these rules permanent.
@@ -107,10 +110,13 @@ ask, the same discipline this skill's source repo applies to its own skills.
 
 ## Related skills
 
-- **`init-playwright-framework`** / **`init-selenium-java-framework`** — scaffold a Playwright/TypeScript or a
-  Selenium + RestAssured/Java (TestNG, thread-local holder) repo that already implements this blueprint.
+- **`init-playwright-framework`** / **`init-selenium-java-framework`** / **`init-pytest-playwright-framework`** —
+  scaffold a Playwright/TypeScript, a Selenium + RestAssured/Java (TestNG, thread-local holder) or a pytest +
+  Playwright + httpx/Python repo that already implements this blueprint.
 - **`page-builder`** / **`service-builder`** — apply the container/section and service-layer rules to generate page
   objects and OpenAPI-mapped services for that scaffold.
+- **`test-code-review`** — the coding standards (readability, reuse) and the review checklist that enforce these
+  principles change by change.
 - **`sdet-automation-docs`** — documents the automation project around the framework (strategy, risk, data,
   flaky policy, CI, quality gates); its architecture documents defer to this skill.
 - **`refactor-test-suite`** — audits existing suites against these rules (rule IDs, audit script, CI ratchet) and

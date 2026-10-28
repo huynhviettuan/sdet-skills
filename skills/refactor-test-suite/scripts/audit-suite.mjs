@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * audit-suite — counts violations of the test-automation rules (refactor-test-suite skill) in a TypeScript/JavaScript
- * or Java test suite. Heuristic, dependency-free (Node >= 18).
+ * audit-suite — counts violations of the test-automation rules (refactor-test-suite skill) in a TypeScript/JavaScript,
+ * Java or Python test suite. Heuristic, dependency-free (Node >= 18).
  *
  *   node audit-suite.mjs <repo-dir> [--json report.json] [--baseline audit-baseline.json] [--fail-on block|warn]
  *
@@ -15,20 +15,22 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
 const SKIP_DIRS = new Set(['node_modules', '.git', 'target', 'build', 'dist', 'test-results', 'playwright-report',
-    'allure-results', 'allure-report', '.idea', '.vscode', 'scripts']);
+    'allure-results', 'allure-report', '.idea', '.vscode', 'scripts', '__pycache__', 'venv', 'site-packages']);
 
 /** Where a file sits in the suite — rules apply to roles, not to every file. */
 function roleOf(rel) {
     const p = rel.replace(/\\/g, '/');
-    if (/(^|\/)(fixtures)\//.test(p) || /(^|\/)(context|testbase)\//.test(p)) return 'composition';
+    if (/(^|\/)(fixtures)\//.test(p) || /(^|\/)(context|testbase)\//.test(p) || /(^|\/)conftest\.py$/.test(p)) return 'composition';
     if (/(^|\/)architecture\//.test(p)) return 'framework'; // architecture-rule tests (ArchUnit) are tooling, not tests
     if (/\.(spec|test)\.[jt]s$/.test(p) || /(^|\/)tests?\//.test(p) && /\.[jt]s$/.test(p) || /src\/test\/java\/.*\.java$/.test(p)) return 'test';
+    if (/(^|\/)(test_[^/]*|[^/]*_test)\.py$/.test(p) || /(^|\/)tests?\//.test(p) && /\.py$/.test(p)) return 'test';
     if (/(^|\/)(pages?|containers?|components?|screens?|sections?)\//.test(p)) return 'page';
     return 'framework';
 }
 
 const TS = /\.(ts|js|mjs|cjs)$/;
 const JAVA = /\.java$/;
+const PY = /\.py$/;
 
 /**
  * Rules: id, severity, title, and per-language patterns limited to file roles.
@@ -40,21 +42,25 @@ const RULES = [
         checks: [
             { lang: TS, roles: ['test', 'page', 'framework', 'composition'], re: /\bwaitForTimeout\s*\(|\bnew Promise\s*\(\s*\(?\s*\w+\s*\)?\s*=>\s*setTimeout\s*\(/ },
             { lang: JAVA, roles: ['test', 'page', 'framework', 'composition'], re: /\bThread\.sleep\s*\(/, when: (l, c) => !/class Eventually\b/.test(c.text) },
-            { lang: JAVA, roles: ['test', 'page', 'framework', 'composition'], re: /implicitlyWait\s*\(\s*(?!Duration\.ZERO)/ }
+            { lang: JAVA, roles: ['test', 'page', 'framework', 'composition'], re: /implicitlyWait\s*\(\s*(?!Duration\.ZERO)/ },
+            // The bounded poll interval of an eventually() helper lives in a wait module, like Java's Eventually.
+            { lang: PY, roles: ['test', 'page', 'framework', 'composition'], re: /\btime\.sleep\s*\(|^\s*from\s+time\s+import\s+.*\bsleep\b|\bwait_for_timeout\s*\(/, when: (l, c) => !/(^|\/)wait\.py$/.test(c.rel) }
         ]
     },
     {
         id: 'R-RAW-UI-IN-TEST', severity: 'block', title: 'Test talks to the browser directly instead of through page objects',
         checks: [
             { lang: TS, roles: ['test'], re: /\bpage\.(locator|getBy\w+|click|fill|type|press|check|selectOption|\$\$?)\s*\(|\$\$?\(\s*['"`]/ },
-            { lang: JAVA, roles: ['test'], re: /\.findElements?\s*\(|\bBy\.(id|xpath|cssSelector|name|className|linkText|tagName)\s*\(|\bWebElement\b/ }
+            { lang: JAVA, roles: ['test'], re: /\.findElements?\s*\(|\bBy\.(id|xpath|cssSelector|name|className|linkText|tagName)\s*\(|\bWebElement\b/ },
+            { lang: PY, roles: ['test'], re: /\bpage\.(locator|get_by_\w+|click|fill|type|press|check|select_option)\s*\(/ }
         ]
     },
     {
         id: 'R-RAW-HTTP-IN-TEST', severity: 'block', title: 'Test sends HTTP directly instead of through a service',
         checks: [
             { lang: TS, roles: ['test'], re: /\brequest\.(get|post|put|patch|delete|fetch)\s*\(|\bfetch\s*\(\s*['"`]http/ },
-            { lang: JAVA, roles: ['test'], re: /\b(RestAssured\.)?given\s*\(\s*\)|\bRestAssured\.(get|post|put|patch|delete)\s*\(/ }
+            { lang: JAVA, roles: ['test'], re: /\b(RestAssured\.)?given\s*\(\s*\)|\bRestAssured\.(get|post|put|patch|delete)\s*\(/ },
+            { lang: PY, roles: ['test'], re: /^\s*(import|from)\s+(httpx|requests|urllib3)\b|\b(httpx|requests)\.(get|post|put|patch|delete|request|Client)\b/ }
         ]
     },
     {
@@ -63,7 +69,9 @@ const RULES = [
             { lang: TS, roles: ['test'], re: /\bnew\s+\w+(Page|Service|Container|Api|Client)\s*\(/ },
             { lang: TS, roles: ['test'], re: /from\s+['"]@playwright\/test['"]/, when: (l, c) => c.hasFixtureModule },
             { lang: JAVA, roles: ['test'], re: /\bnew\s+\w+(Page|Service|Container|Client)\s*\(/ },
-            { lang: JAVA, roles: ['test'], re: /\bnew\s+(Chrome|Firefox|Edge|Safari|Remote)(Web)?Driver\s*\(/ }
+            { lang: JAVA, roles: ['test'], re: /\bnew\s+(Chrome|Firefox|Edge|Safari|Remote)(Web)?Driver\s*\(/ },
+            { lang: PY, roles: ['test'], re: /=\s*\w+(Page|Service|Container|Client)\s*\(/ },
+            { lang: PY, roles: ['test'], re: /^\s*(from|import)\s+playwright\b/ }
         ]
     },
     {
@@ -76,20 +84,23 @@ const RULES = [
             // Order dependence: one test relies on another having run first.
             { lang: JAVA, roles: ['test'], re: /@Test\s*\([^)]*\b(priority|dependsOnMethods)\s*=/ },
             { lang: TS, roles: ['test'], re: /^\s*let\s+\w+\s*(:\s*[\w<>[\]|\s]+)?\s*;?\s*$/, when: (l, c) => c.depthAt(c.i) <= 1 },
-            { lang: TS, roles: ['test'], re: /\.describe\.serial\b|mode:\s*['"]serial['"]/ }
+            { lang: TS, roles: ['test'], re: /\.describe\.serial\b|mode:\s*['"]serial['"]/ },
+            // Module-level mutable state in a test module (lower-case names; UPPER_CASE constants are fine), globals, ordering.
+            { lang: PY, roles: ['test'], re: /^[a-z_]\w*\s*(:\s*[^=]+)?=\s*(\[|\{|None\b|\d|set\(|dict\(|list\()|^\s+global\s+\w+|@pytest\.mark\.(order|dependency)\b/ }
         ]
     },
     {
         id: 'R-TEARDOWN', severity: 'block', title: 'Cleanup in the test body (skipped when an assertion fails)',
         checks: [
             { lang: TS, roles: ['test'], re: /\.(delete\w*|remove\w*|cleanup\w*|destroy\w*)\s*\(/, when: (l, c) => !c.inHook(c.i) },
-            { lang: JAVA, roles: ['test'], re: /\.(delete\w*|remove\w*|cleanup\w*|destroy\w*)\s*\(/, when: (l, c) => !/onTeardown|@After/.test(c.window(c.i, 6)) }
+            { lang: JAVA, roles: ['test'], re: /\.(delete\w*|remove\w*|cleanup\w*|destroy\w*)\s*\(/, when: (l, c) => !/onTeardown|@After/.test(c.window(c.i, 6)) },
+            { lang: PY, roles: ['test'], re: /\.(delete\w*|remove\w*|cleanup\w*|destroy\w*)\s*\(/, when: (l, c) => !/\byield\b|addfinalizer/.test(c.window(c.i, 15)) }
         ]
     },
     {
         id: 'R-SECRETS', severity: 'block', title: 'Hard-coded credential or token',
         checks: [
-            { lang: /\.(ts|js|java|properties|json|ya?ml|env)$/, roles: ['test', 'page', 'framework', 'composition'],
+            { lang: /\.(ts|js|java|py|properties|json|ya?ml|env|toml|ini|cfg)$/, roles: ['test', 'page', 'framework', 'composition'],
                 re: /(password|passwd|secret|api[_-]?key|token)\s*['"]?\s*[:=]\s*['"][^'"$\s{][^'"]{3,}['"]|Bearer\s+[A-Za-z0-9\-_.]{12,}/i,
                 // A deliberately wrong credential in a negative test is test data, not a leaked secret.
                 when: (l) => !/(password|passwd|secret|api[_-]?key|token)\s*['"]?\s*[:=]\s*['"](wrong|invalid|incorrect|bad|not-the-right)[^'"]*['"]/i.test(l) }
@@ -103,42 +114,62 @@ const RULES = [
         id: 'R-SCOPE', severity: 'warn', title: 'Page-global lookup inside a page object (not scoped to a container)',
         checks: [
             { lang: TS, roles: ['page'], re: /\$getBy\w+\s*\(|BrowserInstance\.currentPage\.(locator|getBy\w+)\s*\(|\bpage\.(locator|getBy\w+)\s*\(/ },
-            { lang: JAVA, roles: ['page'], re: /\bdriver\(?\)?\.findElements?\s*\(|DriverFactory\.driver\(\)\.findElements?\s*\(/ }
+            { lang: JAVA, roles: ['page'], re: /\bdriver\(?\)?\.findElements?\s*\(|DriverFactory\.driver\(\)\.findElements?\s*\(/ },
+            // page.locator(...) is the one allowed root lookup. A page-level get_by_* bypasses the container; a
+            // .page.get_by_* reached through a root (the filter(has=...) idiom) is evaluated relative and allowed.
+            { lang: PY, roles: ['page'], re: /(?<![\w.])(self\._page|page)\.get_by_\w+\s*\(/ }
         ]
     },
     {
         id: 'R-POSITION', severity: 'warn', title: 'Element identified by position (nth / index / :nth-child)',
         // Generic widgets (table, list, notification components) address rows/cells by position by design.
-        checks: [{ lang: /\.(ts|js|java)$/, roles: ['test', 'page'], re: /\.nth\s*\(|\.first\s*\(\s*\)|:nth-child|findElements\s*\(.*\)\s*\.get\s*\(\s*\d+\s*\)|\.get\s*\(\s*\d+\s*\)\s*\.click|\[\d+\]['"]/,
+        checks: [{ lang: /\.(ts|js|java|py)$/, roles: ['test', 'page'], re: /\.nth\s*\(|\.first\s*\(\s*\)|:nth-child|findElements\s*\(.*\)\s*\.get\s*\(\s*\d+\s*\)|\.get\s*\(\s*\d+\s*\)\s*\.click|\[\d+\]['"]|\.(first|last)\b(?!\s*\()(?=\s*[.)\s]|$)/,
             when: (l, c) => !c.genericComponent }]
     },
     {
         id: 'R-XPATH-ABS', severity: 'warn', title: 'Absolute or long XPath',
-        checks: [{ lang: /\.(ts|js|java)$/, roles: ['test', 'page'], re: /['"`](xpath=)?(\/html|\/\/\w+(\[[^\]]*\])?(\/\w+(\[[^\]]*\])?){3,})/ }]
+        checks: [{ lang: /\.(ts|js|java|py)$/, roles: ['test', 'page'], re: /['"`](xpath=)?(\/html|\/\/\w+(\[[^\]]*\])?(\/\w+(\[[^\]]*\])?){3,})/ }]
     },
     {
         id: 'R-FORCE', severity: 'warn', title: 'Forced or scripted action bypassing real interactability',
         checks: [
             { lang: TS, roles: ['test', 'page'], re: /force:\s*true/ },
-            { lang: JAVA, roles: ['test', 'page'], re: /executeScript\s*\([^)]*click/ }
+            { lang: JAVA, roles: ['test', 'page'], re: /executeScript\s*\([^)]*click/ },
+            { lang: PY, roles: ['test', 'page'], re: /force\s*=\s*True/ }
         ]
     },
     {
         id: 'R-WEAK-ASSERT', severity: 'warn', title: 'Weak assertion that proves little',
         checks: [
             { lang: TS, roles: ['test'], re: /\.toBeTruthy\s*\(\s*\)|\.toBeDefined\s*\(\s*\)/ },
-            { lang: JAVA, roles: ['test'], re: /\bassertNotNull\s*\(|assertTrue\s*\(\s*\w+\s*!=\s*null|\.isNotNull\s*\(\s*\)\s*;\s*$/ }
+            { lang: JAVA, roles: ['test'], re: /\bassertNotNull\s*\(|assertTrue\s*\(\s*\w+\s*!=\s*null|\.isNotNull\s*\(\s*\)\s*;\s*$/ },
+            // A bare truthiness assert of a name or attribute (assert response, assert data.items) states no value.
+            { lang: PY, roles: ['test'], re: /^\s*assert\s+[A-Za-z_][\w.]*\s*(,.*)?$/ }
         ]
     },
     {
         id: 'R-HARDCODED-URL', severity: 'warn', title: 'Environment URL hard-coded in a test or page',
-        checks: [{ lang: /\.(ts|js|java)$/, roles: ['test', 'page'], re: /['"`]https?:\/\/(?!(www\.)?(w3\.org|json-schema\.org))[^'"`\s]+/ }]
+        checks: [{ lang: /\.(ts|js|java|py)$/, roles: ['test', 'page'], re: /['"`]https?:\/\/(?!(www\.)?(w3\.org|json-schema\.org))[^'"`\s]+/ }]
     },
     {
         id: 'R-RETRY-MASK', severity: 'warn', title: 'Retries configured high enough to hide flakiness',
         checks: [
             { lang: TS, roles: ['framework', 'composition'], re: /retries:\s*([2-9]|\d{2,})\b/ },
-            { lang: /\.(java|xml)$/, roles: ['framework', 'composition', 'test'], re: /retryAnalyzer|rerunFailingTestsCount\s*>?\s*[2-9]/ }
+            { lang: /\.(java|xml)$/, roles: ['framework', 'composition', 'test'], re: /retryAnalyzer|rerunFailingTestsCount\s*>?\s*[2-9]/ },
+            { lang: /\.(py|toml|ini|cfg)$/, roles: ['framework', 'composition', 'test'], re: /--reruns[=\s]+([2-9]|\d{2,})\b|\breruns\s*=\s*([2-9]|\d{2,})\b/ }
+        ]
+    },
+    {
+        id: 'R-INHERIT', severity: 'warn', title: 'Inheritance where the design is composition (pages, tests, services)',
+        // Pages, containers, sections and tests compose; only the framework's thin bases are extended (the element
+        // family, BaseService, one lifecycle test base). See sdet-framework-architect → references/stack-contract.md.
+        checks: [
+            { lang: /\.(ts|js|java)$/, roles: ['page'], re: /\bclass\s+\w+(<[^>]*>)?\s+extends\s+\w+/ },
+            { lang: PY, roles: ['page'], re: /^class\s+\w+\(\s*(?!object\s*\)|\))[^)]+\)/ },
+            { lang: JAVA, roles: ['test'], re: /\bclass\s+\w+\s+extends\s+(?!Base(Ui|Api)?Test\b)\w+/ },
+            { lang: PY, roles: ['test'], re: /^class\s+\w+\(\s*(?!\))[^)]+\)/ },
+            { lang: /\.(ts|js|java)$/, roles: ['framework'], re: /\bclass\s+\w+Service(<[^>]*>)?\s+extends\s+(?!BaseService\b)\w+/ },
+            { lang: PY, roles: ['framework'], re: /^class\s+\w+Service\(\s*(?!BaseService\s*\))[^)]+\)/ }
         ]
     }
 ];
@@ -150,7 +181,7 @@ async function listFiles(root, dir = root) {
     for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
         if (entry.isDirectory()) {
             if (!SKIP_DIRS.has(entry.name) && !entry.name.startsWith('.')) out.push(...(await listFiles(root, path.join(dir, entry.name))));
-        } else if (/\.(ts|js|mjs|cjs|java|properties|json|ya?ml|env|xml)$/.test(entry.name) && !/\.d\.ts$|package-lock\.json$/.test(entry.name)) {
+        } else if (/\.(ts|js|mjs|cjs|java|py|properties|json|ya?ml|env|xml|toml|ini|cfg)$/.test(entry.name) && !/\.d\.ts$|package-lock\.json$|uv\.lock$/.test(entry.name)) {
             out.push(path.join(dir, entry.name));
         }
     }
@@ -167,9 +198,9 @@ function makeContext(text, role, hasFixtureModule, rel) {
         for (const ch of line) d += ch === '{' ? 1 : ch === '}' ? -1 : 0;
     }
     return {
-        text, role, lines, hasFixtureModule, i: 0,
+        text, role, lines, hasFixtureModule, rel, i: 0,
         /** A reusable widget directly under components/ (not a page-specific container or section). */
-        genericComponent: /(^|\/)(components?|ui\/components)\/[^/]+\.(ts|js|java)$/.test(rel),
+        genericComponent: /(^|\/)(components?|ui\/components)\/[^/]+\.(ts|js|java|py)$/.test(rel),
         depthAt: (i) => depth[i],
         window: (i, n) => lines.slice(Math.max(0, i - n), i + 1).join('\n'),
         /** Inside test.afterEach/afterAll or a fixture's teardown (after `use(`) — rough backwards scan. */

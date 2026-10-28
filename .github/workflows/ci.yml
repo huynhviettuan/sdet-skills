@@ -73,3 +73,48 @@ jobs:
       - name: Audit
         working-directory: skills/init-selenium-java-framework/template
         run: node scripts/audit-suite.mjs . --fail-on block
+
+  python-template:
+    name: pytest/Python template lints, type-checks and audits clean
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Scaffold into a temp directory
+        run: |
+          cp -r skills/init-pytest-playwright-framework/template "$RUNNER_TEMP/py"
+          sed -i 's/__PROJECT_NAME__/ci-check/g' "$RUNNER_TEMP/py/pyproject.toml" "$RUNNER_TEMP/py/README.md" "$RUNNER_TEMP/py/CLAUDE.md"
+      - name: Install
+        working-directory: ${{ runner.temp }}/py
+        run: uv sync
+      - name: Lint and format
+        working-directory: ${{ runner.temp }}/py
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Type-check (mypy strict)
+        working-directory: ${{ runner.temp }}/py
+        run: uv run mypy
+      - name: Collect (fixtures and plugins load)
+        working-directory: ${{ runner.temp }}/py
+        # exit code 5 = no tests collected, which is right for an empty scaffold
+        run: uv run pytest --collect-only -q || [ $? -eq 5 ]
+      - name: Audit
+        working-directory: ${{ runner.temp }}/py
+        run: node scripts/audit-suite.mjs . --fail-on block
+
+  changelog:
+    name: User-visible changes have a CHANGELOG entry
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: |
+          changed=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
+          if echo "$changed" | grep -qE '^(skills|agents|commands)/' && ! echo "$changed" | grep -qx 'CHANGELOG.md'; then
+            echo "::error::skills, agents or commands changed without a CHANGELOG.md entry"
+            exit 1
+          fi

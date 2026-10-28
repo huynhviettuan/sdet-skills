@@ -32,11 +32,15 @@ either. Load a reference when you need it:
     TypeScript (`init-playwright-framework`)
   - [`references/code-templates-restassured-java.md`](references/code-templates-restassured-java.md) —
     RestAssured / Java / TestNG (`init-selenium-java-framework`)
+  - [`references/code-templates-python.md`](references/code-templates-python.md) — httpx + pydantic / Python
+    (`init-pytest-playwright-framework`); method names are snake_case(operationId)
 - [`references/drift-and-no-spec.md`](references/drift-and-no-spec.md) — updating services when the spec changes,
   and drafting a spec from captured traffic when none exists.
 
-**Detect the stack first:** `package.json` with `@playwright/test` → TypeScript; `pom.xml` with `rest-assured` →
-Java. The contract and workflow are identical; only paths and syntax differ.
+**Detect the stack first** with the table in `sdet-framework-architect` →
+`references/stack-contract.md` (`package.json` with `@playwright/test` → TypeScript; `pom.xml` with
+`selenium-java` / `rest-assured` → Java; `pyproject.toml` with `pytest` → Python). The 1:1 contract and workflow are identical; only paths, naming case and syntax differ. A stack listed there as
+*planned* has no templates yet: say so and offer a supported scaffold rather than improvising.
 
 ## The 1:1 contract
 

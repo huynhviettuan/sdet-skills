@@ -4,6 +4,17 @@ A collection of portable [Claude Code](https://claude.com/claude-code) skills fo
 from documenting what a product must do, through designing test cases and the automation framework, to performance
 and security testing.
 
+**Stacks.** Every skill works the same way on each supported stack, and every stack is built by **composition**:
+tests take their dependencies from one composition root, pages have containers, containers have elements, services
+receive their client, and only the framework's thin bases are ever extended (enforced as `R-INHERIT`).
+
+| Stack | Scaffold | Status |
+|---|---|---|
+| Playwright / TypeScript | `init-playwright-framework` | supported — verified on TodoMVC, Petstore and a 79-case Gym CRM pilot |
+| Selenium + RestAssured / Java (TestNG, Maven) | `init-selenium-java-framework` | supported — verified on TodoMVC and Petstore |
+| pytest + Playwright + httpx / Python | `init-pytest-playwright-framework` | supported — verified on TodoMVC and Petstore |
+| C#/.NET, Cypress, WebdriverIO, Appium | — | planned; see the [stack contract](skills/sdet-framework-architect/references/stack-contract.md) for what support requires |
+
 ## Which skill when
 
 ```text
@@ -24,11 +35,12 @@ How is the framework code structured?
         │
         ▼
 Start a new repo with that architecture
-  ├─► init-playwright-framework     Playwright / TypeScript
-  └─► init-selenium-java-framework  Selenium + RestAssured / Java / TestNG / Maven
+  ├─► init-playwright-framework        Playwright / TypeScript
+  ├─► init-selenium-java-framework     Selenium + RestAssured / Java / TestNG / Maven
+  └─► init-pytest-playwright-framework pytest + Playwright + httpx / Python
         │
-        ├─► page-builder       explore screen + test cases → page objects, containers, sections (TS or Java)
-        ├─► service-builder    OpenAPI spec → services 1:1 (operationId methods), types, schemas, coverage (TS or Java)
+        ├─► page-builder       explore screen + test cases → page objects, containers, sections (TS, Java, Python)
+        ├─► service-builder    OpenAPI spec → services 1:1 (operationId methods), types, schemas, coverage (TS, Java, Python)
         │
         ▼
 Turn the TC-… cases into automated tests
@@ -48,6 +60,9 @@ When tests go red:
 An existing suite that doesn't follow these rules:
   └─► refactor-test-suite     baseline → audit (rule IDs) → plan → small verified steps → CI ratchet
 
+Before merging any test code:
+  └─► test-code-review        /review-tests — DRY / KISS / YAGNI standards (S- rules), consolidated checklist, verified findings
+
 All of the above as one job, with human gates:
   └─► automation-pipeline     /automate <scope> · sdet-automation-agent — assess → document → [gate] → scaffold
                               → build → [gate] → implement → verify → branch + status report → [merge]
@@ -61,6 +76,7 @@ All of the above as one job, with human gates:
 | Design or review page objects, services, fixtures, DI | `sdet-framework-architect` |
 | Scaffold a new Playwright/TypeScript test repo | `init-playwright-framework` |
 | Scaffold a new Selenium + RestAssured Java (TestNG, Maven) test repo | `init-selenium-java-framework` |
+| Scaffold a new pytest + Playwright + httpx Python test repo | `init-pytest-playwright-framework` |
 | Build page objects for a screen from the live app + test cases | `page-builder` |
 | Generate API services from an OpenAPI/Swagger spec (or draft one) | `service-builder` |
 | Implement documented test cases as automated tests | `test-script-writer` |
@@ -69,6 +85,7 @@ All of the above as one job, with human gates:
 | Authorization/tenant isolation tests, security scans in CI, finding triage | `security-testing` |
 | Investigate a failing, flaky, or CI-only test; triage a red run | `debug-failed-tests` |
 | Audit / clean up / migrate an existing (legacy) test suite; enforce test coding rules | `refactor-test-suite` |
+| Review a PR / diff of test code; DRY / KISS / YAGNI coding standards for test code | `/review-tests` → `test-code-review` |
 | Automate a feature or product end to end, from docs to a verified branch | `/automate` → `automation-pipeline` |
 
 The documentation skills share one ID scheme so requirements trace through to tests:
@@ -93,6 +110,11 @@ The documentation skills share one ID scheme so requirements trace through to te
   TestNG repo for Selenium 4 UI and RestAssured API tests (AssertJ, Allure, Jackson, Lombok): lazy strict
   parent-scoped locators, per-thread WebDriver and test context for parallel methods, teardown registry, retrying
   assertions, OpenAPI-ready `BaseService`, and failure evidence in Allure.
+- [`init-pytest-playwright-framework`](skills/init-pytest-playwright-framework/SKILL.md) — scaffolds a Python repo
+  (pytest, Playwright for Python, httpx, pydantic, jsonschema, pytest-xdist, uv): fixtures as the composition root,
+  page objects composed of container regions and thin elements that hold a locator, services that receive a shared
+  httpx client, factories with yield teardown, `expect` plus a bounded `eventually`, ruff banned-api rules and
+  mypy strict.
 - [`page-builder`](skills/page-builder/SKILL.md) — explores the live app and the feature's test cases, decomposes the
   screen into containers, repeated-item sections, and shared components with parent-scoped locators, confirms an
   element inventory, then generates, registers, and smoke-tests the page objects.
@@ -130,6 +152,10 @@ The documentation skills share one ID scheme so requirements trace through to te
 - [`automation-pipeline`](skills/automation-pipeline/SKILL.md) — the orchestration layer: stage contract (what each
   stage consumes, produces, verifies, and which skill does it), gates, stop rules, and the status-file format that
   makes a run resumable; followed by the plugin's `sdet-automation-agent` and `/automate`.
+- [`test-code-review`](skills/test-code-review/SKILL.md) — coding standards for test code grouped under DRY, KISS
+  and YAGNI with the tie-breaks between them (`S-…` rules with before/after in both stacks, plus TypeScript/Playwright-only and Java-only rules), a review checklist that merges the architecture rules, the audit
+  rules and the builders' checks, and a review workflow (deterministic checks first, every finding verified,
+  severity by consequence); `/review-tests` runs it on a diff, branch or PR.
 - [`refactor-test-suite`](skills/refactor-test-suite/SKILL.md) — audits and incrementally refactors an existing
   suite: rule catalogue with IDs, dependency-free audit script (TS/JS + Java) with suppressions and a CI ratchet,
   before/after recipes for both stacks, migration plan (baseline, ordering, strangler adoption, per-step
@@ -174,22 +200,20 @@ skipped.
 
 ## Contributing
 
-Each skill is a folder with a `SKILL.md` (YAML frontmatter `name` matching the folder, `description` ≤ 1024
-characters) kept short, plus `references/*.md` for depth that loads only when needed.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the definition of done for a skill and for a supported stack. In short: each
+skill is a folder with a short `SKILL.md` (frontmatter `name` = folder, `description` ≤ 1024 characters) plus
+`references/*.md`; `openapi-tool.mjs` and `audit-suite.mjs` are copied into every scaffold and must stay identical;
+every scaffold must audit clean.
 
-`skills/service-builder/scripts/openapi-tool.mjs` is also shipped in both templates
-(`skills/init-playwright-framework/template/scripts/` and `skills/init-selenium-java-framework/template/scripts/`) —
-change all three together. Likewise `skills/refactor-test-suite/scripts/audit-suite.mjs` is shipped in both
-templates' `scripts/`; both templates must audit clean (`node scripts/audit-suite.mjs . --fail-on block`).
-
-Before pushing, run the checks CI runs (`.github/workflows/ci.yml` also compiles, lints and audits both templates):
+Before pushing, run the checks CI runs (`.github/workflows/ci.yml` also installs, lints, type-checks and audits all
+three scaffolds, and fails a PR that changes skills without a changelog entry):
 
 ```bash
 node scripts/check-repo.mjs
 ```
 
 ```bash
-claude plugin validate .
+claude plugin validate --strict .
 ```
 
 Record user-visible changes in [CHANGELOG.md](CHANGELOG.md) and bump `version` in `.claude-plugin/plugin.json` when

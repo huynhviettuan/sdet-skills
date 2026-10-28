@@ -147,6 +147,44 @@ export default tseslint.config(
     },
 
     // ──────────────────────────────────────────────
+    // Pages, containers, sections and components compose; they never inherit (stack contract, R-INHERIT).
+    // Repeats the src/ selector because a later no-restricted-syntax replaces, not merges, the earlier one.
+    // ──────────────────────────────────────────────
+    {
+        files: ['src/pages/**/*.ts', 'src/components/**/*.ts'],
+        rules: {
+            'no-restricted-syntax': [
+                'error',
+                {
+                    selector: "CallExpression[callee.property.name='waitForTimeout']",
+                    message: 'R-NO-SLEEP: wait on a real signal (locator state, response, URL), never a fixed timeout.'
+                },
+                {
+                    selector: 'ClassDeclaration[superClass]',
+                    message:
+                        'R-INHERIT: pages, containers and components compose (hold containers / elements); they never extend another class.'
+                }
+            ]
+        }
+    },
+    {
+        files: ['src/services/**/*.ts'],
+        rules: {
+            'no-restricted-syntax': [
+                'error',
+                {
+                    selector: "CallExpression[callee.property.name='waitForTimeout']",
+                    message: 'R-NO-SLEEP: wait on a real signal (locator state, response, URL), never a fixed timeout.'
+                },
+                {
+                    selector: "ClassDeclaration[superClass][superClass.name!='BaseService']",
+                    message: 'R-INHERIT: a service extends BaseService only; share behaviour by composition.'
+                }
+            ]
+        }
+    },
+
+    // ──────────────────────────────────────────────
     // Test files — Playwright plugin + relaxed rules
     // ──────────────────────────────────────────────
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
