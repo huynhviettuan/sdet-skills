@@ -81,7 +81,8 @@ locators and the environment's data hooks, and verification is the bundled check
 
 ## Related skills
 
-- **`test-case-design`** — produces the cases this skill implements (format, IDs, techniques, data tables).
+- **`test-case-design`** — produces the cases this skill implements (format, IDs, techniques, data tables, basis
+  and evidence quotes, known bugs bound to steps, `@req:` IDs).
 - **`page-builder`** / **`service-builder`** — build missing page objects and services found in step 2.
 - **`debug-failed-tests`** — when a new test fails and the cause isn't obvious.
 - **`sdet-framework-architect`** — composition root, fixture-owned teardown, and scoping rules the tests follow.

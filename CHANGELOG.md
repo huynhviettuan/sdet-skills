@@ -2,7 +2,7 @@
 
 All notable changes to the sdet-skills plugin. Versions follow the `version` in `.claude-plugin/plugin.json`.
 
-## [Unreleased]
+## [1.5.0] — 2026-10-28
 
 ### Added
 

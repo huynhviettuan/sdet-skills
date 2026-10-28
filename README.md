@@ -52,7 +52,8 @@ Turn the TC-… cases into automated tests
                               (framework code, or executable specs for the Manual QA Agent)
 
 Governed runs in the Manual QA Agent (approved sources, human gates, evidence):
-  └─► manual-qa-agent         stories → cited drafts → executable specs → runs → triage; routes the rest to frameworks
+  └─► manual-qa-agent         stories → cited draft sets → executable specs → runs, suites, known bugs → triage;
+                              routes the rest to frameworks
 
 Non-functional, alongside any of the above:
   ├─► performance-testing     SLOs, workload model, scripts, runs, analysis, report
@@ -85,7 +86,7 @@ All of the above as one job, with human gates:
 | Build page objects for a screen from the live app + test cases | `page-builder` |
 | Generate API services from an OpenAPI/Swagger spec (or draft one) | `service-builder` |
 | Implement documented test cases as automated tests | `test-script-writer` |
-| Submit stories, propose executable specs, run and triage cases in the Manual QA Agent | `manual-qa-agent` (+ `test-script-writer`) |
+| Submit stories, propose executable specs, run cases and suites, read reports and triage in the Manual QA Agent | `manual-qa-agent` (+ `test-script-writer`) |
 | Load, stress, soak, capacity testing; perf results analysis | `performance-testing` |
 | Authorization/tenant isolation tests, security scans in CI, finding triage | `security-testing` |
 | Investigate a failing, flaky, or CI-only test; triage a red run | `debug-failed-tests` |
@@ -102,6 +103,8 @@ The documentation skills share one ID scheme so requirements trace through to te
 | `AC-<AREA>-NNN` | Acceptance criterion | project-docs |
 | `TC-<AREA>-NNN` | Test case (`TC-SEC-…` for security) | test-case-design / sdet-automation-docs |
 | `OQ-NNN` | Open question | all |
+| `KQ-NNN` | Question a knowledge base raises about its sources (the sources keep their own `OQ-`) | project-knowledge-base |
+| `S<NN> L<n>` | Citation: knowledge-base source and line (`[S07 L120]`), accepted in `Verifies`/`Evidence` | project-knowledge-base / test-case-design |
 | `ADR-NNN` | Architecture decision record | all |
 
 ## Skills
@@ -129,13 +132,16 @@ The documentation skills share one ID scheme so requirements trace through to te
   traffic when none exists.
 - [`test-script-writer`](skills/test-script-writer/SKILL.md) — implements documented test cases as tests (Playwright
   or Selenium/RestAssured Java): prerequisite check, preconditions through data factories with automatic teardown,
-  steps through page objects/services, every expected result asserted, data rows as separate tests, TC/AC
-  traceability, and verification that each test passes repeatedly and can fail. Also writes executable specs
-  (constrained JSON steps) for the Manual QA Agent.
-- [`manual-qa-agent`](skills/manual-qa-agent/SKILL.md) — drives the Manual QA Agent's API as a propose-only
-  participant: stories and clarifications, executable-spec proposals (with a bundled checker that uses the agent's
-  own schema), runs, triage and reproduction, and routing of what the agent can't run to the framework skills; stops
-  at every human gate.
+  steps through page objects/services, every expected result asserted with the case's evidence quote in the
+  message, data rows as separate tests, known bugs failing expectedly only at the step they name, `@req:` tags for
+  regression by requirement, and verification that each test passes repeatedly and can fail. Also writes executable
+  specs for the Manual QA Agent (run-scoped values, API sessions and JSON checks, data rows, bounded waits).
+- [`manual-qa-agent`](skills/manual-qa-agent/SKILL.md) — drives the Manual QA Agent (at its ADR-0026) as a
+  propose-only participant: stories and clarifications, draft sets with quoted evidence, executable-spec proposals
+  (its own or the agent's `propose_steps`, checked with a bundled checker that uses the agent's schema), runs and
+  suite reports (preflight, detection, known bugs bound to steps, unstable, unproven), regression scope by
+  requirement, triage and reproduction, and routing of what the agent can't run to the framework skills; stops at
+  every human gate and never edits an expectation to make a run pass.
 - [`project-knowledge-base`](skills/project-knowledge-base/SKILL.md) — turns a folder of existing documents (Markdown,
   Word, PDF, Excel, PowerPoint, HTML, screenshots) into a navigable knowledge base: overview, glossary, roles and
   permissions, domain model and lifecycles, every business flow with diagrams, rules, requirements, integrations,

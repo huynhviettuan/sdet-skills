@@ -44,7 +44,8 @@ it covers:
 - **`project-docs`** owns the product-side documents and the formats for OQ, ADR, and the traceability matrix. If
   the product already has those docs, read its BR/AC IDs and extend its matrix instead of creating parallel copies.
 - **`test-case-design`** derives the `TC-` cases (techniques, format, coverage summary) that the traceability
-  matrix and CI suites here consume.
+  matrix and CI suites here consume; its `check_cases.py --trace` generates the requirement → case half of the
+  matrix, and `--kb` ties it to a `project-knowledge-base` when one exists.
 - **`test-script-writer`** implements `TC-` cases as tests following the standards documented here.
 - **`debug-failed-tests`** applies the flaky/retry/quarantine policy and failure-artifact standards documented here
   when a test actually fails.
