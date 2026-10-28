@@ -13,6 +13,8 @@ demand, not on every commit.
 | `trigger-kb-document-pile` | a pile of mixed documents triggers `project-knowledge-base`, and the answer talks about citations and conflicts |
 | `trigger-agent-run-approved-case` | an approved agent case triggers `manual-qa-agent`, and the answer refuses to edit an expectation to make a failed run pass |
 | `no-trigger-unit-tests` | a unit-test request does not trigger `test-case-design` |
+| `tsw-negative-case` | `test-script-writer` on a negative UI case: no fixed waits, titled with the case ID, through the page object, a sync point before the absence check, both expected results asserted |
+| `kb-flow-no-invention` | `project-knowledge-base` on two tiny sources: line citations, a Mermaid diagram, the unstated rejection path marked as a gap, the 7 vs 14 days conflict shown both ways |
 
 The `tcd-freeze-design` graders are the three places the Manual QA Agent pilot found designs thin (boundaries beyond
 the stated range, the decision-table column that needs no special handling, adjacent permission layers), plus the

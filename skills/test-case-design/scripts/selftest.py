@@ -69,6 +69,22 @@ Expected results:
 1. Returns 403.
 2. The page works correctly.
 
+## TC-CON-005 — Over-limit approvals are refused
+
+Verifies:   AC-CON-011
+Basis:      assumption
+Assumptions: the limit is not documented
+Priority:   P2
+Level:      api
+
+Steps:
+1. Approve 10 001.
+2. Approve 10 002.
+
+Expected results:
+1. 403
+2. Returns 403 Forbidden.
+
 ## TC-CON-001 — Duplicate id
 
 Verifies:   AC-CON-010
@@ -96,14 +112,14 @@ EXPECTED_ERRORS = [
     "catalogue: AC-CON-013 is verified by no case",
 ]
 EXPECTED_ADVICE = [
-    "TC-CON-002: expected result 1 checks only a status code",
+    "TC-CON-005: every expected result is a bare status code",
     "TC-CON-002: expected result 2 is vague",
     "catalogue: D-022 is named by no case",
 ]
 
 
 def run(*args: str) -> tuple[int, str]:
-    p = subprocess.run([sys.executable, *args], capture_output=True, text=True, encoding="utf-8")
+    p = subprocess.run([sys.executable, *args], capture_output=True, text=True, encoding="utf-8", errors="replace")
     return p.returncode, p.stdout + p.stderr
 
 
@@ -188,8 +204,30 @@ Expected results:
             failures.append("--kb did not advise on the quote without a citation")
         if "verifies BR-CON-005, which is not in the catalogue" in out or "verifies AC-CON-010, which" in out:
             failures.append("--kb did not build the catalogue from the sources")
-        if "catalogue: BR-CON-006 is named by no case" not in out:
+        if "1 other requirement IDs in the sources are named by no case" not in out:
             failures.append("--kb catalogue lacks BR-CON-006 from the source text")
+
+        (kb / "testing-view.md").write_text(
+            "# Testing view\n\n## Testable rules\n\n| Rule | Limit | Technique | Source |\n|---|---|---|---|\n"
+            "| Approval limit (BR-CON-005) | within the limit | DT | [S06 L6] |\n"
+            "| Session cap (BR-CON-006) | 1000 | BVA | [S06 L7] |\n| Colour of a badge | grey | — | [S06 L7] |\n\n"
+            "## Not testable yet\n\n| Rule | Why | Finding |\n|---|---|---|\n"
+            "| Reminder timing | \"a reasonable time\" | [A-1](analysis.md#ambiguities), KQ-01 |\n", encoding="utf-8")
+        (kb / "analysis.md").write_text(
+            "# Analysis\n\n## Conflicts\n\n| # | Severity | Topic | Source A says | Source B says | Likely current | KQ / OQ |\n"
+            "|---|---|---|---|---|---|---|\n"
+            "| C-1 | High | Approval | BR-CON-005 manager approves [S06 L6] | AC-CON-010 admin approves [S06 L8] | BR-CON-005 | KQ-02 |\n"
+            "| C-2 | Low | Wording | BR-CON-006 says sessions [S06 L7] | AC-CON-010 says visits [S06 L8] | — | — |\n",
+            encoding="utf-8")
+        code, out = run(str(HERE / "check_cases.py"), str(root / "kbcases"), "--kb", str(kb))
+        if "testable rules (testing-view.md): 1 of 2 with a case; 1 rows name no requirement ID" not in out:
+            failures.append("--kb testable-rule coverage wrong:\n" + "\n".join(ln for ln in out.splitlines() if "testable" in ln))
+        if "no case: Session cap (BR-CON-006)" not in out or "blocked: Reminder timing" not in out:
+            failures.append("--kb did not list the uncovered rule or the blocked rule")
+        if "TC-KB-001: Basis specified, but BR-CON-005 is disputed in C-1" not in out:
+            failures.append("--kb accepted a specified case on a rule in a High conflict")
+        if "disputed in C-2" in out:
+            failures.append("--kb treated a Low (wording) conflict as blocking")
 
         factors = {
             "factors": {

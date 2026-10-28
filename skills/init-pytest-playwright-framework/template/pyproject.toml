@@ -29,6 +29,8 @@ markers = [
     "smoke: fast confidence subset",
     "case(id): test-case id, e.g. TC-TODO-001",
     "requirement(id): acceptance criterion or source the test verifies",
+    "metamorphic: checks a relation between two reads or runs (derived values, action + inverse), not a fixed oracle",
+    "sentinel: known-false expectation under xfail(strict=True); the run goes red if it ever passes",
 ]
 
 [tool.ruff]

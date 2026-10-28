@@ -49,13 +49,39 @@ python <skill-dir>/scripts/check_cases.py docs/test-cases --kb ../gym-kb --trace
 
 Every requirement ID the KB's sources mention is then in the catalogue, a `[S06 L29]` citation in a case must name a
 live source and an existing line, and an evidence quote with a citation is verified against that line — the quote
-stops being something a reviewer takes on trust.
+stops being something a reviewer takes on trust. Two more things come with it:
+
+- **Coverage by risk, not by AC.** The KB's testing view lists every rule with a number, limit, state or role; the
+  report says "N of M testable rules have a case" and names the rest, and lists the *not testable yet* rows with
+  the question each waits for. In the Gym CRM pilot the documents had 30 ACs but 52 testable rules and 27 blocked
+  ones — AC coverage alone hid most of the risk.
+- **No guessing on disputed rules.** A case marked `Basis: specified` that verifies a requirement disputed in a
+  High or Medium conflict of the KB's analysis is an error: picking the "likely current" side and calling it
+  specified encodes a guess as a requirement. Write it as an assumption that names the conflict (`C-6`) or its
+  question (`KQ-05`); it becomes specified when the owner answers.
+
+On a trial against the Gym CRM KB the checker refused a case asserting the disputed 30-day "expiring soon" window
+as specified, and a quote that was the KB's paraphrase ("60 working minutes") rather than the source's words
+("`reclaimMinutes` (60; 0 is off) working minutes").
 
 checks IDs, required fields, basis, catalogue references and AC coverage (errors), and lists uncovered IDs, missing
 evidence quotes, vague and status-only expected results (advisory). The lexical checks are hints: a check like
 "is this result observable" flagged 16 % of a team's real expected results, almost all falsely, when measured on a
 held-out set — so they never fail the run, and a tool tuned on the cases it is scored on proves nothing about its
 accuracy.
+
+This checker was measured the same way, on a catalogue it had never seen (Flow Fitness: 376 cases, 983 expected
+results, designed and run by a team; 2026-10-28):
+
+| Check | Result on the held-out set | Kept as |
+|---|---|---|
+| Errors (IDs, fields, basis, catalogue) | 0 errors on 376 cases; the 2 uncovered catalogue IDs are the 2 the team's own design document lists | error |
+| "Vague" phrases | 0 flags — no false flags, but nothing to measure recall on | advisory |
+| Status only, judged per result line (first version) | 98 of 983 lines (10 %), mostly false: the case checked the state on another line, and a case-insensitive pattern counted `201 with group FOREIGN` | replaced |
+| Status only, judged per case (every result a bare code) | 11 cases (3 %); about half genuinely weak (`400 / 400 / 400 / 201`, no error code, nothing proving no change), half fine (anonymous `401`, read-only `200`) | advisory |
+
+The per-case rule was chosen after seeing this set, so its 3 % is no longer a held-out figure; the next new catalogue
+is where to measure it again. Read the advice as a reviewer's prompt, never as a verdict.
 
 ---
 

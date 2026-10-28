@@ -116,7 +116,9 @@ public class ArchitectureRulesTest {
                 .and().areTopLevelClasses()
                 .should(extendOnly("java.lang.Object", BASE + ".testbase.BaseTest", BASE + ".testbase.BaseUiTest"))
                 .because("R-INHERIT: test classes extend only the lifecycle base; share setup through TestContext"));
+        // Top-level only: a list operation's anonymous `new TypeReference<List<Pet>>() {}` is a nested class
         check(classes().that().resideInAPackage(BASE + ".api.services..").and().areNotEnums().and().areNotInterfaces()
+                .and().areTopLevelClasses()
                 .should(extendOnly("java.lang.Object", BASE + ".api.BaseService"))
                 .because("R-INHERIT: one service per spec tag, each extending BaseService only"));
     }

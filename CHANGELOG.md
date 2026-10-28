@@ -2,6 +2,52 @@
 
 All notable changes to the sdet-skills plugin. Versions follow the `version` in `.claude-plugin/plugin.json`.
 
+## [1.6.0] — 2026-10-28
+
+What a green run has to earn.
+
+### Added
+
+- `test-script-writer/scripts/can-fail.mjs`, in every scaffold: changes the expected value on each new assertion line
+  one at a time, runs the file, restores it; a mutation the run doesn't notice is an assertion that cannot fail.
+  Skips assertion messages (Python `assert …, "msg"`, TestNG/JUnit/`node:assert` trailing messages, AssertJ `.as()`),
+  checks polling assertions (`expect.poll`, `Eventually`, `eventually`), and treats an all-skipped baseline as
+  inconclusive, never as a pass. Self-tested in CI.
+- Sentinel tests: one known-false expectation per suite, through the same page objects and assertions, marked so the
+  run is red if it ever passes (`test.fail()`, `expectedExceptions = AssertionError.class`, `xfail(strict=True)`).
+- Metamorphic and derived-value tests in each stack's code templates (filter partition of a list, inverse
+  relations, a record moving between filters, superset queries).
+- `test-script-writer/examples/<stack>/`: the sample cases implemented on each scaffold with a sentinel and
+  metamorphic tests, and `run-examples.sh` (scaffold, gates, 3 repeats in parallel, can-fail); a `Nightly examples`
+  workflow runs all three against the public demo apps, so "verified on TodoMVC and Petstore" is re-earned nightly.
+- `check_cases.py --kb`: coverage of the knowledge base's testable rules ("N of M testable rules have a case", the
+  not-testable-yet rows listed with their question), and a case marked `specified` on a requirement disputed in a
+  High or Medium conflict of the KB's analysis is an error — it encodes a guess. It reads the 20-column CSV workbook.
+- Evals for `test-script-writer` (a negative case: no fixed waits, the page object, proof that nothing changed) and
+  `project-knowledge-base` (no invented steps, both sides of a conflict, line citations, dashed inferred edges).
+
+### Changed
+
+- `check_cases.py` measured on a held-out catalogue (Flow Fitness: 376 cases, 983 expected results): 0 errors; the
+  per-line status-only check flagged 10 % of lines, mostly falsely, and was replaced by a per-case rule (3 % of cases,
+  about half genuinely weak); missing evidence quotes are summarised per case. The numbers are in
+  `coverage-and-prioritization.md`.
+- The Python scripts write UTF-8 on Windows consoles (they crashed on a dash or Vietnamese text before).
+
+### Fixed (found by running the examples for real)
+
+- Playwright template: `StringHelper.normalizeParams` joined query arrays with commas (`?tags=a,b`); OpenAPI's default
+  is one key per value (`?tags=a&tags=b`), and Petstore's `findByTags` answered `[]` to the comma form. It now returns
+  `URLSearchParams` with repeated keys and drops undefined values. (httpx and RestAssured already repeat keys.)
+- Java template: `ArchitectureRulesTest`'s composition rule rejected the anonymous `new TypeReference<>() {}` that
+  service-builder's own template uses for list responses, so any service with a list operation failed on a stock
+  scaffold; the services rule now checks top-level classes, like the test-class rule.
+- Python template: the `metamorphic` and `sentinel` markers are registered (the template runs `--strict-markers`).
+- Playwright template troubleshooting: Playwright 1.61 cannot load any config on Node 22.15
+  (`context.conditions?.includes is not a function`); `PLAYWRIGHT_FORCE_ASYNC_LOADER=1` works around it.
+- Code templates: an assertion message on TC-PET-002 made a can-fail mutant survive, and TC-PET-003 passed on an empty
+  search; both fixed in the references and the examples.
+
 ## [1.5.0] — 2026-10-28
 
 ### Added

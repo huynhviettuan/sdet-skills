@@ -135,7 +135,7 @@ for (const f of files.filter((x) => x.endsWith('.md'))) {
 
 // Shared scripts: identical copies
 const sha = (f) => createHash('sha256').update(readFileSync(f)).digest('hex');
-for (const name of ['openapi-tool.mjs', 'audit-suite.mjs']) {
+for (const name of ['openapi-tool.mjs', 'audit-suite.mjs', 'can-fail.mjs']) {
     const copies = files.filter((f) => basename(f) === name);
     const hashes = new Set(copies.map(sha));
     if (copies.length < 3) problem(root, `${name}: expected 3 copies, found ${copies.length}`);

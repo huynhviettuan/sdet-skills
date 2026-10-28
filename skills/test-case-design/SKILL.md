@@ -34,9 +34,10 @@ transitions) and prevent the duplicates intuition adds.
 Scripts (Python ≥ 3.10, no dependencies):
 
 - `scripts/check_cases.py <cases> --catalogue <file> | --kb <knowledge-base>` — IDs unique, required fields, basis,
-  catalogue references, every AC covered, and with a knowledge base every `[Sxx Lnn]` citation and evidence quote
-  verified against the source line (errors); uncovered IDs, missing quotes, vague or status-only results
-  (advisory); `--trace` CSV.
+  catalogue references, every AC covered; with a knowledge base every `[Sxx Lnn]` citation and evidence quote
+  verified against the source line, no `specified` case on a disputed rule, and coverage of the KB's testable rules
+  (errors and report); uncovered IDs, missing quotes, all-bare-status cases (advisory, measured on a held-out
+  catalogue); reads the 20-column CSV workbook too; `--trace` CSV.
 - `scripts/pairwise.py generate|verify <factors.json>` — builds an all-pairs table with the reason for each value,
   and proves every allowed pair is covered.
 

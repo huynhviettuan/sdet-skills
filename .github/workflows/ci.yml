@@ -38,6 +38,11 @@ jobs:
         run: python skills/test-case-design/scripts/selftest.py
       - name: project-knowledge-base (ingest, check_kb)
         run: python skills/project-knowledge-base/scripts/selftest.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: test-script-writer (can-fail)
+        run: node skills/test-script-writer/scripts/selftest.mjs
 
   playwright-template:
     name: Playwright template compiles, lints and audits clean

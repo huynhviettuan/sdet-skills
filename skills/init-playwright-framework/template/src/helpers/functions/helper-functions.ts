@@ -29,12 +29,16 @@ export class StringHelper {
         return decode(html);
     }
 
+    // An array becomes one key per value (?tags=a&tags=b): OpenAPI's default for query arrays (style form, explode
+    // true). A comma-joined value is a different request — Petstore's findByTags answers [] to ?tags=a,b.
+    // Undefined values are left out, so optional query fields can be passed as they are.
     static normalizeParams(
-        params: Record<string, string | number | boolean | string[] | number[] | boolean[]>
-    ): Record<string, string | number | boolean> {
-        const result: Record<string, string | number | boolean> = {};
+        params: Record<string, string | number | boolean | string[] | number[] | boolean[] | undefined>
+    ): URLSearchParams {
+        const result = new URLSearchParams();
         for (const [key, value] of Object.entries(params)) {
-            result[key] = Array.isArray(value) ? value.join(',') : value;
+            if (value === undefined) continue;
+            for (const item of Array.isArray(value) ? value : [value]) result.append(key, String(item));
         }
         return result;
     }

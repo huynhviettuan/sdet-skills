@@ -216,12 +216,27 @@ Copy a skill folder (the whole folder, including `references/` or `template/`) i
 Skills cross-reference each other by name; if you copy only some, the references to missing ones are simply
 skipped.
 
+## What a green run has to earn
+
+Every check in this plugin is either repeated or measured, not run once:
+
+| Claim | How it is kept true |
+|---|---|
+| The suite can detect a failure | a **sentinel** test with a known-false expectation; the run is red if it passes |
+| Each new assertion can fail | `scripts/can-fail.mjs` (in every scaffold) mutates expected values one at a time and requires red |
+| "Verified on TodoMVC and Petstore" | `test-script-writer/examples/<stack>/` run nightly against the live demo apps, 3× in parallel |
+| Coverage means risk covered | `check_cases.py --kb` reports cases against the knowledge base's testable rules, not only ACs |
+| No guess is tested as a requirement | `check_cases.py --kb` refuses `Basis: specified` on a rule in an open High/Medium conflict |
+| The checkers' advice is worth reading | measured on a held-out 376-case catalogue; the numbers are in the skill |
+| The skills change what a model does | `evals/` for `claude plugin eval`, with and without the plugin ([evals/README.md](evals/README.md)) |
+
 ## Evals
 
 `evals/` holds behavioural checks for `claude plugin eval` (a real model, with and without the plugin): does
-`test-case-design` produce the boundaries, columns and permission cases the pilot found missing; do the new skills
-trigger on how people phrase the request; does `manual-qa-agent` refuse to edit an expectation. See
-[evals/README.md](evals/README.md).
+`test-case-design` produce the boundaries, columns and permission cases the pilot found missing; does
+`test-script-writer` write a negative test that waits on a signal and proves nothing changed; does
+`project-knowledge-base` mark what the sources don't say instead of inventing it; do the skills trigger on how people
+phrase the request; does `manual-qa-agent` refuse to edit an expectation. See [evals/README.md](evals/README.md).
 
 ## Contributing
 

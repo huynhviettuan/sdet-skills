@@ -127,7 +127,7 @@ compared with themselves.
 A negative expected result ("is not added", "is rejected", "returns 404") needs:
 
 1. **A sync point** — proof the app processed the action. Without it an absence check passes before the app
-   reacts. Examples: a valid action afterwards whose result is visible (TodoMVC `sentinel` todo); the error message
+   reacts. Examples: a valid action afterwards whose result is visible (TodoMVC: add a `sync point` todo); the error message
    or status of the rejected request; a response awaited for the action.
 2. **The rejection itself** — status code, error message (via the shared notification/error component), or
    unchanged UI.

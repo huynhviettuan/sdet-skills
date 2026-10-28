@@ -34,6 +34,10 @@ and that a reader can trace back to the case and its acceptance criterion.
 - [`references/executable-spec.md`](references/executable-spec.md) — the Manual QA Agent target: map an approved
   case to its constrained JSON step format, locators, assertions, secrets and cleanup, what it can't express, a
   worked example verified on the agent's demo app, and the pre-proposal check.
+- `examples/<stack>/` — the sample cases implemented on each scaffold, with a sentinel and metamorphic tests;
+  `run-examples.sh` scaffolds the template, runs them 3× in parallel and runs `can-fail.mjs` — CI runs it nightly,
+  so "verified" stays true.
+- `scripts/can-fail.mjs` — mutation check for new assertions (also copied into every scaffold's `scripts/`).
 
 **Detect the target first:** `package.json` with `@playwright/test` → TypeScript; `pom.xml` with TestNG → Java;
 `pyproject.toml` with `pytest` → Python (full table: `sdet-framework-architect` → `references/stack-contract.md`); the
@@ -59,8 +63,13 @@ locators and the environment's data hooks, and verification is the bundled check
    - compiles and passes (`tsc` + ESLint / `mvn test-compile`);
    - passes **repeatedly** (`--repeat-each=3` / temporary `invocationCount = 3`) and alongside its neighbors in
      parallel;
-   - **can fail**: break one expected value temporarily and confirm the test fails with a meaningful message, then
-     restore it.
+   - **can fail**: `node scripts/can-fail.mjs --run "<command for one test file, with {file}>"` (shipped in every
+     scaffold) changes the expected value on each new assertion line, one at a time, runs the file and restores it;
+     a mutation the run doesn't notice is an assertion that cannot fail — fix it, never exclude it;
+   - the suite keeps a **sentinel**: one test with a known-false expectation, written through the same page objects
+     and assertions, marked so the run is red if it ever passes (`test.fail()` / `expectedExceptions =
+     AssertionError.class` / `xfail(strict=True)`) — a green run then proves the assertion path can still fail on
+     this build (agent ADR-0023). Patterns: the stack's `code-templates-*.md` → Sentinel.
 6. **Update traceability**: set each case's `Automation:` field to `Automated — <file>` and refresh the coverage
    summary; report implemented, skipped (with reason), and prerequisites created.
 

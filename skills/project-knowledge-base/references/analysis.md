@@ -122,3 +122,14 @@ roughly 100 reported findings did not survive re-verification.
 | Lifecycles | allowed and forbidden transitions (state-transition tests) |
 | Data to prepare | entities and states a test needs, and which documents say how to create them |
 | Not testable yet | rules that are ambiguous or conflicting (link the OQ) |
+
+Two tables are read by code, so keep their shape: `test-case-design`'s `check_cases.py --kb` reports coverage from
+them and refuses a case that encodes a disputed rule as settled.
+
+- `testing-view.md` → `## Testable rules`: one row per rule, the **first column names the rule and its requirement
+  IDs** (`Lead reclaim (D-052, A-101)`); a row with no ID cannot be matched to a case and is reported as uncounted.
+  `## Not testable yet`: first column the rule, last column the finding and its question (`[C-6](…), KQ-05`).
+- `analysis.md` → `## Conflicts`: first column `C-n`, second the severity (`High`, `Medium`, `Low`), then topic,
+  source A, source B. Every requirement ID named in topic or either side counts as disputed: a High or Medium row
+  blocks `Basis: specified` on cases verifying it; a Low row (wording) only advises. Name only the IDs actually in
+  dispute in those three columns.

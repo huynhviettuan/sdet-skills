@@ -1,5 +1,5 @@
 ---
 type: regex
-pattern: 'Basis:\s*(specified|assumption)'
-match: "count:3"
+pattern: '(Basis:\**\s*\**(specified|assumption)[\s\S]*){3}'
+flags: i
 ---

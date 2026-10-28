@@ -24,7 +24,7 @@ PRICES = "package,sessions,price\nPT 12,12,6000000\nPT 24,24,11000000\n"
 
 
 def run(*args: str) -> tuple[int, str]:
-    p = subprocess.run([sys.executable, *args], capture_output=True, text=True, encoding="utf-8")
+    p = subprocess.run([sys.executable, *args], capture_output=True, text=True, encoding="utf-8", errors="replace")
     return p.returncode, p.stdout + p.stderr
 
 

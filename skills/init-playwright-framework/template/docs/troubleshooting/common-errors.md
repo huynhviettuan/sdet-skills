@@ -56,6 +56,22 @@ await element.click();
 
 ## Test Execution Errors
 
+### Error: the config does not load on Node 22.15
+
+```
+TypeError: context.conditions?.includes is not a function
+```
+
+Playwright 1.61's synchronous module loader expects an array where Node 22.15 passes a `Set`, so no config loads —
+including this one. Use the async loader for the run (CI on Node 20 is not affected):
+
+```bash
+PLAYWRIGHT_FORCE_ASYNC_LOADER=1 npx playwright test
+```
+
+In PowerShell: `$env:PLAYWRIGHT_FORCE_ASYNC_LOADER = '1'; npx playwright test`. Or use Node 20 or 22 LTS before 22.15.
+Found while verifying `test-script-writer/examples/playwright-ts` on 2026-10-28.
+
 ### Error: Browser not launching
 
 ```
