@@ -176,8 +176,9 @@ See `/docs`. Start with `docs/strategy/01_AUTOMATION_STRATEGY.md`.
 
 ## AGENTS.md template
 
-Mandatory when AI agents contribute to automation. Also generate `CLAUDE.md` containing `@AGENTS.md` so Claude Code
-picks it up without a duplicate copy.
+Mandatory when AI agents contribute to automation. `CLAUDE.md` imports it (`@AGENTS.md`) rather than duplicating
+it — the mechanics and the product-side template are in `project-docs` → `references/templates.md` → "AGENTS.md +
+CLAUDE.md"; this template adds only what is specific to a test-automation repo.
 
 ```md
 # SDET AI Agent Instructions

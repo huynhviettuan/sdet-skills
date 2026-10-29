@@ -87,17 +87,10 @@ If two items **at the same level** conflict, do not guess: record an OQ and requ
 
 ## ID scheme
 
-Shared with `sdet-automation-docs` so requirements trace straight through to automated tests. `<AREA>` is an
-uppercase domain noun (`CONTRACT`, `SESSION`, `AUTH`, `PAYMENT`…), numbered per area, never reused.
-
-| Prefix | Meaning | Owned by |
-|---|---|---|
-| `FR-<AREA>-NNN` | Functional requirement / feature | project-docs |
-| `BR-<AREA>-NNN` | Business rule | project-docs |
-| `AC-<AREA>-NNN` | Acceptance criterion | project-docs |
-| `TC-<AREA>-NNN` | Test case / automated scenario | sdet-automation-docs |
-| `OQ-NNN` | Open question | both |
-| `ADR-NNN` | Architecture decision record | both (separate ADR folders) |
+This skill owns `FR-<AREA>-NNN` (feature), `BR-<AREA>-NNN` (business rule) and `AC-<AREA>-NNN` (acceptance
+criterion). `<AREA>` is an uppercase domain noun (`CONTRACT`, `SESSION`, `AUTH`, `PAYMENT`…), numbered per area,
+never reused. `OQ-NNN` and `ADR-NNN` are shared with every skill; `TC-` belongs to `test-case-design`. The complete
+table, including the knowledge-base IDs, is the plugin README's "ID scheme".
 
 ## Readiness
 

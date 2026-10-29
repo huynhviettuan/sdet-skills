@@ -150,22 +150,21 @@ ADR-0015, 0024, 0025 — details in `test-script-writer` → `references/executa
 or a listed test hook can put a record into the needed state, the case is an executable, not a manual one. In the Gym
 CRM pilot, 5 of the 9 cases the showcase had labelled manual were automated that way.
 
-| Reason | Step format today | Framework approach when the format still can't |
-|---|---|---|
-| Date-relative values | `values` (ADR-0015) | — |
-| Value carried between steps | `capture` from text, URL or response (ADR-0015, 0024) | — |
-| Two users in sequence | API level: two `session` steps (ADR-0024); browser: still one user | two browser contexts from fixtures, each with its own auth state |
-| Response-body assertions | `expectJson` (ADR-0024) | service-level API tests with schema validation (`service-builder`) |
-| Data table | `rows`, one verdict per row (ADR-0024) | parametrised test |
-| Data the environment can't provide | `testHook` on a path the administrator listed (ADR-0025); otherwise no | data factories through the API (`service-builder`), teardown owned by the factory |
-| Time passing (expiry, reminders, jobs) | `waitFor` ≤ 120 s, or a `testHook` that runs the job / advances the clock, if the product offers one | `page.clock` (Playwright) / server-side test clock or time-travel endpoint |
-| Files | `upload` (1 MB, travels with the spec), `expectDownload` (name only) | download handling with content assertions |
-| Second factor, malformed input, locale | `{ totp }`, `rawBody`, allowlisted `headers` (ADR-0025) | — |
-| Outside the browser (email, SMS, push) | no | mail/SMS test inbox client |
-| Computed expectation | no — arithmetic is excluded by choice (ADR-0015) | read values through page objects, compute, assert |
-| Shared-data mutation | gated as destructive; `exclusive` for global settings (ADR-0021) | isolated data per test with factory teardown, in a non-shared environment |
-| Concurrency, two browser users at once | no | parallel requests through the service layer; two contexts |
-| Human judgement (layout, wording) | no | stays manual; consider visual comparison only for stable layouts |
+What the step format can and cannot express is one table, owned by `test-script-writer` →
+`references/executable-spec.md` → "Cases the format can't express". This page adds only the route for the reasons
+that remain:
+
+| `manualReason` the format still can't express | Framework approach |
+|---|---|
+| Two users in the browser | two browser contexts from fixtures, each with its own auth state |
+| Data the environment can't provide, no listed hook | data factories through the API (`service-builder`), teardown owned by the factory |
+| Time passing beyond 120 s, no job hook | `page.clock` (Playwright) / a server-side test clock or time-travel endpoint |
+| Download contents | download handling with content assertions |
+| Outside the browser (email, SMS, push) | mail/SMS test inbox client |
+| Computed expectation | read values through page objects, compute, assert |
+| Shared-data mutation on a shared environment | isolated data per test with factory teardown, in a non-shared environment |
+| Concurrency, two browser users at once | parallel requests through the service layer; two contexts |
+| Human judgement (layout, wording) | stays manual; visual comparison only for stable layouts |
 
 The routed test keeps the same case code and cites the same AC, so traceability holds across both runners. Record
 `Automation: Automated — <file>` (framework) or the agent's case code (agent) in the test-case document. A proposal

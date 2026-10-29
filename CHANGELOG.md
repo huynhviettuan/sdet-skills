@@ -2,6 +2,15 @@
 
 All notable changes to the sdet-skills plugin. Versions follow the `version` in `.claude-plugin/plugin.json`.
 
+## [Unreleased]
+
+### Changed
+
+- One owner per shared table: the ID scheme lives in the README (project-docs keeps only the prefixes it owns);
+  "what the executable-spec format can't express" lives in `test-script-writer/references/executable-spec.md`
+  (manual-qa-agent's routing page keeps only the framework route per remaining reason); the `@AGENTS.md` import
+  mechanic lives in project-docs.
+
 ## [1.6.0] — 2026-10-28
 
 What a green run has to earn.
