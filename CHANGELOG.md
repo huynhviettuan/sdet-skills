@@ -4,6 +4,16 @@ All notable changes to the sdet-skills plugin. Versions follow the `version` in 
 
 ## [Unreleased]
 
+### Added
+
+- Working rules for the repo itself: `CLAUDE.md` (a refusal is a stop, green is earned, no "verified" without a
+  repeating job, heuristics measured or advisory, one owner per table, Windows-first hygiene, the subagent brief),
+  path-scoped `.claude/rules/` (skills, scripts, examples and templates, evals), and `docs/decisions.md` (the calls
+  made so far: three stacks, composition, KQ- vs OQ-, Low conflicts, literal-only mutation, separate document
+  packages, evals on demand, nightly examples, OQ-13 human-only, the agent repo's docs, denied calls stop a step).
+- Two of the rules are mechanical: `check-repo` fails a README stack row that says "verified" without the job that
+  re-runs it; CI fails a PR that changes a skill script without touching its self-test.
+
 ### Changed
 
 - One owner per shared table: the ID scheme lives in the README (project-docs keeps only the prefixes it owns);

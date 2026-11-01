@@ -10,9 +10,9 @@ receive their client, and only the framework's thin bases are ever extended (enf
 
 | Stack | Scaffold | Status |
 |---|---|---|
-| Playwright / TypeScript | `init-playwright-framework` | supported — verified on TodoMVC, Petstore and a 79-case Gym CRM pilot |
-| Selenium + RestAssured / Java (TestNG, Maven) | `init-selenium-java-framework` | supported — verified on TodoMVC and Petstore |
-| pytest + Playwright + httpx / Python | `init-pytest-playwright-framework` | supported — verified on TodoMVC and Petstore |
+| Playwright / TypeScript | `init-playwright-framework` | supported — example suite re-run by the `Nightly examples` workflow (TodoMVC, Petstore; 14 tests × 3, sentinel, can-fail); also a 79-case Gym CRM pilot (2026-10) |
+| Selenium + RestAssured / Java (TestNG, Maven) | `init-selenium-java-framework` | supported — example suite re-run by the `Nightly examples` workflow (TodoMVC, Petstore; 14 tests × 3, sentinel, can-fail) |
+| pytest + Playwright + httpx / Python | `init-pytest-playwright-framework` | supported — example suite re-run by the `Nightly examples` workflow (TodoMVC, Petstore; 14 tests × 3, sentinel, can-fail) |
 | C#/.NET, Cypress, WebdriverIO, Appium | — | planned; see the [stack contract](skills/sdet-framework-architect/references/stack-contract.md) for what support requires |
 
 ## Which skill when

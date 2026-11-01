@@ -1,8 +1,10 @@
 # Contributing
 
 This collection holds itself to the standard it teaches: every claim is backed by something that ran, every rule
-has an ID and a gate, and every stack is built by composition. A change is done when it meets the definition below
-for what it touches.
+has an ID and a gate, and every stack is built by composition. How work happens here — refusals stop a step, green
+is earned, one owner per table, Windows-first hygiene, how to brief a subagent — is in [CLAUDE.md](CLAUDE.md) and the
+path-scoped [`.claude/rules/`](.claude/rules/); decisions already taken are in [docs/decisions.md](docs/decisions.md).
+A change is done when it meets the definition below for what it touches.
 
 ## Definition of done — a skill
 

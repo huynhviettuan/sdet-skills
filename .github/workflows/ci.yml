@@ -136,3 +136,15 @@ jobs:
             echo "::error::skills, agents or commands changed without a CHANGELOG.md entry"
             exit 1
           fi
+      - name: A checking script changes together with its self-test
+        run: |
+          changed=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
+          status=0
+          for f in $(echo "$changed" | grep -E '^skills/[^/]+/scripts/[^/]+\.(py|mjs)$' | grep -v selftest); do
+            dir=$(dirname "$f")
+            if ! echo "$changed" | grep -qE "^$dir/selftest\.(py|mjs)$"; then
+              echo "::error::$f changed without a change to $dir/selftest.*; add or extend the self-test (CLAUDE.md rule 4, .claude/rules/scripts.md)"
+              status=1
+            fi
+          done
+          exit $status

@@ -133,6 +133,12 @@ for (const f of files.filter((x) => x.endsWith('.md'))) {
     }
 }
 
+// A "verified" claim in the README's stack table names the job that re-earns it (CLAUDE.md rule 3)
+for (const [i, line] of read(join(root, 'README.md')).split('\n').entries()) {
+    if (/^\|.*\bsupported\b.*\bverified\b/i.test(line) && !/Nightly examples|run-examples\.sh|selftest/.test(line))
+        problem(join(root, 'README.md'), `line ${i + 1}: a "verified" stack row must name the job that re-runs it (Nightly examples / run-examples.sh)`);
+}
+
 // Shared scripts: identical copies
 const sha = (f) => createHash('sha256').update(readFileSync(f)).digest('hex');
 for (const name of ['openapi-tool.mjs', 'audit-suite.mjs', 'can-fail.mjs']) {
