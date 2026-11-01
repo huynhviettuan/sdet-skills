@@ -42,8 +42,28 @@ public final class PetFactory {
             throw new IllegalStateException("Precondition failed: addPet returned " + response.statusCode() + " "
                     + response.bodyText());
         }
-        context.onTeardown("delete pet " + id, () -> service.deletePet(id)); // 404 when already deleted: fine
+        context.onTeardown("delete pet " + id, () -> deleteOrReport(id));
         return response.body();
+    }
+
+    /**
+     * Teardown judged by the real signal — the pet is gone — not by the delete's status: the shared Petstore answers a
+     * DELETE oddly at times (a 304 in the nightly run of 2026-10-30). 404 means already deleted; any other status is
+     * followed by a GET, one retry, and only a pet still present is reported as a leak.
+     */
+    private void deleteOrReport(long id) {
+        int status = service.deletePet(id).statusCode();
+        if (status == 200 || status == 404 || gone(id)) {
+            return;
+        }
+        status = service.deletePet(id).statusCode();
+        if (!gone(id)) {
+            throw new IllegalStateException("Teardown could not delete pet " + id + " (still present, last status " + status + ")");
+        }
+    }
+
+    private boolean gone(long id) {
+        return service.getPetById(id).statusCode() == 404;
     }
 
     /** The id of a pet that certainly does not exist: created, then deleted (never a "magic" id). */

@@ -14,6 +14,13 @@ All notable changes to the sdet-skills plugin. Versions follow the `version` in 
 - Two of the rules are mechanical: `check-repo` fails a README stack row that says "verified" without the job that
   re-runs it; CI fails a PR that changes a skill script without touching its self-test.
 
+### Fixed
+
+- Example factories (all three stacks): teardown is judged by the real signal — the pet is gone — not by the delete's
+  status. The nightly run of 2026-10-30 failed on a Petstore `DELETE` that answered 304 for a pet that was deleted;
+  the Java factory had the opposite flaw and never reported a leak. A non-200/404 delete now gets a GET-checked retry
+  and only a pet still present fails the teardown (decision D-13).
+
 ### Changed
 
 - One owner per shared table: the ID scheme lives in the README (project-docs keeps only the prefixes it owns);

@@ -59,21 +59,33 @@ class PetFactory:
         self._created.append(pet_id)
         return response.data
 
+    def _gone(self, pet_id: int) -> bool:
+        return self._service.get_pet_by_id(pet_id).status_code == 404
+
     def cleanup(self) -> None:
-        """Idempotent: deleting a pet the test already deleted is harmless. Tries every pet, then reports failures."""
+        """Idempotent, and judged by the real signal: the pet is gone, not the delete's status code.
+
+        The shared Petstore answers a DELETE oddly at times (a 304 was seen in the nightly run of 2026-10-30), so a
+        status other than 200/404 is followed by a GET; only a pet still present after one retry is a leak. Tries
+        every pet, then reports the failures together.
+        """
         failures: list[str] = []
         for pet_id in self._created:
             try:
                 status = self._service.delete_pet(pet_id).status_code
+                if status not in (200, 404) and not self._gone(pet_id):
+                    status = self._service.delete_pet(pet_id).status_code
+                    if not self._gone(pet_id):
+                        failures.append(f"{pet_id}: still present after deletePet (last status {status})")
             except Exception as error:  # keep deleting the others; reported below
                 failures.append(f"{pet_id}: {error!r}")
-                continue
-            if status not in (200, 404):
-                failures.append(f"{pet_id}: deletePet returned {status}")
         self._created.clear()
         if failures:
             raise RuntimeError("Teardown could not delete pets: " + "; ".join(failures))
 ```
+
+Teardown asks the question the test cares about — is the record gone? — not whether one HTTP call returned 200. A
+status code is a hint; the GET is the signal. This is the same rule as "wait on the real signal", applied to cleanup.
 
 Registered with teardown after `yield` (runs even when the test fails), behind a guard on the write target:
 

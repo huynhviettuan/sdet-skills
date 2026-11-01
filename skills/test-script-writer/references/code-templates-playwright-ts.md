@@ -77,11 +77,17 @@ export const test = serviceFixtures.extend<DataFixtures>({
             },
             uniqueTag: () => `autotest-tag-${randomUUID()}`
         });
-        // Teardown: runs even when the test failed. Idempotent — a pet the test already deleted answers 200 or 404.
+        // Teardown: runs even when the test failed. Idempotent, and judged by the real signal — the pet is gone — not
+        // by the delete's status: the shared Petstore answers a DELETE oddly at times (a 304 in the nightly run of
+        // 2026-10-30). A status other than 200/404 is followed by a GET; only a pet still present after one retry leaks.
+        const gone = async (id: number): Promise<boolean> => (await petService.getPetById(id)).statusCode === NOT_FOUND;
         const leaked: string[] = [];
         for (const id of created) {
-            const { statusCode } = await petService.deletePet(id);
-            if (statusCode !== OK && statusCode !== NOT_FOUND) leaked.push(`${id} (${statusCode})`);
+            let { statusCode } = await petService.deletePet(id);
+            if (statusCode !== OK && statusCode !== NOT_FOUND && !(await gone(id))) {
+                ({ statusCode } = await petService.deletePet(id));
+                if (!(await gone(id))) leaked.push(`${id} (still present, last status ${statusCode})`);
+            }
         }
         if (leaked.length) throw new Error(`Teardown could not delete pets: ${leaked.join(', ')}`);
     },
