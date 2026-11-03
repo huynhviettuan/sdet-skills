@@ -39,12 +39,19 @@ All notable changes to the sdet-skills plugin. Versions follow the `version` in 
   checked, 0 errors). The skill and `coverage-and-prioritization.md` also say how to check a design that covers one
   slice: against a catalogue of that slice, since an uncovered AC is an error by design. Self-tested, and shown to
   fail with the comparison disabled.
+- `project-knowledge-base/examples/orders-kb`: four deliberately messy Orders sources (a PRD draft, meeting notes that
+  contradict it, a customer FAQ, a roles sheet) turned into a full cited knowledge base: digests, overview, domain
+  model with the state diagram, three flows, business rules, decisions, an analysis with 16 findings (C-1 High: the
+  PRD's "cancel until shipped" against the meeting's "24 hours after payment") and a testing view whose two tables
+  `check_cases.py --kb` reads. `check_kb` 0 errors / 0 warnings and the `--kb` parse are re-earned in CI's `Skill
+  examples` job. The analysis page of this example and the requirement analysis of `test-case-design/examples/
+  orders` were refused to the agents that wrote them (a tool policy on the file name); both agents stopped and
+  returned the content, and the coordinating session placed both pages after the maintainer approved.
 - Worked examples for eleven more skills, most on one shared domain (Orders), each with the command that checks it.
   `project-docs/examples/orders-docs`: a full Level 2 package (7 FR, 17 BR, 44 AC, 4 ADR, 6 OQ, a 51-cell
   permission matrix). `test-case-design/examples/orders`: 25 cases over a 19-AC slice (EP, BVA, state transition,
   decision table, verified pairwise), the CSV workbook, coverage and regression scope; 0 errors against the slice
-  catalogue (its `analysis.md` was refused to the agent that wrote the example and is missing, said so in its
-  README). `sdet-automation-docs/examples/orders-automation`: strategy, risk, data, flaky policy, CI gates,
+  catalogue. `sdet-automation-docs/examples/orders-automation`: strategy, risk, data, flaky policy, CI gates,
   traceability (the Orders matrix measured at 23 of 51 cells covered by the reference suite). `test-code-review/
   examples/review-01`: 8 planted violations, the review, the fixed code, an answer key (audit-suite 7 before, 0 after;
   3 need a human). `refactor-test-suite/examples/legacy-orders`: baseline, audit, plan, three steps 53 -> 43 -> 22 -> 0,

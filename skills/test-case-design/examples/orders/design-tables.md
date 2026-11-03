@@ -2,8 +2,8 @@
 
 The coverage model behind the cases in [`cases/`](cases/), derived on 2026-11-03 from the Orders package
 (`skills/project-docs/examples/orders-docs/`, read-only). Every table names its source; a cell with no source is
-marked *inferred* and says from what. The requirement analysis (`analysis.md`) is not in this folder: writing it
-was refused on 2026-11-03 (see [README.md](README.md#not-done)).
+marked *inferred* and says from what. The requirement analysis (slice, clauses split, OQ register, techniques and
+why) is [analysis.md](analysis.md).
 
 Contents:
 

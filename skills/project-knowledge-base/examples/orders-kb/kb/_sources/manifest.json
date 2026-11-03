@@ -1,0 +1,196 @@
+{
+  "sources": "D:\\sdet-skills\\skills\\project-knowledge-base\\examples\\orders-kb\\sources",
+  "generated": "2026-11-03T10:18Z",
+  "files": [
+    {
+      "id": "S01",
+      "path": "01_orders_prd_draft_v0.3.md",
+      "type": "md",
+      "bytes": 3429,
+      "sha256": "e518aa8a98253a9d2eb78f49f7941de0581a0b03db1d6c7df180a3ec0a18ab2f",
+      "modified": "2026-11-03",
+      "words": 580,
+      "title": "Orders service — product requirements (DRAFT v0.3)",
+      "status": "ok",
+      "change": "unchanged",
+      "text": "_sources/text/S01-01-orders-prd-draft-v0-3.md",
+      "outline": [
+        {
+          "level": 1,
+          "title": "Orders service — product requirements (DRAFT v0.3)",
+          "line": 1
+        },
+        {
+          "level": 2,
+          "title": "1. Purpose",
+          "line": 6
+        },
+        {
+          "level": 2,
+          "title": "2. Tenants and users",
+          "line": 13
+        },
+        {
+          "level": 2,
+          "title": "3. The order",
+          "line": 19
+        },
+        {
+          "level": 2,
+          "title": "4. Status lifecycle",
+          "line": 30
+        },
+        {
+          "level": 2,
+          "title": "5. Who may do what",
+          "line": 41
+        },
+        {
+          "level": 2,
+          "title": "6. Sign-in",
+          "line": 52
+        },
+        {
+          "level": 2,
+          "title": "7. Payment (TODO)",
+          "line": 60
+        },
+        {
+          "level": 2,
+          "title": "8. Acceptance (draft)",
+          "line": 65
+        },
+        {
+          "level": 2,
+          "title": "9. Open points",
+          "line": 72
+        }
+      ]
+    },
+    {
+      "id": "S02",
+      "path": "02_meeting_notes_2026-10-28.md",
+      "type": "md",
+      "bytes": 2233,
+      "sha256": "d121dd75b03fa17005c1f16c523c86861a05ad736531d4a685de8c212a3b6d9c",
+      "modified": "2026-11-03",
+      "words": 371,
+      "title": "Orders sync — meeting notes, 2026-10-28",
+      "status": "ok",
+      "change": "unchanged",
+      "text": "_sources/text/S02-02-meeting-notes-2026-10-28.md",
+      "outline": [
+        {
+          "level": 1,
+          "title": "Orders sync — meeting notes, 2026-10-28",
+          "line": 1
+        },
+        {
+          "level": 2,
+          "title": "1. PRD review",
+          "line": 11
+        },
+        {
+          "level": 2,
+          "title": "2. Cancellation",
+          "line": 17
+        },
+        {
+          "level": 2,
+          "title": "3. Lockout",
+          "line": 32
+        },
+        {
+          "level": 2,
+          "title": "4. Scope of v1",
+          "line": 37
+        },
+        {
+          "level": 2,
+          "title": "Actions",
+          "line": 48
+        }
+      ]
+    },
+    {
+      "id": "S03",
+      "path": "03_support_faq.md",
+      "type": "md",
+      "bytes": 1991,
+      "sha256": "9cec65262987daf020fd78087b0237ee039397c8a06de20e0f53bb60b83be287",
+      "modified": "2026-11-03",
+      "words": 367,
+      "title": "Orders — help centre FAQ",
+      "status": "ok",
+      "change": "unchanged",
+      "text": "_sources/text/S03-03-support-faq.md",
+      "outline": [
+        {
+          "level": 1,
+          "title": "Orders — help centre FAQ",
+          "line": 1
+        },
+        {
+          "level": 2,
+          "title": "Placing an order",
+          "line": 6
+        },
+        {
+          "level": 2,
+          "title": "Cancelling",
+          "line": 19
+        },
+        {
+          "level": 2,
+          "title": "Seeing other orders",
+          "line": 28
+        },
+        {
+          "level": 2,
+          "title": "Signing in",
+          "line": 37
+        },
+        {
+          "level": 2,
+          "title": "Still stuck?",
+          "line": 46
+        }
+      ]
+    },
+    {
+      "id": "S04",
+      "path": "04_roles_sheet.md",
+      "type": "md",
+      "bytes": 2202,
+      "sha256": "c8f215d2618aebc0d0dcf64a1374b206d6cabce0fa9b60a8cdc6ae0ce8207d14",
+      "modified": "2026-11-03",
+      "words": 474,
+      "title": "Roles and permissions — Orders (snapshot 2026-10-15)",
+      "status": "ok",
+      "change": "unchanged",
+      "text": "_sources/text/S04-04-roles-sheet.md",
+      "outline": [
+        {
+          "level": 1,
+          "title": "Roles and permissions — Orders (snapshot 2026-10-15)",
+          "line": 1
+        },
+        {
+          "level": 2,
+          "title": "Response codes",
+          "line": 16
+        },
+        {
+          "level": 2,
+          "title": "Matrix",
+          "line": 25
+        },
+        {
+          "level": 2,
+          "title": "Worked examples",
+          "line": 41
+        }
+      ]
+    }
+  ]
+}

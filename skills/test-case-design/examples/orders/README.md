@@ -28,6 +28,7 @@ example only reads. Design-time only: no case has run, so nothing here is a pass
 
 ```text
 README.md            this page
+analysis.md          the requirement analysis: slice, clauses split, OQ register, proposed OQs, techniques and why
 slice-catalogue.md   the slice's 4 FR, 12 BR, 19 AC, rows copied from the package catalogue
 design-tables.md     EP/BVA, state table, decision table, actor x action matrix, pairwise (with tool output)
 factors.json         pairwise factors, reasons, forbidden and required rows
@@ -39,7 +40,9 @@ coverage.md          AC -> TC, gaps with risk, out-of-slice ACs, assumption case
 
 ## Verification
 
-All commands run from the repository root on 2026-11-03 (ran once on that date; no CI job re-runs this example).
+All commands run from the repository root on 2026-11-03. CI's `Skill examples` job (`scripts/check-examples.sh`)
+re-runs the two slice checks with `--sources` on every push (25 cases, 0 errors); the pairwise and `--trace` runs
+are "ran once on 2026-11-03".
 
 **Cases against the slice** — every slice AC has a case:
 
@@ -117,14 +120,11 @@ Result on 2026-11-03: `evidence quotes: 44 checked against 40 source document(s)
 written, `check_cases.py` compared quotes only under `--kb`, so a scratch script checked them first (same result,
 44 / 0); this example is why `--sources` exists. CI's `Skill examples` job re-runs the command above.
 
-**Repository check**: `node scripts/check-repo.mjs` on 2026-11-03 ended `17 problem(s) | 19 skills | 375 Markdown
-files` (exit 1; the script prints a middle dot where this page writes `|`); all 17 are broken links to `analysis.md` under `skills/project-knowledge-base/examples/orders-kb/`,
-none under this folder. CI's check job re-runs it on every push.
+**Repository check**: `node scripts/check-repo.mjs` is clean for this folder; CI's check job re-runs it on every
+push.
 
-## Not done
+## How analysis.md got here
 
-- **`analysis.md` (the requirement analysis with the OQ register and the techniques and why) is missing.** The
-  Write of that file was refused by a tool policy on 2026-11-03; per the repository's rule a refusal is a stop, so it
-  was not written another way. Its content went to the coordinator in the session report. Until it lands, the
-  techniques per element are in the headers of the case files and in design-tables.md, and the OQ to case mapping is
-  the assumption table of coverage.md.
+The agent that designed this example was refused when it wrote `analysis.md` (a tool policy, 2026-11-03). Per the
+repository's rule a refusal is a stop, so it did not write the file another way; it returned the content in its
+report, and the coordinating session placed it after the maintainer approved.

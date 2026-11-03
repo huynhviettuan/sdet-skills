@@ -62,5 +62,20 @@ for target in "$T/cases" "$T/orders-cases.csv"; do
     fi
 done
 
+# project-knowledge-base: the Orders KB checks clean, and check_cases --kb parses its testing view (14 testable rules).
+K=skills/project-knowledge-base/examples/orders-kb
+if python skills/project-knowledge-base/scripts/check_kb.py "$K/kb" > "$OUT/kb.txt" 2>&1 \
+    && grep -q "^0 error(s), 0 warning(s)" "$OUT/kb.txt"; then
+    ok "project-knowledge-base orders-kb: check_kb 0 errors, 0 warnings"
+else
+    bad "project-knowledge-base orders-kb: check_kb"; tail -5 "$OUT/kb.txt"
+fi
+if python skills/test-case-design/scripts/check_cases.py "$K/parse-probe-cases.md" --kb "$K/kb" > "$OUT/kbcases.txt" 2>&1 \
+    && grep -q "1 of 14 with a case" "$OUT/kbcases.txt" && grep -q "^0 error(s)" "$OUT/kbcases.txt"; then
+    ok "project-knowledge-base orders-kb: check_cases --kb 0 errors, testable rules 1 of 14 with a case"
+else
+    bad "project-knowledge-base orders-kb: check_cases --kb"; tail -5 "$OUT/kbcases.txt"
+fi
+
 if [ "$fail" -ne 0 ]; then echo "FAIL"; exit 1; fi
 echo "OK | every example check passed"
