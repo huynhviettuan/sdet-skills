@@ -13,6 +13,17 @@ All notable changes to the sdet-skills plugin. Versions follow the `version` in 
 
 ### Added
 
+- `ai-guardrail-testing`: testing the rails around an LLM feature or agent — a `GR-<AREA>-NNN` policy catalogue,
+  the entry-point × side-effect threat grid with an OWASP LLM Top 10 mapping, an attack catalogue in eight classes
+  (direct, indirect through tool output / documents / pages, encoding and language, multi-turn, tool-argument
+  tampering, extraction, resource abuse, over-refusal) each with a deterministic oracle, paraphrase sets as
+  metamorphic relations, the tool-gate test pattern, output contracts, a strict sentinel, verdicts with
+  *inconclusive* for a flaky model path, and an LLM judge that stays advisory until `scripts/measure_judge.py --gate`
+  passes on a held-out set (defaults n ≥ 100, FPR ≤ 2 %, FNR ≤ 5 %, overridable and recorded). A runnable
+  `examples/stub-agent` (pytest, no model) with a gullible fake model and the real gate: 12 passed + 1 xfailed
+  sentinel on 2026-11-03; its first paraphrase-set run caught a one-spelling Vietnamese intent pattern. The
+  selftest scores the judge gate, runs the example and proves the sentinel turns the suite red when the gate is
+  opened; it runs in CI's `skill-scripts` job.
 - The automation pipeline runs as a team: `sdet-automation-coordinator` (Sonnet) owns `docs/automation-status.json`
   and spawns one isolated subagent per stage — `sdet-assess` (Opus), `sdet-build-page` / `sdet-build-service` (one
   per screen / tag, in parallel), `sdet-implement` (per case file, in parallel), `sdet-verify`, an independent

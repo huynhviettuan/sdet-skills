@@ -57,7 +57,8 @@ Governed runs in the Manual QA Agent (approved sources, human gates, evidence):
 
 Non-functional, alongside any of the above:
   ├─► performance-testing     SLOs, workload model, scripts, runs, analysis, report
-  └─► security-testing        threat model, authz/BOLA tests, pipeline scanners, triage
+  ├─► security-testing        threat model, authz/BOLA tests, pipeline scanners, triage
+  └─► ai-guardrail-testing    GR- policies, prompt injection, tool gates, output contracts, sentinel, measured judge
 
 When tests go red:
   └─► debug-failed-tests      evidence → classify → reproduce → root cause → prove fix → route
@@ -89,6 +90,7 @@ All of the above as one job, with human gates:
 | Submit stories, propose executable specs, run cases and suites, read reports and triage in the Manual QA Agent | `manual-qa-agent` (+ `test-script-writer`) |
 | Load, stress, soak, capacity testing; perf results analysis | `performance-testing` |
 | Authorization/tenant isolation tests, security scans in CI, finding triage | `security-testing` |
+| Test an AI assistant or agent: refusal policies, prompt injection, tool-call gates, output contracts, LLM judges | `ai-guardrail-testing` |
 | Investigate a failing, flaky, or CI-only test; triage a red run | `debug-failed-tests` |
 | Audit / clean up / migrate an existing (legacy) test suite; enforce test coding rules | `refactor-test-suite` |
 | Review a PR / diff of test code; DRY / KISS / YAGNI coding standards for test code | `/review-tests` → `test-code-review` |
@@ -101,7 +103,8 @@ The documentation skills share one ID scheme so requirements trace through to te
 | `FR-<AREA>-NNN` | Functional requirement / feature | project-docs |
 | `BR-<AREA>-NNN` | Business rule | project-docs |
 | `AC-<AREA>-NNN` | Acceptance criterion | project-docs |
-| `TC-<AREA>-NNN` | Test case (`TC-SEC-…` for security) | test-case-design / sdet-automation-docs |
+| `TC-<AREA>-NNN` | Test case (`TC-SEC-…` for security, `TC-GR-…` for guardrails) | test-case-design / sdet-automation-docs |
+| `GR-<AREA>-NNN` | Guardrail policy of an AI feature (`TOOL`, `INJ`, `OUT`, `REF`, `RES`, `DATA`) | ai-guardrail-testing |
 | `OQ-NNN` | Open question | all |
 | `KQ-NNN` | Question a knowledge base raises about its sources (the sources keep their own `OQ-`) | project-knowledge-base |
 | `S<NN> L<n>` | Citation: knowledge-base source and line (`[S07 L120]`), accepted in `Verifies`/`Evidence` | project-knowledge-base / test-case-design |
@@ -164,6 +167,11 @@ The documentation skills share one ID scheme so requirements trace through to te
 - [`security-testing`](skills/security-testing/SKILL.md) — authorized, defensive security testing: threat modeling
   and ASVS scoping, automated authz/BOLA/session/header tests, SAST/SCA/secrets/IaC/DAST in CI with gating
   policies, and finding triage and reporting.
+- [`ai-guardrail-testing`](skills/ai-guardrail-testing/SKILL.md) — testing the rails around an LLM feature or
+  agent: a `GR-` policy catalogue, the entry-point × side-effect threat grid (OWASP LLM Top 10 mapped), an attack
+  catalogue with deterministic oracles, paraphrase sets, the tool-gate test, output contracts, a strict sentinel,
+  and an LLM judge that stays advisory until measured on a held-out set (`measure_judge.py`); a runnable stub-agent
+  example.
 - [`debug-failed-tests`](skills/debug-failed-tests/SKILL.md) — systematic investigation of failing and flaky tests:
   evidence checklist, five cause categories, a reproduction ladder with flake-rate measurement and pollution
   bisecting, cause → fix → anti-fix tables, and templates for defect reports, environment tickets, and quarantine.

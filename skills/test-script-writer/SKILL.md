@@ -97,3 +97,5 @@ locators and the environment's data hooks, and verification is the bundled check
 - **`sdet-framework-architect`** — composition root, fixture-owned teardown, and scoping rules the tests follow.
 - **`init-playwright-framework`** / **`init-selenium-java-framework`** — the scaffolds the templates target.
 - **`manual-qa-agent`** — propose, get approved, and run executable specs in the agent; route cases it can't run.
+- **`ai-guardrail-testing`** — guardrail suites keep the same sentinel and `can-fail` discipline; paraphrase sets
+  are metamorphic relations.

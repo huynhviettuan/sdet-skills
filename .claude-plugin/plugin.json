@@ -1,7 +1,7 @@
 {
   "name": "sdet-skills",
   "version": "1.6.0",
-  "description": "SDET / test-automation skills plus an end-to-end automation agent: framework architecture, Playwright/TypeScript, Selenium+RestAssured/Java and pytest/Python scaffolding (composition-first), page-object and OpenAPI service builders, test-script writer, test-code review (coding standards, /review-tests), behavioural evals, automation pipeline as a team (/automate, sdet-automation-coordinator with stage agents, guard hooks, status schema), Manual QA Agent integration (executable specs, runs, triage), test-suite refactoring, project knowledge base (cited summary, flows and analysis of existing documents), project and automation documentation, test case design, performance testing, security testing, and debugging failed tests.",
+  "description": "SDET / test-automation skills plus an end-to-end automation agent: framework architecture, Playwright/TypeScript, Selenium+RestAssured/Java and pytest/Python scaffolding (composition-first), page-object and OpenAPI service builders, test-script writer, test-code review (coding standards, /review-tests), behavioural evals, automation pipeline as a team (/automate, sdet-automation-coordinator with stage agents, guard hooks, status schema), Manual QA Agent integration (executable specs, runs, triage), test-suite refactoring, project knowledge base (cited summary, flows and analysis of existing documents), project and automation documentation, test case design, performance testing, security testing, AI guardrail testing (prompt injection, tool gates, output contracts, measured judges), and debugging failed tests.",
   "author": {
     "name": "huynhviettuan"
   },
@@ -13,6 +13,8 @@
     "playwright",
     "performance-testing",
     "security-testing",
+    "ai-safety",
+    "guardrails",
     "documentation",
     "automation-agent",
     "python",

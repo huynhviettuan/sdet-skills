@@ -92,5 +92,7 @@ no BOLA tests, unauthenticated DAST, gate disabled because of backlog, suppressi
   gates.
 - **`sdet-framework-architect`** — role-scoped API clients and two-tenant data fixtures follow its
   composition-root and teardown-ownership rules.
+- **`ai-guardrail-testing`** — the LLM surface (prompt injection, tool gates, output contracts) is one more trust
+  boundary in the STRIDE pass; it reuses this skill's rules of engagement and triage.
 - **`performance-testing`** — load and denial-of-service resilience at scale; this skill only checks that limits
   exist and are enforced.

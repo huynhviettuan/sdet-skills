@@ -129,5 +129,7 @@ Shared with `project-docs` and `sdet-automation-docs`: test cases are `TC-<AREA>
 - **`sdet-automation-docs`** — risk classification (P0–P3), traceability matrix, and CI suites that consume these
   cases.
 - **`security-testing`** — abuse cases and the access-control matrix extend the negative cases designed here.
+- **`ai-guardrail-testing`** — `GR-` policies are catalogue IDs; its attack classes and paraphrase sets are the
+  design tables for `TC-GR-` cases in this format.
 - **`sdet-framework-architect`** — how automated versions of these cases are structured (fixtures, data-driven
   tests, when Gherkin is worth it).
