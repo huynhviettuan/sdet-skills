@@ -2,8 +2,12 @@
 
 This repo teaches testing discipline, so it is held to it. These rules are for anyone working here — a person, this
 session, or a subagent it spawns. Path-scoped detail is in `.claude/rules/`; the definition of done is in
-[CONTRIBUTING.md](CONTRIBUTING.md); decisions already made are in [docs/decisions.md](docs/decisions.md) — read it
-before re-opening one.
+[CONTRIBUTING.md](../CONTRIBUTING.md); decisions already made are in [docs/decisions.md](../docs/decisions.md) — read
+it before re-opening one.
+
+This file lives in `.claude/` on purpose: Claude Code reads it as project instructions for anyone working in this
+repo, and it is not part of the plugin people install (a `CLAUDE.md` at the plugin root is not loaded for plugin
+users, and strict validation flags it).
 
 ## Rules
 
@@ -45,8 +49,10 @@ node skills/service-builder/scripts/selftest.mjs
 ```
 
 ```bash
-npx -y @anthropic-ai/claude-code@2.1.287 plugin validate --strict .
+for t in . .claude-plugin/plugin.json skills agents commands; do npx -y @anthropic-ai/claude-code@2.1.287 plugin validate --strict "$t"; done
 ```
+
+Every target CI validates — the marketplace (`.`) alone misses plugin-level warnings.
 
 Evals (`claude plugin eval . --trust-plugin --no-publish`) and the example suites (`skills/test-script-writer/examples/*/run-examples.sh`)
 run on demand; CI runs the examples nightly.
@@ -62,7 +68,7 @@ Only the coordinating session edits these; a subagent that needs a change in one
 Copy this into the brief; an agent cannot follow a rule it was not given.
 
 ```text
-Repo: D:/sdet-skills. Read CLAUDE.md first and follow it.
+Repo: D:/sdet-skills. Read .claude/CLAUDE.md first and follow it.
 You may write ONLY: <explicit paths>. Everything else — including README, CHANGELOG, .github, scripts/ and the
 other stacks — is someone else's; if you need a change there, stop and say what and why.
 Done means: <the exact outcome: tests pass 3x in parallel, checker clean, N files with line counts>.

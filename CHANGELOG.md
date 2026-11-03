@@ -4,6 +4,13 @@ All notable changes to the sdet-skills plugin. Versions follow the `version` in 
 
 ## [Unreleased]
 
+### Fixed
+
+- The repo's working rules moved from `CLAUDE.md` to `.claude/CLAUDE.md`. CI's strict validation of the plugin
+  manifest had failed on every push since the rules were added (a root `CLAUDE.md` is not loaded for plugin users);
+  only the marketplace target had been validated locally. Claude Code reads `.claude/CLAUDE.md` as project
+  instructions, so contributors keep the rules; the local check now names every target CI validates.
+
 ### Added
 
 - The automation pipeline runs as a team: `sdet-automation-coordinator` (Sonnet) owns `docs/automation-status.json`
