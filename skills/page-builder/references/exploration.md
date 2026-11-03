@@ -36,7 +36,7 @@ guess.
 | Option | Use when |
 |---|---|
 | Claude's built-in browser (or Claude in Chrome) | Default. `navigate`, `read_page` for the accessibility tree, `find` for specific controls, `javascript_tool` to inspect attributes/test ids, `read_network_requests` for API calls |
-| Playwright MCP | The project already uses it; same steps through its snapshot/click/network tools |
+| Playwright MCP | The project already uses it, or an explorer subagent should get a browser and nothing else: the Playwright scaffold ships `.mcp.json.example` (headless, isolated profile, `--caps=core,tabs`, `--allowed-origins` limited to the test environment) — copy it to `.mcp.json` and give the explorer only that server's tools. Same steps through its snapshot/click/network tools |
 | Playwright inspector / codegen (`npx playwright codegen <url>`) | No browser tools available. Use the recording only to learn locators — never paste generated code into page objects |
 | Docs and screenshots only | No access to the app. Every locator is `UNVERIFIED` until checked; say so in the inventory |
 

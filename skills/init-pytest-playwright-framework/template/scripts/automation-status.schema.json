@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/huynhviettuan/sdet-skills/skills/automation-pipeline/schemas/automation-status.schema.json",
+  "title": "Automation status",
+  "description": "The pipeline's memory (docs/automation-status.json): what each stage consumed and produced, the gates, every case's state, every stop. The coordinator reads and writes this; docs/automation-status.md is rendered from it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["scope", "stack", "repo", "branch", "updated", "stage", "gates", "cases", "stops"],
+  "properties": {
+    "scope": { "type": "string", "minLength": 1 },
+    "stack": { "enum": ["playwright-ts", "selenium-java", "pytest-playwright", "qa-agent"] },
+    "repo": { "type": "string" },
+    "branch": { "type": "string", "pattern": "^automation/" },
+    "updated": { "type": "string", "format": "date-time" },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["current", "next"],
+      "properties": {
+        "current": { "enum": ["0-assess", "1-document", "2-scaffold", "3-build", "4-implement", "5-verify", "6-deliver", "7-govern", "done"] },
+        "next": { "type": "string" },
+        "completed": { "type": "array", "items": { "$ref": "#/$defs/stageRecord" } }
+      }
+    },
+    "intake": {
+      "type": "object",
+      "properties": {
+        "appUrl": { "type": "string" },
+        "apiUrl": { "type": "string" },
+        "spec": { "type": "string" },
+        "casesFile": { "type": "string" },
+        "environment": { "type": "string" },
+        "credentials": { "type": "string", "description": "environment-variable names only, never values" }
+      }
+    },
+    "assessment": { "type": "object" },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["A", "B", "C"],
+      "properties": {
+        "A": { "$ref": "#/$defs/gate" },
+        "B": { "$ref": "#/$defs/gate" },
+        "C": { "$ref": "#/$defs/gate" }
+      }
+    },
+    "inventory": {
+      "type": "object",
+      "properties": {
+        "pages": { "type": "array", "items": { "type": "object", "required": ["name", "file", "elements", "verified"], "properties": { "name": { "type": "string" }, "file": { "type": "string" }, "elements": { "type": "integer" }, "verified": { "enum": ["live", "docs-only"] }, "unverifiedLocators": { "type": "integer" } } } },
+        "services": { "type": "array", "items": { "type": "object", "required": ["tag", "file", "operations"], "properties": { "tag": { "type": "string" }, "file": { "type": "string" }, "operations": { "type": "integer" }, "coverage": { "type": "string" } } } },
+        "testIdRequests": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "state"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^TC-" },
+          "state": { "enum": ["pending", "in-progress", "automated", "blocked", "routed", "manual"] },
+          "level": { "enum": ["api", "ui", "integration", "manual"] },
+          "file": { "type": "string" },
+          "reason": { "type": "string", "description": "for blocked / routed / manual: the OQ, the missing part, or the route" },
+          "verified": {
+            "type": "object",
+            "properties": {
+              "green": { "type": "boolean" },
+              "repeats": { "type": "integer" },
+              "workers": { "type": "integer" },
+              "canFail": { "enum": ["killed", "survived", "not-run"] }
+            }
+          }
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "properties": {
+        "command": { "type": "string" },
+        "passed": { "type": "integer" },
+        "failed": { "type": "integer" },
+        "skipped": { "type": "integer" },
+        "repeats": { "type": "integer" },
+        "workers": { "type": "integer" },
+        "sentinel": { "enum": ["failed-as-expected", "PASSED-detection-not-proven", "absent"] },
+        "canFail": { "type": "object", "properties": { "killed": { "type": "integer" }, "survived": { "type": "integer" } } },
+        "audit": { "enum": ["clean", "findings"] },
+        "reviewer": { "type": "object", "properties": { "agent": { "type": "string" }, "findings": { "type": "integer" }, "verdict": { "type": "string" } } }
+      }
+    },
+    "openQuestions": { "type": "array", "items": { "type": "object", "required": ["id", "question"], "properties": { "id": { "type": "string" }, "question": { "type": "string" }, "blocks": { "type": "array", "items": { "type": "string" } }, "forWhom": { "type": "string" } } } },
+    "stops": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["at", "stage", "rule", "detail"],
+        "properties": {
+          "at": { "type": "string", "format": "date-time" },
+          "stage": { "type": "string" },
+          "rule": { "enum": ["missing-requirement", "red-baseline", "unreachable", "shared-limit", "ambiguous-locator", "spec-drift", "verification-failed", "destructive", "production", "secret", "refusal", "other"] },
+          "detail": { "type": "string" },
+          "cases": { "type": "array", "items": { "type": "string" } },
+          "resolution": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": {
+        "state": { "enum": ["not-reached", "waiting", "passed", "rejected"] },
+        "by": { "type": "string" },
+        "at": { "type": "string", "format": "date-time" },
+        "note": { "type": "string" }
+      }
+    },
+    "stageRecord": {
+      "type": "object",
+      "required": ["stage", "agent", "finishedAt", "outcome"],
+      "properties": {
+        "stage": { "type": "string" },
+        "agent": { "type": "string" },
+        "model": { "type": "string" },
+        "finishedAt": { "type": "string", "format": "date-time" },
+        "outcome": { "enum": ["done", "partial", "stopped"] },
+        "produced": { "type": "array", "items": { "type": "string" } },
+        "summary": { "type": "string" }
+      }
+    }
+  }
+}

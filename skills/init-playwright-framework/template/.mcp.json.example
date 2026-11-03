@@ -1,0 +1,9 @@
+{
+    "_comment": "Optional: a Playwright MCP server for live exploration (page-builder → exploration.md). Copy to .mcp.json to enable. Headless, isolated profile, no file-system or install capabilities, so the explorer can read and click the test environment and nothing else. Claude's built-in browser works without this.",
+    "mcpServers": {
+        "playwright-explore": {
+            "command": "npx",
+            "args": ["-y", "@playwright/mcp@latest", "--headless", "--isolated", "--caps=core,tabs", "--allowed-origins=https://staging.example.com;http://localhost:3000"]
+        }
+    }
+}

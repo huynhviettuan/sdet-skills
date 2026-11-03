@@ -43,6 +43,10 @@ jobs:
           node-version: 20
       - name: test-script-writer (can-fail)
         run: node skills/test-script-writer/scripts/selftest.mjs
+      - name: automation-pipeline (guard hooks, status schema)
+        run: node skills/automation-pipeline/scripts/selftest.mjs
+      - name: service-builder (openapi-tool)
+        run: node skills/service-builder/scripts/selftest.mjs
 
   playwright-template:
     name: Playwright template compiles, lints and audits clean

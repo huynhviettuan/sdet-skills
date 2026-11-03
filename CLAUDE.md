@@ -23,7 +23,8 @@ before re-opening one.
    stack contract (`sdet-framework-architect`). Everyone else links.
 6. **Sources are read-only; outputs are cited.** Nothing under a user's documents, a pilot repo or a test catalogue
    is edited by a skill run; every statement a skill produces from them carries a citation or is marked inferred.
-7. **Shared scripts are one file.** `audit-suite.mjs`, `openapi-tool.mjs`, `can-fail.mjs`: change the skill's copy,
+7. **Shared scripts are one file.** `audit-suite.mjs`, `openapi-tool.mjs`, `can-fail.mjs`, `guard-hooks.mjs`, `status.mjs` and the
+   status schema: change the skill's copy,
    copy to every template, `check-repo` proves they match.
 8. **Write `[Unreleased]` as you go, one bullet group per commit.** A commit that mixes two release-note groups has
    to be split by hand later; it was, twice.
@@ -39,6 +40,8 @@ node scripts/check-repo.mjs
 python skills/test-case-design/scripts/selftest.py
 python skills/project-knowledge-base/scripts/selftest.py
 node skills/test-script-writer/scripts/selftest.mjs
+node skills/automation-pipeline/scripts/selftest.mjs
+node skills/service-builder/scripts/selftest.mjs
 ```
 
 ```bash

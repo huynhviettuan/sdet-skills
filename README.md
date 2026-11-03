@@ -69,7 +69,7 @@ Before merging any test code:
   └─► test-code-review        /review-tests — DRY / KISS / YAGNI standards (S- rules), consolidated checklist, verified findings
 
 All of the above as one job, with human gates:
-  └─► automation-pipeline     /automate <scope> · sdet-automation-agent — assess → document → [gate] → scaffold
+  └─► automation-pipeline     /automate <scope> · sdet-automation-coordinator + stage agents — assess → document → [gate] → scaffold
                               → build → [gate] → implement → verify → branch + status report → [merge]
 ```
 
@@ -181,12 +181,17 @@ The documentation skills share one ID scheme so requirements trace through to te
 
 ## The automation agent
 
-`/automate <feature> [--stack playwright|selenium-java|qa-agent] [--url <app>] [--spec <openapi>]` runs the whole
-pipeline as one job, and `sdet-automation-agent` is the same job as a subagent. Both follow the
+`/automate <feature> [--stack playwright|selenium-java|pytest-playwright|qa-agent] [--url <app>] [--spec <openapi>]`
+runs the pipeline as a **team**: `sdet-automation-coordinator` owns `docs/automation-status.json` and spawns one
+isolated subagent per stage — `sdet-assess` (Opus), `sdet-build-page` and `sdet-build-service` (one per screen / per
+tag, in parallel), `sdet-implement` (per case file, in parallel), `sdet-verify`, an independent `sdet-review` that
+sees the diff and not the writers, and `sdet-triage` (Haiku) for nightly failures. All follow the
 [`automation-pipeline`](skills/automation-pipeline/SKILL.md) skill: the other skills do each stage's work; the
 pipeline adds the order, three human gates (approve the test cases, confirm the element/API inventory, merge the
-PR), stop rules (missing requirement, unreachable app, ambiguous locator, red baseline, anything destructive), and
-a resumable `docs/automation-status.md`. It works on a branch and never merges.
+PR), stop rules, and the status JSON (rendered to Markdown) that lets a run resume. Four stop rules are hooks in every
+scaffold (`scripts/guard-hooks.mjs`): no merge or push to the default branch, no production host, no fixed sleep, no
+edit to an existing assertion; the audit runs after every write. `sdet-automation-agent` (one context, all stages)
+remains behind `--single-context`. It works on a branch and never merges.
 
 ## Install
 

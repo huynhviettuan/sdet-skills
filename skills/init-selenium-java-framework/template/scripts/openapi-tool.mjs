@@ -4,9 +4,10 @@
  *
  *   node openapi-tool.mjs inventory <spec> [--out inventory.json]
  *       List every operation with the service class, file, and method name it maps to (1:1).
- *   node openapi-tool.mjs schemas   <spec> [--out-dir src/data/schemas]
+ *   node openapi-tool.mjs schemas   <spec> [--out-dir src/data/schemas] [--tags pet,store]
  *       Write one JSON Schema per JSON 2xx response: <out-dir>/<folder>/<methodName>_<status>_schema.json
  *       (the naming read by validateJsonSchema(`${methodName}_${status}`, folder, body)).
+ *       --tags writes only those services' schemas, so a builder working on one tag never writes outside its paths.
  *   node openapi-tool.mjs coverage  <spec> [--services src/services] [--tags pet,store]
  *       Compare spec operations with `@operationId <id>` tags in service files (.ts, .java, .py, .cs). Exit 1 on any gap.
  *       --tags limits "missing" to the given tags (a feature-scoped build); extra and duplicated are always checked.
@@ -229,12 +230,13 @@ function toJsonSchema(spec, root, warnings) {
     return schema;
 }
 
-async function writeSchemas(spec, outDir) {
+async function writeSchemas(spec, outDir, tags) {
     const inv = buildInventory(spec);
     const isSwagger2 = spec.swagger === '2.0';
     const warnings = new Set();
     const written = [];
     for (const o of inv.operations) {
+        if (tags && !tags.includes(o.tag)) continue; // --tags: only the services in scope, so a builder never writes outside its paths
         const op = spec.paths[o.path][o.method.toLowerCase()];
         for (const [status, resp] of Object.entries(op.responses ?? {})) {
             if (!/^2\d\d$/.test(status)) continue;
@@ -354,7 +356,8 @@ async function main() {
             );
         }
     } else if (cmd === 'schemas') {
-        const { written, warnings } = await writeSchemas(spec, arg('--out-dir', path.join('src', 'data', 'schemas')));
+        const tags = arg('--tags')?.split(',').map((t) => t.trim()).filter(Boolean);
+        const { written, warnings } = await writeSchemas(spec, arg('--out-dir', path.join('src', 'data', 'schemas')), tags);
         written.forEach((f) => console.log(`wrote ${f}`));
         warnings.forEach((w) => console.warn(`warning: ${w}`));
         console.log(`${written.length} schema file(s)`);

@@ -45,9 +45,10 @@ inventory or the cases. The decision below keeps every step that needs that judg
 [`templates/nightly-triage.yml`](../templates/nightly-triage.yml):
 
 1. Run the suite **deterministically** (no model): `npx playwright test --project=e2e --reporter=json`.
-2. Only when tests failed: run Claude Code headless with the plugin loaded and the `debug-failed-tests` skill, limited
-   to reading files, re-running Playwright, and writing `triage/report.md`. It classifies each failure (product,
-   test, environment, data) with evidence and never edits tests or expectations.
+2. Only when tests failed: run Claude Code headless as the `sdet-triage` agent (Haiku; tools Read, Glob, Grep, Bash)
+   with the plugin loaded, limited to reading files, re-running one failing test once, and writing
+   `triage/report.md`. It classifies each failure (product, test, environment, data) with evidence and never edits
+   tests or expectations. The scaffold's guard hooks apply to it like to any session.
 3. Open (or update) one issue with the report. A person decides what to fix.
 
 ## Authoring from changed test cases

@@ -11,8 +11,10 @@ description: >
 
 # SDET Automation Agent
 
-You run the `automation-pipeline` skill. Load it first (`Skill: automation-pipeline`) and follow it exactly; this
-file only says how you behave as the one running it.
+You run the `automation-pipeline` skill **in one context, all stages** — the single-context fallback
+(`/automate … --single-context`) for small scopes or when subagents are unavailable. The default runner is
+`sdet-automation-coordinator`, which gives each stage its own context and runs stages 3–4 in parallel. Load the skill
+first (`Skill: automation-pipeline`) and follow it exactly; this file only says how you behave as the one running it.
 
 ## How you work
 

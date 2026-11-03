@@ -72,6 +72,12 @@ registry entries, the inventory.
    coverage report. No spec → capture traffic and draft an UNVERIFIED spec; that's also Gate B material.
 4. Verify: compile, each locator unique in each state, smoke spec per page, `openapi-tool coverage --tags <the tags in scope>` clean.
 
+**As a team:** one `sdet-build-page` per screen and one `sdet-build-service` per tag, launched together. Write paths
+are disjoint by construction — `src/pages/<screen>/**` + `src/components/containers/<screen>/**` per page agent,
+`src/services/<tag>*` + `src/models/<tag>/**` + `src/data/schemas/<tag>/**` per service agent (the stack's
+equivalents for Java and Python). Agents return their fixture/context registrations and registry rows in the report;
+the coordinator writes them, so no two agents touch `fixtures.ts`, `Pages.java` or `docs/registry/*`.
+
 ## Gate B — inventory
 
 Present: per page the container → element → locator → verified-in-states table (UNVERIFIED marked), the test-id
@@ -94,7 +100,17 @@ Consumes: approved cases, built pages/services. Produces: specs/tests, data fact
   routing).
 - Update `Automation:` fields in the case file.
 
+**As a team:** one `sdet-implement` per case file (or per batch of about five cases), launched together, each writing
+only `tests/<feature>*` and `src/data/factories/<feature>*` (stack equivalents). Each agent proves its own tests
+(pass, ×3, can-fail clean) before reporting; the coordinator applies the `Automation:` updates and any fixture lines.
+
 ## 5 Verify
+
+**As a team:** `sdet-verify` runs on the branch's working tree; `sdet-review` runs at the same time from a detached
+`git worktree` of HEAD. Never two runners on one tree: `can-fail` rewrites test files for the length of a run, and a
+concurrent runner reads the mutant (a phantom red in the 2026-11-02 pilot). Review findings come back as
+`findings[]` with file:line, severity by consequence and how each was verified; the coordinator applies small fixes
+itself (a registry row, a precondition check) and sends larger ones back to stage 4 as a new batch.
 
 Consumes: the implemented tests. Produces: the verification table in the status file.
 
@@ -142,6 +158,49 @@ For cases the team runs under approval: **`manual-qa-agent`** + **`test-script-w
 agent's own gates (approve case, approve executable by a second person, lead approval for destructive runs)
 apply; the pipeline proposes and reports, never approves. Cases the step format can't express stay in the
 framework (routing table in `manual-qa-agent/references/routing.md`).
+
+## Stage brief
+
+What the coordinator gives a stage agent. An agent cannot follow a rule it was not given, so the whole block goes in
+every brief:
+
+```text
+Repo: <path>. Stack: <stack>. Read CLAUDE.md and .claude/rules/ first and follow them.
+Stage: <n name>. Inputs (files, read them): <case file>, <inventory / status excerpt>, <produced paths from earlier stages>.
+You may write ONLY: <explicit paths>. Fixtures, context, registry, the status file, the case file and everything else
+are the coordinator's: return the lines to add in your report instead.
+Done means: <exact outcome — e.g. TC-TODO-001..003 implemented, each passes, passes with --repeat-each=3, can-fail 0 survivors>.
+Verify for real: run the commands; never skip, loosen, retry or edit an expectation to go green; a failing baseline
+is INCONCLUSIVE and is reported as such. A refused tool call (a guard hook, a permission) stops that step: report it,
+do not route around it.
+End with the stage report below, then two sentences in plain words.
+```
+
+## Stage report
+
+One fenced JSON block, the same shape for every stage, so the coordinator can update `automation-status.json` without
+reading prose:
+
+```json
+{
+  "stage": "4-implement",
+  "agent": "sdet-implement",
+  "outcome": "done | partial | stopped",
+  "produced": ["tests/e2e/todo.spec.ts", "src/data/factories/todo.ts"],
+  "registrations": ["src/fixtures/page-fixtures.ts: todoPage: async ({ page }, use) => use(new TodoPage(page))"],
+  "cases": [{ "id": "TC-TODO-001", "state": "automated", "level": "ui", "file": "tests/e2e/todo.spec.ts",
+              "verified": { "green": true, "repeats": 3, "workers": 4, "canFail": "killed" } },
+            { "id": "TC-TODO-003", "state": "blocked", "reason": "OQ-001 empty-todo message not specified" }],
+  "inventory": { "pages": [], "services": [], "testIdRequests": [] },
+  "commands": [{ "command": "npx playwright test tests/e2e/todo.spec.ts --repeat-each=3", "result": "6 passed" }],
+  "questions": [{ "id": "OQ-001", "question": "…", "blocks": ["TC-TODO-003"], "forWhom": "product owner" }],
+  "stops": [{ "rule": "missing-requirement", "detail": "…", "cases": ["TC-TODO-003"] }],
+  "refusals": []
+}
+```
+
+`refusals` lists every tool call a hook or permission blocked, verbatim — each is a stop. The coordinator re-verifies
+one claim per report (opens a produced file, re-runs one command, checks a count) before writing it to the status.
 
 ## Resuming a run
 

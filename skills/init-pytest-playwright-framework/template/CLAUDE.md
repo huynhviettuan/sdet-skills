@@ -33,6 +33,13 @@ root; services receive the shared httpx client; factories own cleanup.
   `[TC-…] behavior`.
 - **Config/secrets:** `qa.config.CONFIG`, values from `.env` / environment only.
 
+## Guard hooks
+
+`.claude/settings.json` runs `scripts/guard-hooks.mjs` on every tool call: a merge or push to the default branch, a
+production host from `.claude/guard.json`, a permission bypass, a `time.sleep`, or an edit that changes an existing
+assertion under `tests/` is blocked before it runs; `audit-suite --fail-on block` runs after every write. A blocked
+call is a finding, never something to work around (`ALLOW_ASSERTION_EDIT=1` is a person's deliberate override).
+
 ## Verify after changes
 
 ```bash

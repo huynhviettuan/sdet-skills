@@ -60,7 +60,25 @@ Collect before starting; stop and ask if any is missing:
 A gate is a stop. Present the artifact, ask, and wait — never proceed on silence or on "looks fine" you wrote
 yourself.
 
+## Run as a team
+
+The default runner is `sdet-automation-coordinator`: it owns `docs/automation-status.json` and spawns **one
+isolated subagent per stage** (`sdet-assess` on Opus; `sdet-build-page`, `sdet-build-service`, `sdet-implement`,
+`sdet-verify`, `sdet-review` on Sonnet; `sdet-triage` on Haiku) with only that stage's inputs — files, never the
+previous stage's conversation. Stages 3 and 4 fan out in parallel over disjoint write paths (one agent per screen,
+per tag, per case file); shared files (fixtures, registry, the status file) are merged by the coordinator from the
+registration lines the agents return. The reviewer at stage 5 sees the diff and the cases, not the writers. The
+brief and report shapes are in `references/stages.md`. `sdet-automation-agent` (one context, all stages) remains for
+small scopes and `--single-context`. The team runner ran once on 2026-11-02 (TodoMVC + Petstore, Playwright scaffold):
+10/10 cases, 42 passed ×3 on 4 workers, sentinel held, can-fail 20/0, independent review applied — details in the
+CHANGELOG; it is not yet repeated by a CI job.
+
 ## Stop rules
+
+Four of these are enforced by the scaffold's hooks (`scripts/guard-hooks.mjs`, wired in `.claude/settings.json`):
+a merge or push to the default branch, a production host from `.claude/guard.json`, a fixed sleep, and an edit that
+changes an existing assertion in a test are blocked before they run, and `audit-suite --fail-on block` runs after
+every write under `src/` or `tests/`. A blocked call is a stop to report, never something to route around.
 
 Stop the stage and report instead of guessing when:
 

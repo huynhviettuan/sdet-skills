@@ -1,8 +1,14 @@
 # Status File
 
-`docs/automation-status.md` is the pipeline's memory: created at intake, updated after every stage and gate,
-committed with the work. A new run reads it before doing anything. Keep it factual and short; details live in the
-case file, the registry and the PR.
+`docs/automation-status.json` is the pipeline's memory: created at intake, updated after every stage and gate,
+committed with the work. A new run reads it before doing anything. Its schema is
+`schemas/automation-status.schema.json` (copied into every scaffold as `scripts/automation-status.schema.json`);
+`node scripts/status.mjs validate | render | summary` checks it, renders `docs/automation-status.md` from it and
+prints the one-line summary. **Edit the JSON, never the Markdown** — the Markdown below is what the render produces,
+for people and for the PR description. Keep it factual and short; details live in the case file, the registry and
+the PR. The stage agents never write either file; they report, the coordinator writes.
+
+Rendered form:
 
 ```md
 # Automation status — <scope>

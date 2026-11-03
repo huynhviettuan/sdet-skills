@@ -141,10 +141,10 @@ for (const [i, line] of read(join(root, 'README.md')).split('\n').entries()) {
 
 // Shared scripts: identical copies
 const sha = (f) => createHash('sha256').update(readFileSync(f)).digest('hex');
-for (const name of ['openapi-tool.mjs', 'audit-suite.mjs', 'can-fail.mjs']) {
+for (const name of ['openapi-tool.mjs', 'audit-suite.mjs', 'can-fail.mjs', 'guard-hooks.mjs', 'status.mjs', 'automation-status.schema.json']) {
     const copies = files.filter((f) => basename(f) === name);
     const hashes = new Set(copies.map(sha));
-    if (copies.length < 3) problem(root, `${name}: expected 3 copies, found ${copies.length}`);
+    if (copies.length < 4) problem(root, `${name}: expected 4 copies, found ${copies.length}`);
     if (hashes.size > 1)
         problem(root, `${name}: copies differ — ${copies.map((c) => relative(root, c).replaceAll('\\', '/')).join(', ')}`);
 }

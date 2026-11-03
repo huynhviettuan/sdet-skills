@@ -1,5 +1,29 @@
 {
     "hooks": {
+        "PreToolUse": [
+            {
+                "matcher": "Bash",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "node scripts/guard-hooks.mjs pre-bash",
+                        "timeout": 10,
+                        "statusMessage": "Stop rules: merge, default branch, production host, permission bypass"
+                    }
+                ]
+            },
+            {
+                "matcher": "Edit|Write",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "node scripts/guard-hooks.mjs pre-edit",
+                        "timeout": 10,
+                        "statusMessage": "Stop rules: existing assertions, fixed sleeps"
+                    }
+                ]
+            }
+        ],
         "PostToolUse": [
             {
                 "matcher": "Write|Edit",
@@ -10,6 +34,12 @@
                         "shell": "bash",
                         "timeout": 30,
                         "statusMessage": "Running prettier..."
+                    },
+                    {
+                        "type": "command",
+                        "command": "node scripts/guard-hooks.mjs post-edit",
+                        "timeout": 60,
+                        "statusMessage": "audit-suite on the repo (block-level rules)"
                     }
                 ]
             }

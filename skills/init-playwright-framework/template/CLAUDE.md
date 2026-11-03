@@ -372,3 +372,9 @@ Enforced rules live in [`.claude/rules/`](.claude/rules/). They apply automatica
 | `04-parent-scoping`           | `pages/`, `components/` | Elements resolve through a parent Locator          |
 | `05-imports`                  | `src/`, `tests/`        | Path aliases + import from `@fixtures/fixtures`    |
 | `06-no-raw-locators-in-tests` | `tests/`                | Tests use page objects, never raw locators         |
+
+Hooks in [`.claude/settings.json`](.claude/settings.json) run `scripts/guard-hooks.mjs` on every tool call: a merge
+or push to the default branch, a production host listed in `.claude/guard.json`, a permission bypass, a fixed sleep,
+or an edit that changes an existing assertion in `tests/` is **blocked** before it runs, and `audit-suite --fail-on
+block` runs after every write under `src/` or `tests/`. A blocked call is a finding to report, never something to
+work around; a person who means to change an expectation sets `ALLOW_ASSERTION_EDIT=1` for that one command.

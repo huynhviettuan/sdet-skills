@@ -41,6 +41,13 @@ If a skill isn't installed, follow the conventions below and the code that alrea
 - **Assertions:** AssertJ only; response contracts via `SchemaValidator.assertMatches(response, folder, name)`.
 - **Config/secrets:** `Config.get(...)`; secrets from env / `-D` only.
 
+## Guard hooks
+
+`.claude/settings.json` runs `scripts/guard-hooks.mjs` on every tool call: a merge or push to the default branch, a
+production host from `.claude/guard.json`, a permission bypass, a `Thread.sleep`, or an edit that changes an existing
+assertion under `src/test/` is blocked before it runs; `audit-suite --fail-on block` runs after every write. A blocked
+call is a finding, never something to work around (`ALLOW_ASSERTION_EDIT=1` is a person's deliberate override).
+
 ## Verify after changes
 
 ```bash
