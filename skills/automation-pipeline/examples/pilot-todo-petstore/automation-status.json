@@ -1,0 +1,396 @@
+{
+  "scope": "todo + pet (pilot of the team runner)",
+  "stack": "playwright-ts",
+  "repo": "scratchpad/pilot",
+  "branch": "automation/todo",
+  "updated": "2026-11-02T15:40:00Z",
+  "stage": {
+    "current": "done",
+    "next": "-",
+    "completed": [
+      {
+        "stage": "0-assess",
+        "agent": "coordinator",
+        "finishedAt": "2026-11-02T10:00:00Z",
+        "outcome": "done",
+        "summary": "fresh init-playwright-framework scaffold; cases copied from the verified examples; app https://demo.playwright.dev/todomvc and API https://petstore3.swagger.io/api/v3 reachable; no credentials needed"
+      },
+      {
+        "stage": "1-document",
+        "agent": "coordinator",
+        "finishedAt": "2026-11-02T10:00:00Z",
+        "outcome": "done",
+        "summary": "docs/test-cases/todo.md (5 cases) and pet.md (5 cases) already in the test-case-design format"
+      },
+      {
+        "stage": "2-scaffold",
+        "agent": "coordinator",
+        "finishedAt": "2026-11-02T10:00:00Z",
+        "outcome": "done",
+        "summary": "npm install clean"
+      },
+      {
+        "stage": "3-build",
+        "agent": "sdet-build-page",
+        "model": "sonnet (general-purpose in the pilot)",
+        "finishedAt": "2026-11-02T10:50:00Z",
+        "outcome": "done",
+        "produced": [
+          "src/pages/todo/index.ts",
+          "src/components/containers/todo/header.container.ts",
+          "src/components/containers/todo/main.container.ts",
+          "src/components/containers/todo/todo-item.section.ts",
+          "src/components/containers/todo/footer.container.ts"
+        ],
+        "summary": "TodoPage with header/main/footer and a title-keyed item section; 8 states explored live; 0 UNVERIFIED; tsc, eslint, prettier, audit clean; re-verified by the coordinator (tsc, no .first()/sleeps)"
+      },
+      {
+        "stage": "3-build",
+        "agent": "sdet-build-service",
+        "model": "sonnet (general-purpose in the pilot)",
+        "finishedAt": "2026-11-02T10:45:00Z",
+        "outcome": "done",
+        "produced": [
+          "src/services/pet.service.ts",
+          "src/models/pet/pet.interface.ts",
+          "src/data/schemas/pet/ (7 schemas)"
+        ],
+        "summary": "PetService 7/8 operations mapped, uploadFile skipped with reason; coverage, tsc, eslint, audit clean; re-verified by the coordinator (coverage re-run)"
+      },
+      {
+        "stage": "3-build",
+        "agent": "coordinator",
+        "finishedAt": "2026-11-02T11:05:00Z",
+        "outcome": "done",
+        "produced": [
+          "src/fixtures/page-fixtures.ts",
+          "src/fixtures/service-fixtures.ts",
+          "src/constants/endpoints.constant.ts",
+          "docs/registry/pages.md",
+          "docs/registry/services.md"
+        ],
+        "summary": "registrations merged from the two reports; tsc and eslint clean on the merged tree"
+      },
+      {
+        "stage": "4-implement",
+        "agent": "sdet-implement (todo.md)",
+        "model": "sonnet (general-purpose in the pilot)",
+        "finishedAt": "2026-11-02T12:00:00Z",
+        "outcome": "done",
+        "produced": [
+          "tests/e2e/todo.spec.ts",
+          "tests/e2e/todo.metamorphic.spec.ts",
+          "tests/sentinel.spec.ts",
+          "src/data/factories/todo.factory.ts"
+        ],
+        "summary": "5/5 automated; 18 passed x3 on 4 workers; can-fail 14 killed 0 survived; sentinel failed on its false value x3; re-verified by the coordinator (4/4 re-run)"
+      },
+      {
+        "stage": "4-implement",
+        "agent": "sdet-implement (pet.md)",
+        "model": "sonnet (general-purpose in the pilot)",
+        "finishedAt": "2026-11-02T12:10:00Z",
+        "outcome": "partial",
+        "produced": [
+          "tests/api/pet.spec.ts",
+          "tests/api/pet.metamorphic.spec.ts",
+          "src/data/factories/pet.factory.ts"
+        ],
+        "summary": "4/5 green x3 on 4 workers, metamorphic can-fail 4 killed; TC-PET-003 (available) red on the shared server (finding verified by the coordinator: 3 of 254 pets without name); pet.spec.ts can-fail INCONCLUSIVE on the red baseline; nothing loosened"
+      },
+      {
+        "stage": "4-implement",
+        "agent": "coordinator",
+        "finishedAt": "2026-11-02T12:30:00Z",
+        "outcome": "done",
+        "produced": [
+          "src/fixtures/data-fixtures.ts",
+          "src/fixtures/fixtures.ts",
+          "docs/registry/helpers.md",
+          "tests/api/pet.spec.ts (fixture import)",
+          "tests/api/pet.metamorphic.spec.ts (fixture import)"
+        ],
+        "summary": "petFactory registered; spec-local extends removed; tsc + eslint clean"
+      },
+      {
+        "stage": "5-verify",
+        "agent": "sdet-verify",
+        "model": "sonnet (general-purpose in the pilot)",
+        "finishedAt": "2026-11-02T14:20:00Z",
+        "outcome": "partial",
+        "summary": "before the fixes: 36/39 passed x3 on 4 workers (3 reds = TC-PET-003 available, the known finding); sentinel failed-as-expected x3; can-fail 18 killed 0 survived, pet.spec.ts INCONCLUSIVE on the red baseline; audit/tsc/eslint/coverage clean; git status empty before and after"
+      },
+      {
+        "stage": "5-review",
+        "agent": "sdet-review",
+        "model": "sonnet (general-purpose in the pilot)",
+        "finishedAt": "2026-11-02T14:35:00Z",
+        "outcome": "done",
+        "summary": "changes requested: 1 block (blocked case ran red unmarked), 3 warn (createAbsent unchecked delete; sentinel outside the e2e/api projects; Automation field vs status), 2 nit (registry row, DRY goto). Verified from a detached worktree after a concurrent can-fail mutant made its first run inconclusive. Every expected result of all 10 cases asserted; nothing weakened."
+      },
+      {
+        "stage": "5-verify",
+        "agent": "coordinator",
+        "finishedAt": "2026-11-02T15:05:00Z",
+        "outcome": "done",
+        "produced": [
+          "docs/test-cases/pet.md",
+          "tests/api/pet.spec.ts",
+          "src/data/factories/pet.factory.ts",
+          "tests/e2e/sentinel.spec.ts (moved)",
+          "docs/registry/helpers.md"
+        ],
+        "summary": "applied the owner's answer to OQ-PET-001 (case first, then the test), the review's warns 2-4 and nit 5; nit 6 left (accepted decision). Re-run: 42 passed x3 on 4 workers, sentinel in e2e failed-as-expected x3, can-fail pet.spec.ts 2 killed 0 survived, tsc+eslint clean"
+      }
+    ]
+  },
+  "intake": {
+    "appUrl": "https://demo.playwright.dev/todomvc",
+    "apiUrl": "https://petstore3.swagger.io/api/v3",
+    "spec": "specs/petstore.json",
+    "casesFile": "docs/test-cases/todo.md, docs/test-cases/pet.md",
+    "environment": "public demo apps",
+    "credentials": "none"
+  },
+  "gates": {
+    "A": {
+      "state": "passed",
+      "by": "tuan (cases are the verified examples)",
+      "at": "2026-11-02T10:00:00Z"
+    },
+    "B": {
+      "state": "passed",
+      "by": "tuan",
+      "at": "2026-11-02T11:20:00Z",
+      "note": "inventory confirmed; NativeCheckBox request kept as interim (scaffold improvement for later)"
+    },
+    "C": {
+      "state": "passed",
+      "by": "tuan",
+      "at": "2026-11-02T15:40:00Z",
+      "note": "pilot closed; scratch repo, nothing merged"
+    }
+  },
+  "inventory": {
+    "pages": [
+      {
+        "name": "TodoPage",
+        "file": "src/pages/todo/index.ts",
+        "elements": 7,
+        "verified": "live",
+        "unverifiedLocators": 0
+      }
+    ],
+    "services": [
+      {
+        "tag": "pet",
+        "file": "src/services/pet.service.ts",
+        "operations": 8,
+        "coverage": "7/8 mapped in tags pet (11 out of scope), 1 skipped (uploadFile, octet-stream)"
+      }
+    ],
+    "testIdRequests": []
+  },
+  "cases": [
+    {
+      "id": "TC-TODO-001",
+      "state": "automated",
+      "level": "ui",
+      "file": "tests/e2e/todo.spec.ts",
+      "verified": {
+        "green": true,
+        "repeats": 3,
+        "workers": 4,
+        "canFail": "killed"
+      }
+    },
+    {
+      "id": "TC-TODO-002",
+      "state": "automated",
+      "level": "ui",
+      "file": "tests/e2e/todo.spec.ts",
+      "verified": {
+        "green": true,
+        "repeats": 3,
+        "workers": 4,
+        "canFail": "killed"
+      }
+    },
+    {
+      "id": "TC-TODO-003",
+      "state": "automated",
+      "level": "ui",
+      "file": "tests/e2e/todo.spec.ts",
+      "verified": {
+        "green": true,
+        "repeats": 3,
+        "workers": 4,
+        "canFail": "killed"
+      }
+    },
+    {
+      "id": "TC-TODO-004",
+      "state": "automated",
+      "level": "ui",
+      "file": "tests/e2e/todo.metamorphic.spec.ts",
+      "verified": {
+        "green": true,
+        "repeats": 3,
+        "workers": 4,
+        "canFail": "killed"
+      }
+    },
+    {
+      "id": "TC-TODO-005",
+      "state": "automated",
+      "level": "ui",
+      "file": "tests/e2e/todo.metamorphic.spec.ts",
+      "verified": {
+        "green": true,
+        "repeats": 3,
+        "workers": 4,
+        "canFail": "killed"
+      }
+    },
+    {
+      "id": "TC-PET-001",
+      "state": "automated",
+      "level": "api",
+      "file": "tests/api/pet.spec.ts",
+      "verified": {
+        "green": true,
+        "repeats": 3,
+        "workers": 4,
+        "canFail": "killed"
+      }
+    },
+    {
+      "id": "TC-PET-002",
+      "state": "automated",
+      "level": "api",
+      "file": "tests/api/pet.spec.ts",
+      "verified": {
+        "green": true,
+        "repeats": 3,
+        "workers": 4,
+        "canFail": "not-run"
+      }
+    },
+    {
+      "id": "TC-PET-003",
+      "state": "automated",
+      "level": "api",
+      "file": "tests/api/pet.spec.ts",
+      "reason": "case restated 2026-11-02 (OQ-PET-001 answered): contract asserted on the pet this test created",
+      "verified": {
+        "green": true,
+        "repeats": 3,
+        "workers": 4,
+        "canFail": "killed"
+      }
+    },
+    {
+      "id": "TC-PET-006",
+      "state": "automated",
+      "level": "api",
+      "file": "tests/api/pet.metamorphic.spec.ts",
+      "verified": {
+        "green": true,
+        "repeats": 3,
+        "workers": 4,
+        "canFail": "killed"
+      }
+    },
+    {
+      "id": "TC-PET-007",
+      "state": "automated",
+      "level": "api",
+      "file": "tests/api/pet.metamorphic.spec.ts",
+      "verified": {
+        "green": true,
+        "repeats": 3,
+        "workers": 4,
+        "canFail": "killed"
+      }
+    }
+  ],
+  "openQuestions": [
+    {
+      "id": "OQ-PET-AUTH",
+      "question": "Does the target environment enforce petstore_auth / api_key on pet operations? The public demo does not; if yes, which test credential (API_KEY variable)?",
+      "blocks": [],
+      "forWhom": "API team"
+    },
+    {
+      "id": "OQ-PET-001",
+      "question": "petstore3 serves pets without the required name under findByStatus (it accepts spec-violating POSTs). For TC-PET-003 on a shared server: bind a known bug (Petstore validation) at step 1, or restate expected result 1 to validate the pet this test created? The same assertion is in the sdet-skills example suites, so tonight's nightly will show it. ANSWERED 2026-11-02 by the case owner: validate the pet this test created; case restated, tests follow (D-18).",
+      "blocks": [
+        "TC-PET-003"
+      ],
+      "forWhom": "tuan (case owner)"
+    }
+  ],
+  "stops": [
+    {
+      "at": "2026-11-02T10:50:00Z",
+      "stage": "3-build",
+      "rule": "other",
+      "detail": "The app's row toggle is a native checkbox; the scaffold's CheckBox class (click-to-toggle, is-checked class) does not fit. Interim: Clickable + idempotent complete()/reopen() in TodoItemSection. Request: a NativeCheckBox element in src/elements/common (coordinator's path) — decide at Gate B.",
+      "cases": [
+        "TC-TODO-002",
+        "TC-TODO-004",
+        "TC-TODO-005"
+      ],
+      "resolution": "Gate B: keep the interim; NativeCheckBox recorded as a scaffold improvement"
+    },
+    {
+      "at": "2026-11-02T10:45:00Z",
+      "stage": "3-build",
+      "rule": "other",
+      "detail": "Coordinator's brief named openapi-tool flags that do not exist (schemas --tag/--out); the agent generated to scratch and copied pet/ only. Fix: give openapi-tool schemas a --tags filter (shared script) and correct the brief.",
+      "resolution": "to do in sdet-skills"
+    },
+    {
+      "at": "2026-11-02T12:10:00Z",
+      "stage": "4-implement",
+      "rule": "red-baseline",
+      "detail": "TC-PET-003 (available) fails schema validation on every run because of other users' spec-violating pets on the shared server; can-fail for tests/api/pet.spec.ts INCONCLUSIVE; expectation not loosened, case file not edited",
+      "cases": [
+        "TC-PET-003"
+      ]
+    },
+    {
+      "at": "2026-11-02T12:00:00Z",
+      "stage": "4-implement",
+      "rule": "other",
+      "detail": "Coordinator's brief said project \"chromium\"; the scaffold has e2e/chrome/api projects. Agents used the right ones and reported the mismatch. Fix: the brief names the projects from playwright.config.ts.",
+      "resolution": "brief template corrected"
+    },
+    {
+      "at": "2026-11-02T14:30:00Z",
+      "stage": "5-verify",
+      "rule": "other",
+      "detail": "verify and review ran can-fail/tests on the same working tree; the reviewer saw a __mutant__ literal and a false red, re-verified from a detached worktree. Pipeline fix: runners never share a tree (D-19, sdet-review.md, stages.md 5).",
+      "resolution": "fixed in sdet-skills"
+    }
+  ],
+  "verification": {
+    "command": "npx playwright test --project=e2e --project=api --retries=0 --repeat-each=3 --workers=4",
+    "passed": 42,
+    "failed": 0,
+    "skipped": 0,
+    "repeats": 3,
+    "workers": 4,
+    "sentinel": "failed-as-expected",
+    "canFail": {
+      "killed": 20,
+      "survived": 0
+    },
+    "audit": "clean",
+    "reviewer": {
+      "agent": "sdet-review (detached worktree)",
+      "findings": 6,
+      "verdict": "changes requested -> applied; nit 6 declined (navigation stays in tests by the page doc)"
+    }
+  }
+}

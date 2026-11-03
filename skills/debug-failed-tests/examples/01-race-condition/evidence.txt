@@ -1,0 +1,134 @@
+Case 01 - race condition | real output, trimmed | ran 2026-11-03
+Machine: Windows 11 (Git Bash), Node 22.15.0, Playwright 1.61.0 (bundled Chromium, headless).
+Copy: skills/init-playwright-framework/template + skills/test-script-writer/examples/playwright-ts at aa20c82
+(neither changed since 286442c), .env as written by run-examples.sh, PLAYWRIGHT_FORCE_ASYNC_LOADER=1, CI unset.
+Apps: https://demo.playwright.dev/todomvc (live, reachable throughout).
+Trimming: each run shows its summary lines and, where useful, its first failure block; "failing line per failure"
+counts the "> NN |" source pointer of every failed test (or attempt) in the raw log. The local path of the copy is
+replaced with <repo>. Nothing else is edited.
+Line numbers refer to tests/e2e/todo.metamorphic.spec.ts: 37 = expect(completed).toContain(first),
+39 = expect(active.filter(... completed.includes ...)).toHaveLength(0).
+
+=== rung1.txt
+$ npx playwright test --config=playwright.examples.config.ts tests/e2e/todo.metamorphic.spec.ts -g "TC-TODO-004" --retries=0
+  1 failed
+  failing line per failure: 1 at line 39; 
+--- first failure:
+  1) [examples] › tests\e2e\todo.metamorphic.spec.ts:15:9 › Todo list — relations › [TC-TODO-004] Active and Completed partition All and the counter equals the Active count @P2 @metamorphic 
+    Error: expect(received).toHaveLength(expected)
+    Expected length: 0
+    Received length: 2
+    Received array:  ["todo 1 c78895dd", "todo 3 cdcce04a"]
+      37 |             expect(completed).toContain(first);
+      38 |             // ... no todo is both Active and Completed ...
+    > 39 |             expect(active.filter((title) => completed.includes(title))).toHaveLength(0);
+         |                                                                         ^
+      40 |             // ... every todo under All is Active or Completed ...
+      41 |             expect(all.filter((title) => !active.includes(title) && !completed.includes(title))).toHaveLength(0);
+      42 |             // ... |Active| + |Completed| == |All| ...
+        at <repo>\tests\e2e\todo.metamorphic.spec.ts:39:73
+
+=== rung2-repeat10-w1.txt
+$ npx playwright test --config=playwright.examples.config.ts tests/e2e/todo.metamorphic.spec.ts -g "TC-TODO-004" --repeat-each=10 --workers=1 --retries=0 --reporter=line
+  10 failed
+  failing line per failure: 3 at line 37; 7 at line 39; 
+
+=== rung3-repeat10-w4.txt
+$ npx playwright test --config=playwright.examples.config.ts tests/e2e/todo.metamorphic.spec.ts -g "TC-TODO-004" --repeat-each=10 --workers=4 --retries=0 --reporter=line
+  10 failed
+  failing line per failure: 10 at line 37; 
+--- first failure:
+  1) [examples] › tests\e2e\todo.metamorphic.spec.ts:15:9 › Todo list — relations › [TC-TODO-004] Active and Completed partition All and the counter equals the Active count @P2 @metamorphic 
+    Error: expect(received).toContain(expected) // indexOf
+    Expected value: "todo 1 639ff715"
+    Received array: ["todo 4 2289c72c", "todo 5 d0162829"]
+      35 |             // Assert: the sequence happened (otherwise every relation below holds trivially) ...
+      36 |             expect(all).not.toContain(deleted);
+    > 37 |             expect(completed).toContain(first);
+         |                               ^
+      38 |             // ... no todo is both Active and Completed ...
+      39 |             expect(active.filter((title) => completed.includes(title))).toHaveLength(0);
+      40 |             // ... every todo under All is Active or Completed ...
+        at <repo>\tests\e2e\todo.metamorphic.spec.ts:37:31
+
+=== rung4-e2e-folder.txt
+$ npx playwright test --config=playwright.examples.config.ts tests/e2e --workers=1 --retries=0 --reporter=line
+  1 failed
+  5 passed (8.7s)
+  failing line per failure: 1 at line 37; 
+
+=== defect-rung2-run2-repeat10-w1.txt
+$ (same defect, second measurement) npx playwright test --config=playwright.examples.config.ts tests/e2e/todo.metamorphic.spec.ts -g "TC-TODO-004" --repeat-each=10 --workers=1 --retries=0 --reporter=line
+  9 failed
+  1 passed (25.2s)
+  failing line per failure: 5 at line 37; 4 at line 39; 
+
+=== defect-rung3-run2-repeat10-w4.txt
+$ (same defect, second measurement) npx playwright test --config=playwright.examples.config.ts tests/e2e/todo.metamorphic.spec.ts -g "TC-TODO-004" --repeat-each=10 --workers=4 --retries=0 --reporter=line
+  10 failed
+  failing line per failure: 10 at line 37; 
+
+=== defect-rung4-run2-e2e-folder.txt
+$ (same defect, second measurement) npx playwright test --config=playwright.examples.config.ts tests/e2e --workers=1 --retries=0 --reporter=line
+  1 failed
+  5 passed (8.2s)
+  failing line per failure: 1 at line 37; 
+
+=== anti-fix-sleep50-rung2-repeat10-w1.txt
+$ (ANTI-FIX 1: defect + waitForTimeout(50), see anti-fix-sleep.diff) npx playwright test --config=playwright.examples.config.ts tests/e2e/todo.metamorphic.spec.ts -g "TC-TODO-004" --repeat-each=10 --workers=1 --retries=0 --reporter=line
+  10 passed (26.4s)
+
+=== anti-fix-retries2-rung2-repeat10-w1.txt
+$ (ANTI-FIX 2: defect + retries; the tally counts every attempt) npx playwright test --config=playwright.examples.config.ts tests/e2e/todo.metamorphic.spec.ts -g "TC-TODO-004" --repeat-each=10 --workers=1 --retries=2 --reporter=line
+  10 failed
+  failing line per failure: 27 at line 37; 3 at line 39; 
+
+=== anti-fix-url-rung2-repeat10-w1.txt
+$ (ANTI-FIX 3: wait on the URL hash instead of the selected filter, see anti-fix-wrong-signal.diff) npx playwright test --config=playwright.examples.config.ts tests/e2e/todo.metamorphic.spec.ts -g "TC-TODO-004" --repeat-each=10 --workers=1 --retries=0 --reporter=line
+  10 failed
+  failing line per failure: 10 at line 37; 
+
+=== fix-rung2-repeat10-w1.txt
+$ (FIX) npx playwright test --config=playwright.examples.config.ts tests/e2e/todo.metamorphic.spec.ts -g "TC-TODO-004" --repeat-each=10 --workers=1 --retries=0 --reporter=line
+  10 passed (25.3s)
+
+=== fix-rung3-repeat10-w4.txt
+$ (FIX) npx playwright test --config=playwright.examples.config.ts tests/e2e/todo.metamorphic.spec.ts -g "TC-TODO-004" --repeat-each=10 --workers=4 --retries=0 --reporter=line
+  10 passed (9.1s)
+
+=== fix-rung2-repeat30-w1.txt
+$ (FIX) npx playwright test --config=playwright.examples.config.ts tests/e2e/todo.metamorphic.spec.ts -g "TC-TODO-004" --repeat-each=30 --workers=1 --retries=0 --reporter=line
+  30 passed (1.2m)
+
+=== fix-rung4-e2e-folder.txt
+$ (FIX) npx playwright test --config=playwright.examples.config.ts tests/e2e --workers=1 --retries=0 --reporter=line
+  6 passed (6.3s)
+
+=== probe-output.txt (diagnostic: a script clicks Completed/Active on the live app and measures, in the page, the time from the click resolving to a.selected switching)
+$ node probe.mjs   (from the copy; the script is in this README)
+Completed: click 30ms, render after click 13.3ms
+Active: click 44ms, render after click 4.2ms
+Completed: click 38ms, render after click 7.3ms
+Active: click 34ms, render after click 16.2ms
+Completed: click 43ms, render after click 4.4ms
+Active: click 42ms, render after click 6.5ms
+Completed: click 42ms, render after click 4.5ms
+Active: click 45ms, render after click 0.1ms
+Completed: click 40ms, render after click 6.4ms
+Active: click 38ms, render after click 9.2ms
+
+=== rung4-error-context.md, excerpt (page snapshot at the failure in rung4-e2e-folder.txt; structure lines kept, decoration dropped)
+```
+Error: expect(received).toContain(expected) // indexOf
+
+Expected value: "todo 1 8044cddf"
+      - list [ref=e12]:
+            - checkbox "Toggle Todo" [checked] [ref=e15]
+            - generic [ref=e16]: todo 1 8044cddf
+            - checkbox "Toggle Todo" [checked] [ref=e19]
+            - generic [ref=e20]: todo 3 e9f1f27b
+        - strong [ref=e23]: "2"
+        - text: items left
+          - link "All" [ref=e26] [cursor=pointer]:
+          - link "Active" [ref=e28] [cursor=pointer]:
+          - link "Completed" [active] [ref=e30] [cursor=pointer]:

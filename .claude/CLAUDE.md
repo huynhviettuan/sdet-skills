@@ -41,6 +41,7 @@ users, and strict validation flags it).
 
 ```bash
 node scripts/check-repo.mjs
+bash scripts/check-examples.sh
 python skills/test-case-design/scripts/selftest.py
 python skills/project-knowledge-base/scripts/selftest.py
 python skills/ai-guardrail-testing/scripts/selftest.py

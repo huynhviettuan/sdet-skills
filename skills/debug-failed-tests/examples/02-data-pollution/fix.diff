@@ -1,0 +1,36 @@
+diff --git a/src/fixtures/page-fixtures.ts b/src/fixtures/page-fixtures.ts
+index 7c76237..45127f8 100644
+--- a/src/fixtures/page-fixtures.ts
++++ b/src/fixtures/page-fixtures.ts
+@@ -1,29 +1,11 @@
+ import { TodoPage } from '@pages/todo';
+-import { type Page, test as base } from '@playwright/test';
++import { test as base } from '@playwright/test';
+ 
+ type PageObjects = {
+     todoPage: TodoPage;
+-    page: Page;
+ };
+ 
+-type WorkerPage = {
+-    sharedPage: Page;
+-};
+-
+-export const test = base.extend<PageObjects, WorkerPage>({
+-    // One browser page per worker instead of one per test: saves a context start per test.
+-    sharedPage: [
+-        async ({ browser }, use, workerInfo) => {
+-            const context = await browser.newContext({ baseURL: workerInfo.project.use.baseURL });
+-            const page = await context.newPage();
+-            await use(page);
+-            await context.close();
+-        },
+-        { scope: 'worker' }
+-    ],
+-    page: async ({ sharedPage }, use) => {
+-        await use(sharedPage);
+-    },
++export const test = base.extend<PageObjects>({
+     todoPage: async ({}, use) => {
+         await use(new TodoPage());
+     }

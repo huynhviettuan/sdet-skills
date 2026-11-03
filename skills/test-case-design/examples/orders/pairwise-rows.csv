@@ -1,0 +1,14 @@
+length,charset,operation,caller,status
+200,vietnamese,create,customer-own,new
+0,ascii,edit,manager-same-tenant,new
+201,vietnamese,edit,manager-same-tenant,cancelled
+201,ascii,edit,customer-own,paid
+200,ascii,edit,manager-same-tenant,shipped
+201,ascii,create,manager-same-tenant,new
+0,ascii,edit,customer-own,cancelled
+200,vietnamese,edit,manager-same-tenant,paid
+201,vietnamese,edit,customer-own,shipped
+0,ascii,edit,customer-own,paid
+0,ascii,edit,customer-own,shipped
+0,ascii,create,customer-own,new
+200,vietnamese,edit,customer-own,cancelled

@@ -1,0 +1,26 @@
+{
+  "spec": {
+    "setup": [
+      { "id": "fresh-store", "type": "apiRequest", "method": "POST", "path": "/_reset", "expectStatus": 204 },
+      { "id": "failed-attempt-1", "type": "apiRequest", "method": "POST", "path": "/auth/login",
+        "body": { "username": "nobody-rl", "password": "wrong" }, "expectStatus": 401 },
+      { "id": "failed-attempt-2", "type": "apiRequest", "method": "POST", "path": "/auth/login",
+        "body": { "username": "nobody-rl", "password": "wrong" }, "expectStatus": 401 },
+      { "id": "failed-attempt-3", "type": "apiRequest", "method": "POST", "path": "/auth/login",
+        "body": { "username": "nobody-rl", "password": "wrong" }, "expectStatus": 401 },
+      { "id": "failed-attempt-4", "type": "apiRequest", "method": "POST", "path": "/auth/login",
+        "body": { "username": "nobody-rl", "password": "wrong" }, "expectStatus": 401 },
+      { "id": "failed-attempt-5", "type": "apiRequest", "method": "POST", "path": "/auth/login",
+        "body": { "username": "nobody-rl", "password": "wrong" }, "expectStatus": 401 }
+    ],
+    "steps": [
+      { "id": "sixth-attempt", "type": "apiRequest", "method": "POST", "path": "/auth/login",
+        "body": { "username": "nobody-rl", "password": "wrong" }, "expectStatus": 429,
+        "expectJson": [ { "path": "error", "equals": "too many attempts" } ],
+        "sourceRefs": ["BR-ORD-AUTHN-001@v1"] }
+    ],
+    "teardown": [
+      { "id": "reset-store", "type": "apiRequest", "method": "POST", "path": "/_reset", "expectStatus": 204 }
+    ]
+  }
+}

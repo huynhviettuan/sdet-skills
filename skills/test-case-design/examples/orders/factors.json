@@ -1,0 +1,36 @@
+{
+  "factors": {
+    "length": {
+      "0": "lower edge: empty note, AC-ORD-005",
+      "200": "upper edge: stored whole, AC-ORD-003",
+      "201": "first invalid length: rejected, AC-ORD-004/024 (OQ-002)"
+    },
+    "charset": {
+      "ascii": "one byte per character",
+      "vietnamese": "multi-byte characters: the limit counts characters, not bytes (BR-ORD-003)"
+    },
+    "operation": {
+      "create": "POST /orders",
+      "edit": "PATCH /orders/{id}"
+    },
+    "caller": {
+      "customer-own": "alice, the owner",
+      "manager-same-tenant": "carol; create and edit are OQ-006 option A"
+    },
+    "status": {
+      "new": "the only status a create can produce",
+      "paid": "edit after payment (OQ-005 option A)",
+      "shipped": "terminal (OQ-005 option A)",
+      "cancelled": "terminal (OQ-005 option A)"
+    }
+  },
+  "forbidden": [
+    {"operation": "create", "status": "paid"},
+    {"operation": "create", "status": "shipped"},
+    {"operation": "create", "status": "cancelled"},
+    {"length": "0", "charset": "vietnamese"}
+  ],
+  "required": [
+    {"length": "200", "charset": "vietnamese", "operation": "create", "caller": "customer-own", "status": "new"}
+  ]
+}

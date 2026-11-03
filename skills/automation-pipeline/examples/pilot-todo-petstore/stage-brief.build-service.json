@@ -1,0 +1,25 @@
+{
+  "_comment": "The brief the coordinator sent to sdet-build-service in the pilot (2026-11-02), reconstructed from the status file and the agent's report; the prose block is the one in references/stages.md § Stage brief. The flag error in 'commands' is kept on purpose: the agent caught it (see the report).",
+  "repo": "scratchpad/pilot",
+  "stack": "playwright-ts",
+  "stage": "3-build",
+  "agent": "sdet-build-service",
+  "model": "sonnet",
+  "inputs": [
+    "docs/test-cases/pet.md",
+    "specs/petstore-openapi.json",
+    "docs/automation-status.json (stage 2 excerpt)"
+  ],
+  "writeOnly": [
+    "src/services/pet.service.ts",
+    "src/models/pet/",
+    "src/data/schemas/pet/"
+  ],
+  "commands": [
+    "node scripts/openapi-tool.mjs inventory specs/petstore-openapi.json",
+    "node scripts/openapi-tool.mjs schemas specs/petstore-openapi.json --tag pet --out src/data/schemas",
+    "npx tsc --noEmit"
+  ],
+  "done": "PetService with one method per pet operation (camelCase operationId), response schemas for every 2xx JSON response of the pet tag, coverage report clean for the tag, tsc clean; registry rows for services.md returned in the report, not written.",
+  "rules": "Verify for real: run the commands; never skip, loosen, retry or edit an expectation to go green; a failing baseline is INCONCLUSIVE and is reported as such. A refused tool call stops that step: report it, do not route around it. End with the stage report, then two sentences in plain words."
+}

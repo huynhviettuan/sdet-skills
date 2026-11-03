@@ -1,0 +1,35 @@
+{
+ "model": "closed",
+ "vus": 8,
+ "warmup_s": 2.0,
+ "steady_s": 10.0,
+ "requests": 14184,
+ "throughput_rps": 1418.4,
+ "p50_ms": 3.26,
+ "p95_ms": 8.52,
+ "p99_ms": 20.46,
+ "max_ms": 2026.13,
+ "mean_ms": 5.48,
+ "error_rate": 0.0,
+ "by_op": {
+  "GET /orders": {
+   "n": 3495,
+   "p95_ms": 8.93,
+   "share": 0.25
+  },
+  "GET /orders/{id}": {
+   "n": 8560,
+   "p95_ms": 8.43,
+   "share": 0.6
+  },
+  "POST /orders": {
+   "n": 2129,
+   "p95_ms": 8.01,
+   "share": 0.15
+  }
+ },
+ "thresholds": {
+  "p95_ms": 50.0,
+  "error_rate": 0.01
+ }
+}

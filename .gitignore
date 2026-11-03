@@ -7,3 +7,4 @@ target/
 evals/results/
 __pycache__/
 .pytest_cache/
+.check-examples-out/

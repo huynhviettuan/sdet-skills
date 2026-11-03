@@ -1,0 +1,395 @@
+{
+  "root": "D:\\sdet-skills\\skills\\refactor-test-suite\\examples\\legacy-orders\\step-0",
+  "scannedFiles": 6,
+  "counts": {
+    "R-NO-SLEEP": 7,
+    "R-RAW-UI-IN-TEST": 3,
+    "R-RAW-HTTP-IN-TEST": 4,
+    "R-COMPOSITION": 6,
+    "R-SHARED-STATE": 3,
+    "R-TEARDOWN": 3,
+    "R-SECRETS": 2,
+    "R-FOCUS": 0,
+    "R-SCOPE": 13,
+    "R-POSITION": 6,
+    "R-XPATH-ABS": 0,
+    "R-FORCE": 2,
+    "R-WEAK-ASSERT": 1,
+    "R-HARDCODED-URL": 1,
+    "R-RETRY-MASK": 1,
+    "R-INHERIT": 1
+  },
+  "findings": [
+    {
+      "rule": "R-NO-SLEEP",
+      "severity": "block",
+      "file": "pages/BasePage.ts",
+      "line": 8,
+      "code": "await this.page.waitForTimeout(800); // let the SPA render"
+    },
+    {
+      "rule": "R-SCOPE",
+      "severity": "warn",
+      "file": "pages/BasePage.ts",
+      "line": 12,
+      "code": "return this.page.locator('.toast').first();"
+    },
+    {
+      "rule": "R-SCOPE",
+      "severity": "warn",
+      "file": "pages/BasePage.ts",
+      "line": 16,
+      "code": "await this.page.locator('.toast .close').first().click({ force: true });"
+    },
+    {
+      "rule": "R-POSITION",
+      "severity": "warn",
+      "file": "pages/BasePage.ts",
+      "line": 12,
+      "code": "return this.page.locator('.toast').first();"
+    },
+    {
+      "rule": "R-POSITION",
+      "severity": "warn",
+      "file": "pages/BasePage.ts",
+      "line": 16,
+      "code": "await this.page.locator('.toast .close').first().click({ force: true });"
+    },
+    {
+      "rule": "R-FORCE",
+      "severity": "warn",
+      "file": "pages/BasePage.ts",
+      "line": 16,
+      "code": "await this.page.locator('.toast .close').first().click({ force: true });"
+    },
+    {
+      "rule": "R-HARDCODED-URL",
+      "severity": "warn",
+      "file": "pages/BasePage.ts",
+      "line": 7,
+      "code": "await this.page.goto('https://orders.example.test' + path);"
+    },
+    {
+      "rule": "R-NO-SLEEP",
+      "severity": "block",
+      "file": "pages/OrdersPage.ts",
+      "line": 11,
+      "code": "await this.page.waitForTimeout(1500); // wait for the list to refresh"
+    },
+    {
+      "rule": "R-NO-SLEEP",
+      "severity": "block",
+      "file": "pages/OrdersPage.ts",
+      "line": 28,
+      "code": "await this.page.waitForTimeout(1000);"
+    },
+    {
+      "rule": "R-NO-SLEEP",
+      "severity": "block",
+      "file": "pages/OrdersPage.ts",
+      "line": 34,
+      "code": "await this.page.waitForTimeout(1000);"
+    },
+    {
+      "rule": "R-NO-SLEEP",
+      "severity": "block",
+      "file": "pages/OrdersPage.ts",
+      "line": 44,
+      "code": "await this.page.waitForTimeout(500);"
+    },
+    {
+      "rule": "R-SCOPE",
+      "severity": "warn",
+      "file": "pages/OrdersPage.ts",
+      "line": 7,
+      "code": "await this.page.locator('#new-order').click();"
+    },
+    {
+      "rule": "R-SCOPE",
+      "severity": "warn",
+      "file": "pages/OrdersPage.ts",
+      "line": 8,
+      "code": "await this.page.locator('#item').fill(item);"
+    },
+    {
+      "rule": "R-SCOPE",
+      "severity": "warn",
+      "file": "pages/OrdersPage.ts",
+      "line": 9,
+      "code": "await this.page.locator('#qty').fill(String(qty));"
+    },
+    {
+      "rule": "R-SCOPE",
+      "severity": "warn",
+      "file": "pages/OrdersPage.ts",
+      "line": 10,
+      "code": "await this.page.locator('button:has-text(\"Place order\")').click();"
+    },
+    {
+      "rule": "R-SCOPE",
+      "severity": "warn",
+      "file": "pages/OrdersPage.ts",
+      "line": 15,
+      "code": "return (await this.page.locator('table.orders tbody tr').nth(0).getAttribute('data-order-id')) ?? '';"
+    },
+    {
+      "rule": "R-SCOPE",
+      "severity": "warn",
+      "file": "pages/OrdersPage.ts",
+      "line": 19,
+      "code": "return this.page.locator(`table.orders tbody tr[data-order-id=\"${orderId}\"]`);"
+    },
+    {
+      "rule": "R-SCOPE",
+      "severity": "warn",
+      "file": "pages/OrdersPage.ts",
+      "line": 33,
+      "code": "await this.page.locator('.confirm-dialog button.ok').click({ force: true }); // dialog fades in"
+    },
+    {
+      "rule": "R-SCOPE",
+      "severity": "warn",
+      "file": "pages/OrdersPage.ts",
+      "line": 42,
+      "code": "await this.page.locator('#note-text').fill(text);"
+    },
+    {
+      "rule": "R-SCOPE",
+      "severity": "warn",
+      "file": "pages/OrdersPage.ts",
+      "line": 43,
+      "code": "await this.page.locator('#note-save').click();"
+    },
+    {
+      "rule": "R-SCOPE",
+      "severity": "warn",
+      "file": "pages/OrdersPage.ts",
+      "line": 48,
+      "code": "return (await this.page.locator('.note-list li').first().innerText()).trim();"
+    },
+    {
+      "rule": "R-SCOPE",
+      "severity": "warn",
+      "file": "pages/OrdersPage.ts",
+      "line": 53,
+      "code": "await this.page.locator('.confirm-dialog button.ok').click();"
+    },
+    {
+      "rule": "R-POSITION",
+      "severity": "warn",
+      "file": "pages/OrdersPage.ts",
+      "line": 15,
+      "code": "return (await this.page.locator('table.orders tbody tr').nth(0).getAttribute('data-order-id')) ?? '';"
+    },
+    {
+      "rule": "R-POSITION",
+      "severity": "warn",
+      "file": "pages/OrdersPage.ts",
+      "line": 48,
+      "code": "return (await this.page.locator('.note-list li').first().innerText()).trim();"
+    },
+    {
+      "rule": "R-FORCE",
+      "severity": "warn",
+      "file": "pages/OrdersPage.ts",
+      "line": 33,
+      "code": "await this.page.locator('.confirm-dialog button.ok').click({ force: true }); // dialog fades in"
+    },
+    {
+      "rule": "R-INHERIT",
+      "severity": "warn",
+      "file": "pages/OrdersPage.ts",
+      "line": 5,
+      "code": "export class OrdersPage extends BasePage {"
+    },
+    {
+      "rule": "R-RETRY-MASK",
+      "severity": "warn",
+      "file": "playwright.config.ts",
+      "line": 7,
+      "code": "retries: 3,"
+    },
+    {
+      "rule": "R-RAW-UI-IN-TEST",
+      "severity": "block",
+      "file": "tests/order-notes.spec.ts",
+      "line": 30,
+      "code": "expect(await page.locator('.note-list li').nth(0).innerText()).toContain(note);"
+    },
+    {
+      "rule": "R-RAW-UI-IN-TEST",
+      "severity": "block",
+      "file": "tests/order-notes.spec.ts",
+      "line": 39,
+      "code": "await page.locator('#note-text').click();"
+    },
+    {
+      "rule": "R-RAW-HTTP-IN-TEST",
+      "severity": "block",
+      "file": "tests/order-notes.spec.ts",
+      "line": 8,
+      "code": "const res = await request.post(`${API_URL}/orders`, { data: { item: 'Gadget', qty: 1, customer: 'customer01' } });"
+    },
+    {
+      "rule": "R-RAW-HTTP-IN-TEST",
+      "severity": "block",
+      "file": "tests/order-notes.spec.ts",
+      "line": 20,
+      "code": "await request.delete(`${API_URL}/orders/${orderId}`);"
+    },
+    {
+      "rule": "R-RAW-HTTP-IN-TEST",
+      "severity": "block",
+      "file": "tests/order-notes.spec.ts",
+      "line": 25,
+      "code": "await request.post(`${API_URL}/orders/${orderId}/notes`, { data: { text: note } });"
+    },
+    {
+      "rule": "R-RAW-HTTP-IN-TEST",
+      "severity": "block",
+      "file": "tests/order-notes.spec.ts",
+      "line": 31,
+      "code": "await request.delete(`${API_URL}/orders/${orderId}`);"
+    },
+    {
+      "rule": "R-COMPOSITION",
+      "severity": "block",
+      "file": "tests/order-notes.spec.ts",
+      "line": 14,
+      "code": "const orders = new OrdersPage(page);"
+    },
+    {
+      "rule": "R-COMPOSITION",
+      "severity": "block",
+      "file": "tests/order-notes.spec.ts",
+      "line": 27,
+      "code": "const orders = new OrdersPage(page);"
+    },
+    {
+      "rule": "R-COMPOSITION",
+      "severity": "block",
+      "file": "tests/order-notes.spec.ts",
+      "line": 36,
+      "code": "const orders = new OrdersPage(page);"
+    },
+    {
+      "rule": "R-SHARED-STATE",
+      "severity": "block",
+      "file": "tests/order-notes.spec.ts",
+      "line": 5,
+      "code": "let orderId: string;"
+    },
+    {
+      "rule": "R-TEARDOWN",
+      "severity": "block",
+      "file": "tests/order-notes.spec.ts",
+      "line": 20,
+      "code": "await request.delete(`${API_URL}/orders/${orderId}`);"
+    },
+    {
+      "rule": "R-TEARDOWN",
+      "severity": "block",
+      "file": "tests/order-notes.spec.ts",
+      "line": 31,
+      "code": "await request.delete(`${API_URL}/orders/${orderId}`);"
+    },
+    {
+      "rule": "R-POSITION",
+      "severity": "warn",
+      "file": "tests/order-notes.spec.ts",
+      "line": 30,
+      "code": "expect(await page.locator('.note-list li').nth(0).innerText()).toContain(note);"
+    },
+    {
+      "rule": "R-NO-SLEEP",
+      "severity": "block",
+      "file": "tests/orders.spec.ts",
+      "line": 31,
+      "code": "await page.waitForTimeout(1000);"
+    },
+    {
+      "rule": "R-RAW-UI-IN-TEST",
+      "severity": "block",
+      "file": "tests/orders.spec.ts",
+      "line": 13,
+      "code": "expect(await page.locator('.toast').first().innerText()).toContain('Order placed');"
+    },
+    {
+      "rule": "R-COMPOSITION",
+      "severity": "block",
+      "file": "tests/orders.spec.ts",
+      "line": 10,
+      "code": "const orders = new OrdersPage(page);"
+    },
+    {
+      "rule": "R-COMPOSITION",
+      "severity": "block",
+      "file": "tests/orders.spec.ts",
+      "line": 20,
+      "code": "const orders = new OrdersPage(page);"
+    },
+    {
+      "rule": "R-COMPOSITION",
+      "severity": "block",
+      "file": "tests/orders.spec.ts",
+      "line": 28,
+      "code": "const orders = new OrdersPage(page);"
+    },
+    {
+      "rule": "R-SHARED-STATE",
+      "severity": "block",
+      "file": "tests/orders.spec.ts",
+      "line": 5,
+      "code": "let orderId: string;"
+    },
+    {
+      "rule": "R-SHARED-STATE",
+      "severity": "block",
+      "file": "tests/orders.spec.ts",
+      "line": 7,
+      "code": "test.describe.serial('Orders - customer places, manager approves and cancels', () => {"
+    },
+    {
+      "rule": "R-TEARDOWN",
+      "severity": "block",
+      "file": "tests/orders.spec.ts",
+      "line": 33,
+      "code": "await orders.deleteOrder(orderId); // tidy up so the staging list does not grow"
+    },
+    {
+      "rule": "R-POSITION",
+      "severity": "warn",
+      "file": "tests/orders.spec.ts",
+      "line": 13,
+      "code": "expect(await page.locator('.toast').first().innerText()).toContain('Order placed');"
+    },
+    {
+      "rule": "R-WEAK-ASSERT",
+      "severity": "warn",
+      "file": "tests/orders.spec.ts",
+      "line": 15,
+      "code": "expect(orderId).toBeTruthy();"
+    },
+    {
+      "rule": "R-NO-SLEEP",
+      "severity": "block",
+      "file": "utils/helpers.ts",
+      "line": 10,
+      "code": "export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));"
+    },
+    {
+      "rule": "R-SECRETS",
+      "severity": "block",
+      "file": "utils/helpers.ts",
+      "line": 7,
+      "code": "export const CUSTOMER = { username: 'customer01', password: 'customer-example-pw' };"
+    },
+    {
+      "rule": "R-SECRETS",
+      "severity": "block",
+      "file": "utils/helpers.ts",
+      "line": 8,
+      "code": "export const MANAGER = { username: 'manager01', password: 'manager-example-pw' };"
+    }
+  ]
+}

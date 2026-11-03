@@ -1,0 +1,13 @@
+{
+  "_comment": "Example values only (docs/product/00_PROJECT_OVERVIEW.md, source S2). Every seeded user shares one example password that is defined in the reference implementation and is not repeated here. The admin's tenant is * (every tenant).",
+  "tenants": ["tenant-a", "tenant-b"],
+  "users": [
+    { "username": "alice", "tenant": "tenant-a", "role": "customer" },
+    { "username": "erin", "tenant": "tenant-a", "role": "customer" },
+    { "username": "bob", "tenant": "tenant-b", "role": "customer" },
+    { "username": "carol", "tenant": "tenant-a", "role": "manager" },
+    { "username": "dave", "tenant": "tenant-b", "role": "manager" },
+    { "username": "root", "tenant": "*", "role": "admin" }
+  ],
+  "orders": []
+}

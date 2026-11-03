@@ -1,0 +1,209 @@
+Case 02 - data pollution | real output, trimmed | ran 2026-11-03
+Machine: Windows 11 (Git Bash), Node 22.15.0, Playwright 1.61.0 (bundled Chromium, headless).
+Copy: skills/init-playwright-framework/template + skills/test-script-writer/examples/playwright-ts at aa20c82
+(neither changed since 286442c), .env as written by run-examples.sh, PLAYWRIGHT_FORCE_ASYNC_LOADER=1, CI unset.
+Apps: https://demo.playwright.dev/todomvc and https://petstore3.swagger.io/api/v3 (live, reachable throughout).
+Trimming: each run shows its summary lines and, where useful, its first failure block; "failing line per failure"
+counts the "> NN |" source pointer of every failed test in the raw log. The local path of the copy is replaced with
+<repo>. Nothing else is edited.
+Note on counts: a full-suite run lists 14 tests; the @sentinel test is expected to fail (test.fail()) and is
+counted as passed when it fails on its known-false value.
+
+=== rung1-alone.txt
+$ npx playwright test --config=playwright.examples.config.ts tests/e2e/todo.spec.ts -g "TC-TODO-001" --retries=0 --reporter=line
+  1 passed (2.9s)
+
+=== rung2-repeat10-w1.txt
+$ npx playwright test --config=playwright.examples.config.ts tests/e2e/todo.spec.ts -g "TC-TODO-001" --repeat-each=10 --workers=1 --retries=0 --reporter=line
+  10 passed (21.2s)
+
+=== diag-repeat10-workers.txt
+$ (diagnostic: same as above with the JSON report, then workerIndex per repeat read from it) npx playwright test --config=playwright.examples.config.ts tests/e2e/todo.spec.ts -g "TC-TODO-001" --repeat-each=10 --workers=1 --retries=0
+  10 passed (22.9s)
+
+=== rung4-file-w1.txt
+$ npx playwright test --config=playwright.examples.config.ts tests/e2e/todo.spec.ts --workers=1 --retries=0 --reporter=line
+  2 failed
+  2 passed (19.3s)
+  failing line per failure: 1 at line 21; 1 at line 59; 
+--- first failure:
+  1) [examples] › tests\e2e\todo.spec.ts:23:9 › Todo list › [TC-TODO-002] completed todo is listed under Completed and hidden under Active @P1 
+    Error: locator.check: Error: strict mode violation: locator('section.main').getByTestId('todo-item').filter({ has: getByTestId('todo-title').getByText('buy milk', { exact: true }) }).getByRole('checkbox', { name: 'Toggle Todo' }) resolved to 2 elements:
+        1) <input class="toggle" type="checkbox" aria-label="Toggle Todo"/> aka getByRole('checkbox', { name: 'Toggle Todo' }).first()
+        2) <input class="toggle" type="checkbox" aria-label="Toggle Todo"/> aka getByRole('checkbox', { name: 'Toggle Todo' }).nth(1)
+    Call log:
+      - waiting for locator('section.main').getByTestId('todo-item').filter({ has: getByTestId('todo-title').getByText('buy milk', { exact: true }) }).getByRole('checkbox', { name: 'Toggle Todo' })
+       at ..\src\components\containers\todo\todo-item.section.ts:21
+      19 |     /** Idempotent: Playwright's check() waits until the box reports checked. */
+      20 |     async complete(): Promise<void> {
+    > 21 |         await this.chkToggle.element.check();
+         |                                      ^
+      22 |     }
+      23 |
+      24 |     async reopen(): Promise<void> {
+        at TodoItemSection.complete (<repo>\src\components\containers\todo\todo-item.section.ts:21:38)
+        at TodoPage.completeTodo (<repo>\src\pages\todo\index.ts:22:40)
+        at <repo>\tests\e2e\todo.spec.ts:32:28
+
+=== rung4-folder-w1.txt
+$ npx playwright test --config=playwright.examples.config.ts tests/e2e --workers=1 --retries=0 --reporter=line
+  3 failed
+  3 passed (36.0s)
+  failing line per failure: 1 at line 21; 1 at line 56; 1 at line 59; 
+
+=== rung3-folder-w4.txt
+$ npx playwright test --config=playwright.examples.config.ts tests/e2e --workers=4 --retries=0 --reporter=line
+  2 failed
+  4 passed (17.6s)
+  failing line per failure: 2 at line 59; 
+--- first failure:
+  1) [examples] › tests\e2e\todo.spec.ts:49:13 › Todo list › [TC-TODO-003] blank titles are not added (empty) @P2 
+    Error: expect(received).toEqual(expected) // deep equality
+    - Expected  - 0
+    + Received  + 1
+      Array [
+    +   "buy milk",
+        "sync point",
+      ]
+    Call Log:
+    - Timeout 15000ms exceeded while waiting on the predicate
+      57 |
+      58 |                 // Assert
+    > 59 |                 await expect.poll(() => todoPage.main.getTitles()).toEqual(['sync point']);
+         |                                                                    ^
+      60 |             }
+      61 |         );
+      62 |     }
+        at <repo>\tests\e2e\todo.spec.ts:59:68
+
+=== rung5-suite-w4.txt
+$ npx playwright test --config=playwright.examples.config.ts --workers=4 --retries=0 --reporter=line
+  2 failed
+  12 passed (21.0s)
+  failing line per failure: 1 at line 33; 1 at line 59; 
+
+=== bisect-002-alone.txt
+$ (bisect) npx playwright test --config=playwright.examples.config.ts tests/e2e --workers=1 --retries=0 --reporter=line -g "TC-TODO-002"
+  1 passed (3.1s)
+
+=== bisect-004-005-then-002.txt
+$ (bisect) npx playwright test --config=playwright.examples.config.ts tests/e2e --workers=1 --retries=0 --reporter=line -g "TC-TODO-00[452]"
+  1 failed
+  2 passed (19.7s)
+  failing line per failure: 1 at line 56; 
+--- first failure:
+  1) [examples] › tests\e2e\todo.metamorphic.spec.ts:49:9 › Todo list — relations › [TC-TODO-005] completing then reopening a todo restores the counter @P2 @metamorphic 
+    Error: expect(received).toEqual(expected) // deep equality
+    - Expected  - 0
+    + Received  + 4
+      Array [
+    +   "todo 1 ba40f23c",
+    +   "todo 3 38d8ee01",
+    +   "todo 4 4828ab57",
+    +   "todo 5 66f9c59a",
+        "todo 1 0a085a11",
+        "todo 2 2935ea68",
+        "todo 3 79bc889a",
+      ]
+    Call Log:
+    - Timeout 15000ms exceeded while waiting on the predicate
+      54 |             const titles = todoFactory.titles(3);
+      55 |             for (const title of titles) await todoPage.addTodo(title);
+    > 56 |             await expect.poll(() => todoPage.main.getTitles()).toEqual(titles);
+         |                                                                ^
+      57 |             const before = await todoPage.footer.getItemsLeft();
+      58 |             const change = async (): Promise<number> => (await todoPage.footer.getItemsLeft()) - before;
+      59 |             const [target] = titles;
+        at <repo>\tests\e2e\todo.metamorphic.spec.ts:56:64
+
+=== bisect-004-then-002.txt
+$ (bisect) npx playwright test --config=playwright.examples.config.ts tests/e2e --workers=1 --retries=0 --reporter=line -g "TC-TODO-00[42]"
+  1 failed
+  1 passed (17.6s)
+  failing line per failure: 1 at line 33; 
+--- first failure:
+  1) [examples] › tests\e2e\todo.spec.ts:23:9 › Todo list › [TC-TODO-002] completed todo is listed under Completed and hidden under Active @P1 
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: "1 item left"
+    Received: "3 items left"
+    Call Log:
+    - Timeout 15000ms exceeded while waiting on the predicate
+      31 |             // Act + Assert, step by step as in the test case
+      32 |             await todoPage.completeTodo('buy milk');
+    > 33 |             await expect.poll(() => todoPage.footer.lblCount.getInnerText()).toBe('1 item left');
+         |                                                                              ^
+      34 |
+      35 |             await todoPage.filterBy('Completed');
+      36 |             await expect.poll(() => todoPage.main.getTitles()).toEqual(['buy milk']);
+        at <repo>\tests\e2e\todo.spec.ts:33:78
+
+=== bisect-005-then-002.txt
+$ (bisect) npx playwright test --config=playwright.examples.config.ts tests/e2e --workers=1 --retries=0 --reporter=line -g "TC-TODO-00[52]"
+  1 failed
+  1 passed (17.1s)
+  failing line per failure: 1 at line 33; 
+
+=== bisect-001-then-002.txt
+$ (bisect) npx playwright test --config=playwright.examples.config.ts tests/e2e --workers=1 --retries=0 --reporter=line -g "TC-TODO-00[12]"
+  1 failed
+  1 passed (3.2s)
+  failing line per failure: 1 at line 21; 
+
+=== anti-fix-clear-folder-w1.txt
+$ (ANTI-FIX: defect + about:blank and clearCookies before each test, see anti-fix-clear-at-start.diff) npx playwright test --config=playwright.examples.config.ts tests/e2e --workers=1 --retries=0 --reporter=line
+  3 failed
+  3 passed (36.2s)
+  failing line per failure: 1 at line 21; 1 at line 56; 1 at line 59; 
+
+=== anti-fix-clear-folder-w4.txt
+$ (ANTI-FIX, same) npx playwright test --config=playwright.examples.config.ts tests/e2e --workers=4 --retries=0 --reporter=line
+  2 failed
+  4 passed (17.7s)
+  failing line per failure: 2 at line 59; 
+--- first failure:
+  1) [examples] › tests\e2e\todo.spec.ts:49:13 › Todo list › [TC-TODO-003] blank titles are not added (empty) @P2 
+    Error: expect(received).toEqual(expected) // deep equality
+    - Expected  - 0
+    + Received  + 1
+      Array [
+    +   "buy milk",
+        "sync point",
+      ]
+    Call Log:
+    - Timeout 15000ms exceeded while waiting on the predicate
+      57 |
+      58 |                 // Assert
+    > 59 |                 await expect.poll(() => todoPage.main.getTitles()).toEqual(['sync point']);
+         |                                                                    ^
+      60 |             }
+      61 |         );
+      62 |     }
+        at <repo>\tests\e2e\todo.spec.ts:59:68
+
+=== fix-file-w1.txt
+$ (FIX) npx playwright test --config=playwright.examples.config.ts tests/e2e/todo.spec.ts --workers=1 --retries=0 --reporter=line
+  4 passed (5.0s)
+
+=== fix-folder-w1.txt
+$ (FIX) npx playwright test --config=playwright.examples.config.ts tests/e2e --workers=1 --retries=0 --reporter=line
+  6 passed (6.4s)
+
+=== fix-folder-w4.txt
+$ (FIX) npx playwright test --config=playwright.examples.config.ts tests/e2e --workers=4 --retries=0 --reporter=line
+  6 passed (4.1s)
+
+=== fix-suite-w4.txt
+$ (FIX) npx playwright test --config=playwright.examples.config.ts --workers=4 --retries=0 --reporter=line
+  14 passed (21.6s)
+
+=== fix-folder-w1-repeat3.txt
+$ (FIX) npx playwright test --config=playwright.examples.config.ts tests/e2e --workers=1 --repeat-each=3 --retries=0 --reporter=line
+  18 passed (17.5s)
+
+=== diag-repeat10-workers.txt, last line (read from test-results/examples-report.json after the diagnostic run above)
+workerIndex:status per repeat -> 0:passed 1:passed 2:passed 3:passed 4:passed 5:passed 6:passed 7:passed 8:passed 9:passed
+
+=== storage-probe.txt (diagnostic: where the app keeps the list; the script is in this README)
+$ node storage-probe.tmp.mjs
+{"localStorage":{"react-todos":"[{\"id\":\"c634bb3e-d17d-4360-9169-968df3ec1795\",\"title\":\"probe todo\",\"completed\":false}]"},"sessionStorageKeys":[]}
+titles after about:blank + clearCookies + goto: ["probe todo"]

@@ -1,0 +1,209 @@
+﻿Test Case ID,Requirement ID(s),Title,Feature/Module,Technique(s),Test Type,Priority,Preconditions,Test Data,Steps,Expected Results,Basis,Assumptions,Open Questions,Actual Result,Status,Defect ID,Environment,Notes,Automation Candidate
+TC-AUTH-001,"AC-AUTH-001
+BR-AUTH-003
+FR-AUTH-001",A seeded user with the correct password gets a token that authorizes GET /orders,Login and lockout (FR-AUTH-001),"Equivalence partitioning, partition ""known username + correct password""","Functional, positive",P0,- alice is seeded and has no failed login in the last 60 s,"- username: alice — the ""known username"" partition
+- password: the shared example password — the ""correct password"" partition","1. Post alice's username and correct password to POST /auth/login.
+2. Call GET /orders with the returned token.","1. The login answers 200 and the body carries a non-empty `token`.
+Evidence: “A seeded user who posts the correct password to POST /auth/login receives 200 and a token” — AC-AUTH-001
+2. GET /orders with that token answers 200 with a JSON array (the token is accepted).
+Evidence: “a token that authorizes GET /orders for the next 60 minutes” — AC-AUTH-001",specified,,,,Not Run,,,"Level: api
+Smoke: yes
+Source: cases/auth-login-lockout.md",yes
+TC-AUTH-002,"AC-AUTH-002
+BR-AUTH-001",A known username with a wrong password gets the generic 401 and no token,Login and lockout (FR-AUTH-001),"Equivalence partitioning, partition ""known username + wrong password""","Functional, negative",P1,- alice is seeded and has no failed login in the last 60 s,"- username: alice — ""known username""
+- password: ""wrong-password-example"" — ""wrong password"" partition (example value)",1. Post alice's username and the wrong password to POST /auth/login.,"1. The answer is 401 and the body is exactly {""error"": ""invalid credentials""}, with no `token` field.
+Evidence: “A known username with a wrong password answers 401 with the body {""error"": ""invalid credentials""}.” — AC-AUTH-002",specified,,,,Not Run,,,"Level: api
+Source: cases/auth-login-lockout.md",yes
+TC-AUTH-003,"AC-AUTH-003
+BR-AUTH-001",An unknown username gets the same status and body as a wrong password,Login and lockout (FR-AUTH-001),"Equivalence partitioning, partition ""unknown username""","Security, negative (account enumeration)",P1,"- ""probe-<run id>"" is not a seeded user","- username: probe-<run id> — ""unknown username""
+- reference answer: the status and body of TC-AUTH-002's step, taken in this case's own setup for alice","1. Post a wrong password for alice to POST /auth/login and keep status and body (reference).
+2. Post any password for probe-<run id> to POST /auth/login.","1. Step 2 answers 401 and its body is byte-for-byte equal to the reference body {""error"": ""invalid credentials""}.
+Evidence: “An unknown username answers 401 with exactly the same status and body as a wrong password.” — AC-AUTH-003
+2. No field, status or header value in step 2 differs from the reference except `Date`.
+Evidence: “nothing in status, body, headers or timing distinguishes them” — BR-AUTH-001",specified,,,,Not Run,,,"Level: api
+Source: cases/auth-login-lockout.md",yes
+TC-AUTH-004,"AC-AUTH-004
+BR-AUTH-002",The fifth failed login answers 401 and the sixth answers 429 with Retry-After: 60,Login and lockout (FR-AUTH-001),"Boundary value analysis on the failed-attempt count, values 4 / 5 / 6 around the limit 5; state transition open -> locked","Security, negative",P0,- probe-<run id> has no failed login in the last 60 s (true by construction: the name is new),"- username: probe-<run id> — failures count per submitted username, known or not (BR-AUTH-001 Audit line)
+- attempt 4 — just below the limit; attempt 5 — on the limit; attempt 6 — just above it","1. Post a wrong password for probe-<run id> six times within 60 s, keeping each answer.","1. Attempts 1 to 5 each answer 401 with the body {""error"": ""invalid credentials""}; attempt 4 and attempt 5 are checked explicitly.
+Evidence: “The fifth failed login for one username within 60 seconds answers 401” — AC-AUTH-004
+2. Attempt 6 answers 429 with the header Retry-After: 60 and the body exactly {""error"": ""too many attempts""}.
+Evidence: “the sixth answers 429 with the header Retry-After: 60 and the body {""error"": ""too many attempts""}.” — AC-AUTH-004",specified,,,,Not Run,,,"Level: api  (the username is unique per run, so the lockout touches no shared user and the case runs in parallel)
+Source: cases/auth-login-lockout.md",yes
+TC-AUTH-005,"AC-AUTH-005
+BR-AUTH-002","A locked username does not lock another username, which still logs in with 200",Login and lockout (FR-AUTH-001),"Equivalence partitioning, partition ""another username"" while one username is locked","Functional, negative isolation",P1,"- probe-<run id> has 5 failed logins in the last 60 s (locked), created in this case's setup
+- erin is seeded and has no failed login in the last 60 s",- locked username: probe-<run id>; other username: erin with the correct password,1. Post erin's username and correct password to POST /auth/login.,"1. The answer is 200 with a non-empty `token`, and GET /orders with it answers 200.
+Evidence: “Five failed logins for one username do not lock another username, which still logs in with 200.” — AC-AUTH-005",specified,,,,Not Run,,,"Level: api
+Source: cases/auth-login-lockout.md",yes
+TC-AUTH-006,"AC-AUTH-004
+BR-AUTH-002",A locked seeded user is refused with 429 even with the correct password,Login and lockout (FR-AUTH-001),"State transition, counter state ""locked"" x event ""correct password""","Security, negative",P0,"- bob is seeded and has 5 failed logins in the last 60 s (locked), created in this case's setup
+- Teardown (hook): wait until a login for bob stops answering 429, polling no faster than the Retry-After value","- username: bob; password: the shared example password — the ""correct password"" partition",1. Post bob's username and correct password to POST /auth/login.,"1. The answer is 429 with the header Retry-After: 60 and the body exactly {""error"": ""too many attempts""}; the body carries no `token`.
+Evidence: “before the password is checked” — BR-AUTH-002",specified,,,,Not Run,,,"Level: api
+Exclusive: yes — locks the seeded user bob for 60 s; any case logging in as bob in that minute would fail
+Source: cases/auth-login-lockout.md",yes
+TC-ORD-020,"AC-ORD-030
+BR-ORD-005",The owner pays a new order and it becomes paid with paid_at set,Order lifecycle (FR-ORD-004),"State transition, valid transition new -pay-> paid; decision table column R7","Functional, positive",P0,- alice owns an order in status new with `paid_at` null,,"1. As alice, POST /orders/{id}/pay.
+2. As alice, GET /orders/{id}.","1. Step 1 answers 200 with `status` ""paid"" and a non-null `paid_at`.
+Evidence: “POST /orders/{id}/pay on a ""new"" order by its owner answers 200 with status ""paid"" and a non-null paid_at.” — AC-ORD-030
+2. Step 2 shows `status` ""paid"" and the same `paid_at` value as step 1.
+Evidence: “`paid_at` is set on `new` → `paid` and never changed.” — BR-ORD-005",specified,,,,Not Run,,,"Level: api
+Smoke: yes
+Source: cases/order-lifecycle.md",yes
+TC-ORD-021,"AC-ORD-031
+BR-ORD-005",The tenant manager ships a paid order and it becomes shipped,Order lifecycle (FR-ORD-004),"State transition, valid transition paid -ship-> shipped; decision table column R7","Functional, positive",P0,- alice owns an order in status paid,,"1. As carol (manager of tenant-a), POST /orders/{id}/ship.
+2. As alice, GET /orders/{id}.","1. Step 1 answers 200 with `status` ""shipped"".
+Evidence: “POST /orders/{id}/ship on a ""paid"" order by a manager of the order's tenant answers 200 with status ""shipped"".” — AC-ORD-031
+2. Step 2 shows `status` ""shipped"" and the `paid_at` set before the ship, unchanged.
+Evidence: “`paid_at` is set on `new` → `paid` and never changed.” — BR-ORD-005",specified,,,,Not Run,,,"Level: api
+Smoke: yes
+Source: cases/order-lifecycle.md",yes
+TC-ORD-022,"AC-ORD-032
+BR-ORD-005",The owner cancels a new order and it becomes cancelled,Order lifecycle (FR-ORD-004),"State transition, valid transition new -cancel-> cancelled; decision table column R7, actor customer-own","Functional, positive",P1,- alice owns an order in status new,,"1. As alice, POST /orders/{id}/cancel.
+2. As alice, GET /orders/{id}.","1. Step 1 answers 200 with `status` ""cancelled"", and step 2 shows ""cancelled"".
+Evidence: “POST /orders/{id}/cancel on a ""new"" order by its owner, or by a manager of its tenant, answers 200 with status ""cancelled"".” — AC-ORD-032",specified,,,,Not Run,,,"Level: api
+Source: cases/order-lifecycle.md",yes
+TC-ORD-023,"AC-ORD-032
+BR-ORD-005",The tenant manager cancels a new order and it becomes cancelled,Order lifecycle (FR-ORD-004),"State transition, valid transition new -cancel-> cancelled; decision table column R7, actor manager-same-tenant","Functional, positive",P1,- alice owns an order in status new,,"1. As carol, POST /orders/{id}/cancel.
+2. As alice, GET /orders/{id}.","1. Step 1 answers 200 with `status` ""cancelled"", and alice's re-read in step 2 shows ""cancelled"".
+Evidence: “POST /orders/{id}/cancel on a ""new"" order by its owner, or by a manager of its tenant, answers 200 with status ""cancelled"".” — AC-ORD-032",specified,,,,Not Run,,,"Level: api
+Source: cases/order-lifecycle.md",yes
+TC-ORD-024,"AC-ORD-033
+BR-ORD-005",Every forbidden transition answers 409 invalid transition and leaves the order unchanged,Order lifecycle (FR-ORD-004),"State transition, all 8 invalid cells of the state x action table; decision table column R4","Functional, negative",P0,"- per row, an order of alice in the row's status (shipped and cancelled reached through the lifecycle actions)","- row 1: paid, pay, alice — repeated pay
+- row 2: new, ship, carol — not paid yet
+- row 3: shipped, pay, alice — terminal
+- row 4: shipped, ship, carol — terminal, repeated ship
+- row 5: shipped, cancel, alice — terminal
+- row 6: cancelled, pay, alice — terminal
+- row 7: cancelled, ship, carol — terminal
+- row 8: cancelled, cancel, carol — terminal, repeated cancel","1. As the row's actor, POST /orders/{id}/<action>.
+2. As alice, GET /orders/{id}.","1. Step 1 answers 409 with the body exactly {""error"": ""invalid transition""}.
+Evidence: “pay on a paid order, ship on a new order, and any action on a shipped or cancelled order each answer 409 with the body {""error"": ""invalid transition""}” — AC-ORD-033
+2. Step 2 shows the status the order had before step 1, and `paid_at` unchanged (null for row 2).
+Evidence: “and the status is unchanged.” — AC-ORD-033",specified,,,,Not Run,,,"Level: api
+Source: cases/order-lifecycle.md",yes
+TC-ORD-025,"AC-ORD-034
+BR-ORD-006",The owner cancels a paid order 23 h 59 min 59 s after paid_at,Order lifecycle (FR-ORD-004),"Boundary value analysis on hours since paid_at, last second inside the window; decision table column R6","Functional, positive boundary",P1,"- alice owns an order in status paid; the server clock reads `paid_at` + 23:59:59
+- order.cancel_window_hours has its default value 24",- now - paid_at = 23 h 59 min 59 s — just inside the window,"1. As alice, POST /orders/{id}/cancel.
+2. As alice, GET /orders/{id}.","1. Step 1 answers 200 with `status` ""cancelled"", and step 2 shows ""cancelled"".
+Evidence: “cancel on a paid order 23 h 59 min 59 s after paid_at answers 200 with status ""cancelled""” — AC-ORD-034",assumption,"the 24-hour window (result 1 depends on the window still being open at 23:59:59) is option B of OQ-001; S1 allows paid -> cancelled with no limit, under which this case also passes",OQ-001,,Not Run,,,"Level: api  (needs the server clock controlled by the test: ""a controllable clock in tests"", FR-ORD-004 Dependencies)
+Source: cases/order-lifecycle.md",yes
+TC-ORD-026,"AC-ORD-034
+BR-ORD-006",Cancelling a paid order at 24 h 00 min 00 s or later is refused and the order stays paid,Order lifecycle (FR-ORD-004),"Boundary value analysis on hours since paid_at, on the boundary (24:00:00) and just past it (24:00:01); decision table column R5","Functional, negative boundary",P1,"- per row, an order of alice in status paid; the server clock reads `paid_at` + the row's offset
+- order.cancel_window_hours has its default value 24","- row A: now - paid_at = 24 h 00 min 00 s — on the boundary
+- row B: now - paid_at = 24 h 00 min 01 s — just past it","1. As alice, POST /orders/{id}/cancel.
+2. As alice, GET /orders/{id}.","1. Step 1 answers 409 with the body exactly {""error"": ""cancellation window closed""}.
+Evidence: “at 24 h 00 min 00 s or later answers 409 with the body {""error"": ""cancellation window closed""}” — AC-ORD-034
+2. Step 2 shows `status` ""paid"" and the original `paid_at`.
+Evidence: “and status stays ""paid"".” — AC-ORD-034",assumption,"the refusal, its body and the unchanged status (results 1 and 2) are option B of OQ-001; under option A (no window) the cancel would succeed",OQ-001,,Not Run,,,"Level: api  (needs the server clock controlled by the test, as TC-ORD-025)
+Source: cases/order-lifecycle.md",yes
+TC-ORD-027,"AC-ORD-035
+BR-SEC-002
+BR-ORD-002",The owner calling ship is refused with 403 and the order stays paid,Order lifecycle (FR-ORD-004),"Decision table column R3 (sees the order, role lacks order.ship); matrix cell AZ-032","Security, negative (privilege boundary)",P0,- alice owns an order in status paid,,"1. As alice, POST /orders/{id}/ship.
+2. As alice, GET /orders/{id}.","1. Step 1 answers 403 with the body exactly {""error"": ""forbidden""}.
+Evidence: “answers 403 with `{""error"": ""forbidden""}`” — BR-SEC-002
+2. Step 2 shows `status` ""paid"".
+Evidence: “A customer calling ship, or a manager calling pay, answers 403 and the status is unchanged.” — AC-ORD-035",specified,,,,Not Run,,,"Level: api
+Source: cases/order-lifecycle.md",yes
+TC-ORD-028,"AC-ORD-035
+BR-SEC-002
+BR-ORD-002",The tenant manager calling pay is refused with 403 and the order stays new,Order lifecycle (FR-ORD-004),"Decision table column R3 (sees the order, role lacks order.pay); matrix cell AZ-028","Security, negative (privilege boundary)",P0,- alice owns an order in status new,,"1. As carol, POST /orders/{id}/pay.
+2. As alice, GET /orders/{id}.","1. Step 1 answers 403 with the body exactly {""error"": ""forbidden""}.
+Evidence: “answers 403 with `{""error"": ""forbidden""}`” — BR-SEC-002
+2. Step 2 shows `status` ""new"" and `paid_at` null.
+Evidence: “A customer calling ship, or a manager calling pay, answers 403 and the status is unchanged.” — AC-ORD-035",specified,,,,Not Run,,,"Level: api
+Source: cases/order-lifecycle.md",yes
+TC-ORD-029,"AC-ORD-036
+BR-SEC-002
+BR-ORD-002","The admin calling pay, ship or cancel is refused with 403 and the status is unchanged",Order lifecycle (FR-ORD-004),"Decision table column R3 for the admin; matrix cells AZ-030, AZ-036, AZ-043 (+ cancel on paid)","Security, negative (privilege boundary)",P1,"- per row, an order of alice in the row's status","- row A: pay on new (AZ-030)
+- row B: ship on paid (AZ-036)
+- row C: cancel on new (AZ-043)
+- row D: cancel on paid, inside the window — the paid branch of the cancel decision table","1. As root (admin), POST /orders/{id}/<action>.
+2. As alice, GET /orders/{id}.","1. Step 1 answers 403 with the body exactly {""error"": ""forbidden""}.
+Evidence: “The admin calling pay, ship or cancel answers 403 and the status is unchanged.” — AC-ORD-036
+2. Step 2 shows the status the order had before step 1.
+Evidence: “The admin calling pay, ship or cancel answers 403 and the status is unchanged.” — AC-ORD-036",assumption,that the admin may not transition orders (results 1 and 2) is option A of OQ-004; under option B the admin rows would answer 200,OQ-004,,Not Run,,,"Level: api
+Source: cases/order-lifecycle.md",yes
+TC-ORD-030,"BR-SEC-001
+BR-ORD-002
+FR-ORD-004","A caller who cannot see the order gets 404 not found on pay, ship and cancel, and nothing changes",Order lifecycle (FR-ORD-004),"Decision table column R2 (caller does not see the order); matrix cells AZ-026, 027, 029, 033, 035, 039, 040, 042 + the ship row the matrix omits","Security, negative (object scope)",P0,"- per row, an order of alice in the status the action needs (pay: new, ship: paid, cancel: new)
+- the body of GET /orders/999999 as alice (an id never created) is taken in setup as the reference not-found body","- erin (customer, same tenant): pay, ship, cancel — ship has no matrix row; its 404 follows from BR-SEC-001 (""every per-order operation"")
+- bob (customer, other tenant): pay, ship, cancel
+- dave (manager, other tenant): pay, ship, cancel","1. As the row's actor, POST /orders/{id}/<action>.
+2. As alice, GET /orders/{id}.","1. Step 1 answers 404 with a body equal to the reference not-found body {""error"": ""not found""}.
+Evidence: “the answer is 404 with `{""error"": ""not found""}` — the same status and body as for an id that does not exist — on every per-order operation (read, edit, pay, ship, cancel, delete)” — BR-SEC-001
+2. Step 2 shows the status the order had before step 1 (the scope check refuses before any transition is applied).
+Evidence: “Server checks token → scope (404) → function (403) → state (409), inside the store lock.” — FR-ORD-004",specified,,,,Not Run,,,"Level: api
+Source: cases/order-lifecycle.md",yes
+TC-ORD-001,"AC-ORD-003
+BR-ORD-003
+FR-ORD-001",A note of 199 or 200 characters is stored whole on create,"Note length (FR-ORD-001, FR-ORD-003)","Boundary value analysis, upper edge of the valid partition (199 just inside, 200 on the limit)","Functional, positive boundary",P1,- alice owns fewer than 4 orders in status new,"- row A: note = ""a"" x 200 — on the boundary
+- row B: note = ""a"" x 199 — just inside","1. As alice, POST /orders with {""note"": <row value>}.
+2. As alice, GET /orders/{id} for the returned id.","1. Step 1 answers 201 and the returned `note` equals the sent string, 200 (row A) or 199 (row B) characters long.
+Evidence: “A note of exactly 200 characters is accepted and returned unchanged by the create and by a later read.” — AC-ORD-003
+2. Step 2 answers 200 and its `note` equals the sent string character for character.
+Evidence: “A note of 200 characters is stored whole.” — BR-ORD-003",specified,,,,Not Run,,,"Level: api
+Source: cases/order-note-length.md",yes
+TC-ORD-002,"AC-ORD-004
+BR-ORD-003",A 201-character note on create is rejected with 400 naming note and no order is created,"Note length (FR-ORD-001, FR-ORD-003)","Boundary value analysis, first value of the invalid partition (201)","Functional, negative boundary",P1,- alice owns fewer than 5 orders in status new; the ids of her orders are listed in setup,"- note = ""a"" x 201 — first invalid length","1. As alice, POST /orders with {""note"": <201 characters>}.
+2. As alice, GET /orders.","1. Step 1 answers 400 and the error body names `note`; no `id` is returned.
+Evidence: “A note of 201 characters on POST /orders answers 400 with an error naming note and no order is created.” — AC-ORD-004
+2. Step 2 lists exactly the ids listed in setup (no order was created).
+Evidence: “nothing is stored or changed” — BR-ORD-003",assumption,the 400 rejection (results 1 and 2) is option A of OQ-002; the 200-character limit itself is specified (S1 sentence 4),OQ-002,,Not Run,,,"Level: api
+Source: cases/order-note-length.md",yes
+TC-ORD-003,"AC-ORD-005
+BR-ORD-001
+BR-ORD-003","An empty create body makes an order whose note is """" and status is new","Note length (FR-ORD-001, FR-ORD-003)","Boundary value analysis, lower edge (length 0); equivalence partitioning of ""no note"" (`{}`, no body)","Functional, positive boundary",P2,- alice owns fewer than 4 orders in status new,"- row A: body {} — note absent
+- row B: no body at all","1. As alice, POST /orders with the row's body.","1. The answer is 201 with `note` equal to """" (length 0), `status` equal to ""new"" and `owner` equal to ""alice"".
+Evidence: “POST /orders with an empty body creates an order whose note is """" and whose status is ""new"".” — AC-ORD-005",specified,,,,Not Run,,,"Level: api
+Source: cases/order-note-length.md",yes
+TC-ORD-004,"AC-ORD-020
+BR-ORD-003
+FR-ORD-003",The owner's edit to a 200-character note is stored whole,"Note length (FR-ORD-001, FR-ORD-003)","Boundary value analysis, upper edge on PATCH","Functional, positive boundary",P2,"- alice owns an order in status new with note ""first""","- note = ""b"" x 200 — on the boundary","1. As alice, PATCH /orders/{id} with {""note"": <200 characters>}.
+2. As alice, GET /orders/{id}.","1. Step 1 answers 200 and the returned `note` equals the 200-character string.
+Evidence: “PATCH /orders/{id} with {""note"": ""<new>""} by the owner answers 200 and the returned and re-read note equal the new value.” — AC-ORD-020
+2. Step 2 shows the same 200-character note, and `status` is still ""new"".
+Evidence: “A note of 200 characters is stored whole.” — BR-ORD-003",specified,,,,Not Run,,,"Level: api
+Source: cases/order-note-length.md",yes
+TC-ORD-005,"AC-ORD-024
+BR-ORD-003",A 201-character note edit is rejected with 400 and the note is unchanged,"Note length (FR-ORD-001, FR-ORD-003)","Boundary value analysis, first invalid length on PATCH","Functional, negative boundary",P1,"- alice owns an order in status new with note ""first""","- note = ""c"" x 201 — first invalid length","1. As alice, PATCH /orders/{id} with {""note"": <201 characters>}.
+2. As alice, GET /orders/{id}.","1. Step 1 answers 400 and the error body names `note`.
+Evidence: “PATCH /orders/{id} with a note of 201 characters answers 400 and the note is unchanged.” — AC-ORD-024
+2. Step 2 shows `note` equal to ""first"".
+Evidence: “nothing is stored or changed” — BR-ORD-003",assumption,"the 400 rejection and the unchanged note (results 1 and 2) are option A of OQ-002; the reference server stores the first 200 characters instead (observed, not a requirement)",OQ-002,,Not Run,,,"Level: api
+Source: cases/order-note-length.md",yes
+TC-ORD-006,"BR-ORD-003
+BR-ORD-004
+AC-ORD-003
+AC-ORD-004
+AC-ORD-020
+AC-ORD-024","The note-length outcome is the same for every caller, status and character set","Note length (FR-ORD-001, FR-ORD-003)","Pairwise (13 rows, verified by pairwise.py; design-tables.md#pairwise-note-validation) + syntax testing on multi-byte characters","Functional, data-driven",P2,"- per row: for ""edit"", an order of alice in the row's status with note ""first""; for ""create"", no order
+- alice owns fewer than 4 orders in status new","- ascii text: ""a"" repeated to the row's length
+- vietnamese text: ""ệ"" (U+1EC7, precomposed, 3 bytes in UTF-8) repeated to the row's length; 200 of them are 600 bytes
+- length 0 on edit is {""note"": """"}; length 0 on create is an empty body","1. As the row's caller, send the row's operation (POST /orders, or PATCH /orders/{id}) with the row's note.
+2. As alice, GET /orders/{id} (edit rows) or GET /orders (create rows).","1. Rows with length 0 or 200 answer 201 (create) or 200 (edit), and the returned and re-read note equal the sent string character for character, so 200 vietnamese characters (600 bytes) are accepted.
+Evidence: “`note` is a string of 0 to 200 characters (characters, not bytes).” — BR-ORD-003
+2. Rows with length 201 answer 400 with an error naming `note`; an edited order still shows ""first"" and a create adds no order.
+Evidence: “PATCH /orders/{id} with a note of 201 characters answers 400 and the note is unchanged.” — AC-ORD-024",assumption,"rows with caller manager-same-tenant assume OQ-006 option A (a manager may create and edit notes); rows with status paid, shipped or cancelled assume OQ-005 option A (the note is editable in every status); rows with length 201 assume OQ-002 option A (rejected). Rows 1 and 12 depend on no question.","OQ-002, OQ-005, OQ-006",,Not Run,,,"Level: api
+Source: cases/order-note-length.md",yes
+TC-ORD-010,"AC-ORD-006
+BR-ORD-007",The sixth open order is refused with 409 and the customer still owns exactly 5 new orders,"Open-order cap (FR-ORD-001, BR-ORD-007)","Boundary value analysis on the open-order count, 4 -> 5 (on the cap) and 5 -> 6 (just above)","Functional, negative boundary",P1,"- alice owns exactly 4 orders in status new (setup creates or cancels orders of alice to reach 4)
+- order.open_cap has its default value 5",- count before step 1: 4 — just below the cap; count before step 2: 5 — on the cap,"1. As alice, POST /orders with {""note"": ""fifth""}.
+2. As alice, POST /orders with {""note"": ""sixth""}.
+3. As alice, GET /orders and count the orders in status new.","1. Step 1 answers 201 with `status` ""new"" (the fifth open order is allowed).
+Evidence: “A customer may have at most 5 orders in status” — BR-ORD-007
+2. Step 2 answers 409 with the body exactly {""error"": ""too many open orders""} and no `id`.
+Evidence: “A customer who already owns 5 orders in status ""new"" answers 409 with the body {""error"": ""too many open orders""} on the next POST /orders” — AC-ORD-006
+3. Step 3 counts exactly 5 orders in status new, and no order has the note ""sixth"".
+Evidence: “and still owns exactly 5 new orders.” — AC-ORD-006",assumption,the cap of 5 orders in new and the 409 refusal (results 1 to 3) are option B of OQ-003; nothing in S1 limits open orders,OQ-003,,Not Run,,,"Level: api
+Exclusive: yes — asserts alice's exact count of orders in new
+Source: cases/order-open-cap.md",yes
+TC-ORD-011,"AC-ORD-007
+BR-ORD-007",Paying or cancelling one of 5 new orders frees a slot for the next create,"Open-order cap (FR-ORD-001, BR-ORD-007)","Equivalence partitioning of ""leaves new"": row A pay, row B cancel","Functional, positive",P2,"- alice owns exactly 5 orders in status new (setup creates or cancels orders of alice to reach 5)
+- order.open_cap has its default value 5","- row A: alice pays one of the 5 (new -> paid)
+- row B: alice cancels one of the 5 (new -> cancelled)","1. As alice, apply the row's action to one of her 5 new orders.
+2. As alice, POST /orders with {""note"": ""after slot freed""}.
+3. As alice, GET /orders and count the orders in status new.","1. Step 2 answers 201 with `status` ""new"".
+Evidence: “After the customer pays or cancels one of 5 new orders, the next POST /orders answers 201.” — AC-ORD-007
+2. Step 3 counts exactly 5 orders in status new (4 left + the new one).
+Evidence: “paying or cancelling a `new` order frees a slot” — BR-ORD-007",assumption,that a slot exists to free (results 1 and 2) follows from option B of OQ-003,OQ-003,,Not Run,,,"Level: api
+Exclusive: yes — asserts alice's exact count of orders in new
+Source: cases/order-open-cap.md",yes

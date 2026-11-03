@@ -1,0 +1,238 @@
+openapi: 3.0.3
+info:
+  title: Orders API
+  version: "2026-11-03"
+  description: >
+    Machine-readable contract for the Orders example (docs/api/API_SPECIFICATION.md explains intent and rule IDs).
+    Every protected operation answers 401 without a valid token, 404 for an object outside the caller's scope
+    (BR-SEC-001) and 403 for a function the role may not perform (BR-SEC-002). Every response carries the six
+    security headers (BR-SEC-004). Test hooks of the reference implementation (/_reset, /_boom) are not part of
+    this contract.
+servers:
+  - url: http://127.0.0.1:8765
+    description: Local (docs/delivery/ENVIRONMENTS.md)
+security:
+  - bearer: []
+paths:
+  /auth/login:
+    post:
+      summary: Login (FR-AUTH-001)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string, example: alice }
+                password: { type: string, format: password, description: example value, see the reference implementation }
+      responses:
+        "200":
+          description: token valid for 60 minutes (BR-AUTH-003)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token]
+                properties:
+                  token: { type: string }
+        "401":
+          description: invalid credentials, unknown user or wrong password alike (BR-AUTH-001)
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+        "429":
+          description: 5 failed attempts for this username in 60 s (BR-AUTH-002)
+          headers:
+            Retry-After: { schema: { type: string, example: "60" } }
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+  /orders:
+    get:
+      summary: List the caller's data scope (FR-ORD-002, BR-ORD-002)
+      responses:
+        "200":
+          description: every order the caller may see
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Order" } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      summary: Create an order (FR-ORD-001)
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                note: { $ref: "#/components/schemas/Note" }
+      responses:
+        "201":
+          description: created in status new (BR-ORD-001)
+          content: { application/json: { schema: { $ref: "#/components/schemas/Order" } } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409":
+          description: too many open orders (BR-ORD-007, assumption OQ-003)
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+  /orders/{id}:
+    parameters:
+      - $ref: "#/components/parameters/OrderId"
+    get:
+      summary: Read one order (FR-ORD-002)
+      responses:
+        "200": { $ref: "#/components/responses/OrderOk" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      summary: Edit the note (FR-ORD-003); note is the only accepted key (BR-ORD-004, BR-SEC-003)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                note: { $ref: "#/components/schemas/Note" }
+      responses:
+        "200": { $ref: "#/components/responses/OrderOk" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      summary: Delete an order (FR-ORD-005)
+      responses:
+        "204": { description: deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /orders/{id}/pay:
+    parameters:
+      - $ref: "#/components/parameters/OrderId"
+    post:
+      summary: new -> paid, by the owner (FR-ORD-004, BR-ORD-005)
+      responses:
+        "200": { $ref: "#/components/responses/OrderOk" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /orders/{id}/ship:
+    parameters:
+      - $ref: "#/components/parameters/OrderId"
+    post:
+      summary: paid -> shipped, by a tenant manager (FR-ORD-004, BR-ORD-005)
+      responses:
+        "200": { $ref: "#/components/responses/OrderOk" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /orders/{id}/cancel:
+    parameters:
+      - $ref: "#/components/parameters/OrderId"
+    post:
+      summary: new|paid -> cancelled, by the owner or a tenant manager; paid only within the window (BR-ORD-005, BR-ORD-006)
+      responses:
+        "200": { $ref: "#/components/responses/OrderOk" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /admin/users:
+    get:
+      summary: List users, admin only (FR-ADM-001)
+      responses:
+        "200":
+          description: username, tenant, role per user; never a password
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: false
+                  required: [username, tenant, role]
+                  properties:
+                    username: { type: string }
+                    tenant: { type: string, description: "tenant id, or * for the admin" }
+                    role: { type: string, enum: [customer, manager, admin] }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /_audit:
+    get:
+      summary: Audit log, admin only (FR-ADM-001, BR-AUD-001)
+      responses:
+        "200":
+          description: entries in insertion order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required: [actor, action, outcome]
+                  properties:
+                    actor: { type: string, description: username or anonymous }
+                    action: { type: string, example: GET /orders/1 }
+                    outcome: { type: string, enum: [denied] }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    OrderId:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+  schemas:
+    Note:
+      type: string
+      minLength: 0
+      maxLength: 200
+      description: at most 200 characters (BR-ORD-003)
+    Order:
+      type: object
+      required: [id, owner, tenant, note, status]
+      properties:
+        id: { type: integer, minimum: 1, readOnly: true }
+        owner: { type: string, readOnly: true }
+        tenant: { type: string, readOnly: true }
+        note: { $ref: "#/components/schemas/Note" }
+        status: { type: string, enum: [new, paid, shipped, cancelled], readOnly: true }
+        paid_at: { type: string, format: date-time, nullable: true, readOnly: true, description: set on new -> paid (assumption OQ-001) }
+    Error:
+      type: object
+      required: [error]
+      additionalProperties: false
+      properties:
+        error: { type: string, description: exact messages in docs/api/ERROR_CODES.md }
+        fields: { type: array, items: { type: string }, description: 400 only, sorted field names }
+        ref: { type: string, pattern: "^[0-9a-f]{8}$", description: 500 only }
+  responses:
+    OrderOk:
+      description: the order
+      content: { application/json: { schema: { $ref: "#/components/schemas/Order" } } }
+    BadRequest:
+      description: unknown or read-only fields (BR-SEC-003) or note too long (BR-ORD-003)
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    Unauthorized:
+      description: no, malformed, unsigned, tampered or expired token (BR-AUTH-003)
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    Forbidden:
+      description: role may not perform this function (BR-SEC-002)
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    NotFound:
+      description: outside the caller's scope or no such id, identical bodies (BR-SEC-001)
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    Conflict:
+      description: invalid transition (BR-ORD-005) or cancellation window closed (BR-ORD-006)
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }

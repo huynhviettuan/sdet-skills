@@ -52,6 +52,20 @@ jobs:
       - name: service-builder (openapi-tool)
         run: node skills/service-builder/scripts/selftest.mjs
 
+  skill-examples:
+    name: Skill examples re-earn their numbers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: every example's README counts (scripts/check-examples.sh)
+        run: bash scripts/check-examples.sh
+
   playwright-template:
     name: Playwright template compiles, lints and audits clean
     runs-on: ubuntu-latest

@@ -1,0 +1,44 @@
+{
+  "stage": "3-build",
+  "agent": "sdet-build-service",
+  "outcome": "done",
+  "produced": [
+    "src/services/pet.service.ts",
+    "src/models/pet/pet.interface.ts",
+    "src/data/schemas/pet/addPet_200_schema.json",
+    "src/data/schemas/pet/findPetsByStatus_200_schema.json",
+    "src/data/schemas/pet/findPetsByTags_200_schema.json",
+    "src/data/schemas/pet/getPetById_200_schema.json",
+    "src/data/schemas/pet/updatePet_200_schema.json",
+    "src/data/schemas/pet/updatePetWithForm_200_schema.json",
+    "src/data/schemas/pet/uploadFile_200_schema.json"
+  ],
+  "registrations": [
+    "src/fixtures/service-fixtures.ts: petService: async ({ request }, use) => use(new PetService(request))",
+    "docs/registry/services.md: | PetService | src/services/pet.service.ts | pet | 7 of 8 operations (uploadFile skipped), 7 response schemas |"
+  ],
+  "cases": [],
+  "inventory": {
+    "pages": [],
+    "services": [
+      { "tag": "pet", "operations": 8, "methods": 7, "skipped": ["uploadFile: application/octet-stream body, no case needs it"], "schemas": 7, "unmapped": [] }
+    ],
+    "testIdRequests": []
+  },
+  "commands": [
+    { "command": "node scripts/openapi-tool.mjs inventory specs/petstore-openapi.json", "result": "19 operations, 3 tags" },
+    { "command": "node scripts/openapi-tool.mjs schemas specs/petstore-openapi.json --tag pet --out src/data/schemas", "result": "unknown flags --tag/--out: the tool has no tag filter; it wrote schemas for all 3 tags" },
+    { "command": "node scripts/openapi-tool.mjs schemas specs/petstore-openapi.json --out-dir <scratch>/schemas", "result": "17 schemas written to scratch; pet/ (7) copied into src/data/schemas, store/ and user/ left in scratch (outside writeOnly)" },
+    { "command": "node scripts/openapi-tool.mjs coverage specs/petstore-openapi.json --services src/services", "result": "pet: 7/8 mapped, 1 skipped (uploadFile, octet-stream body); store, user: out of scope" },
+    { "command": "npx tsc --noEmit", "result": "clean" }
+  ],
+  "questions": [],
+  "stops": [
+    {
+      "rule": "other",
+      "detail": "The brief named openapi-tool flags that do not exist (schemas --tag/--out). Generated to scratch and copied pet/ only so no file outside writeOnly was written. Request: a --tags filter in the shared script and a corrected brief.",
+      "cases": []
+    }
+  ],
+  "refusals": []
+}

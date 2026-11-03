@@ -1,0 +1,80 @@
+Case 03 - environment, CI only | real output, trimmed | ran 2026-11-03
+Machine: Windows 11 (Git Bash), Node 22.15.0, Playwright 1.61.0 (bundled Chromium, headless).
+Copy: skills/init-playwright-framework/template + skills/test-script-writer/examples/playwright-ts at aa20c82
+(neither changed since 286442c), .env as written by run-examples.sh, PLAYWRIGHT_FORCE_ASYNC_LOADER=1, CI unset.
+The only variable between the two sides is TEST_ENV: src/constants/config.constant.ts loads .env.${TEST_ENV ?? 'dev'}
+with override, then .env without override. The defect is a .env.ci (see defect.diff) that the CI job selects.
+Apps: https://demo.playwright.dev/todomvc and https://petstore3.swagger.io (live, reachable throughout).
+Trimming: each run shows its summary lines and, where useful, its first failure block. The local path of the copy
+is replaced with <repo>. Nothing else is edited.
+Note on counts: a full-suite run lists 14 tests (7 API, 6 UI, 1 @sentinel); the sentinel is expected to fail
+(test.fail()) and is counted as passed when it fails on its known-false value.
+
+=== local-suite-w4.txt
+$ (TEST_ENV unset: .env only) npx playwright test --config=playwright.examples.config.ts --workers=4 --retries=0 --reporter=line
+  14 passed (22.2s)
+
+=== ci-suite-w4.txt
+$ TEST_ENV=ci npx playwright test --config=playwright.examples.config.ts --workers=4 --retries=0 --reporter=line
+  7 failed
+  7 passed (22.8s)
+  failing line per failure: 7 at line 45; 
+
+=== local-pet001.txt
+$ (TEST_ENV unset) npx playwright test --config=playwright.examples.config.ts tests/api/pet.spec.ts -g "TC-PET-001" --retries=0 --reporter=line
+  1 passed (4.2s)
+
+=== ci-pet001.txt
+$ TEST_ENV=ci npx playwright test --config=playwright.examples.config.ts tests/api/pet.spec.ts -g "TC-PET-001" --retries=0 --reporter=line
+  1 failed
+  failing line per failure: 1 at line 45; 
+--- first failure:
+  1) [examples] › tests\api\pet.spec.ts:8:9 › Pet API › [TC-PET-001] created pet can be retrieved by id @P0 @smoke 
+    Error: Precondition failed: addPet returned 404
+       at ..\src\fixtures\data-fixtures.ts:45
+      43 |                     status
+      44 |                 });
+    > 45 |                 if (statusCode !== OK) throw new Error(`Precondition failed: addPet returned ${statusCode}`);
+         |                                              ^
+      46 |                 created.push(id);
+      47 |                 return data;
+      48 |             },
+        at Object.create (<repo>\src\fixtures\data-fixtures.ts:45:46)
+        at <repo>\tests\api\pet.spec.ts:13:25
+
+=== local-tz-locale-pet001.txt
+$ (one other dimension changed, TEST_ENV unset) TZ=UTC LOCALE=vi-VN npx playwright test --config=playwright.examples.config.ts tests/api/pet.spec.ts -g "TC-PET-001" --retries=0 --reporter=line
+  1 passed (4.2s)
+
+=== fix-ci-pet001.txt
+$ (FIX) TEST_ENV=ci npx playwright test --config=playwright.examples.config.ts tests/api/pet.spec.ts -g "TC-PET-001" --retries=0 --reporter=line
+  1 passed (4.3s)
+
+=== fix-ci-suite-w4.txt
+$ (FIX) TEST_ENV=ci npx playwright test --config=playwright.examples.config.ts --workers=4 --retries=0 --reporter=line
+  14 passed (21.7s)
+
+=== fix-local-suite-w4.txt
+$ (FIX) (TEST_ENV unset) npx playwright test --config=playwright.examples.config.ts --workers=4 --retries=0 --reporter=line
+  14 passed (21.7s)
+
+=== ci-suite-w4.txt, every failure (one line each: test, then error)
+  1) [examples] › tests\api\pet.metamorphic.spec.ts:30:9 › Pet API — relations › [TC-PET-006] a pet is listed under its own status only, and moves when its status changes
+  Error: Precondition failed: addPet returned 404
+  2) [examples] › tests\api\pet.metamorphic.spec.ts:47:9 › Pet API — relations › [TC-PET-007] searching by two tags returns a superset of searching by one of them
+  Error: Precondition failed: addPet returned 404
+  3) [examples] › tests\api\pet.spec.ts:8:9 › Pet API › [TC-PET-001] created pet can be retrieved by id
+  Error: Precondition failed: addPet returned 404
+  4) [examples] › tests\api\pet.spec.ts:25:9 › Pet API › [TC-PET-002] unknown pet id returns 404
+  Error: Precondition failed: addPet returned 404
+  5) [examples] › tests\api\pet.spec.ts:46:13 › Pet API › [TC-PET-003] search by status returns only pets with that status (available)
+  Error: Precondition failed: addPet returned 404
+  6) [examples] › tests\api\pet.spec.ts:46:13 › Pet API › [TC-PET-003] search by status returns only pets with that status (pending)
+  Error: Precondition failed: addPet returned 404
+  7) [examples] › tests\api\pet.spec.ts:46:13 › Pet API › [TC-PET-003] search by status returns only pets with that status (sold)
+  Error: Precondition failed: addPet returned 404
+
+=== probe-curl.txt (the two API roots, same request)
+$ curl -s -o /dev/null -w '...%{http_code} %{content_type}' https://petstore3.swagger.io/api/v2/pet/findByStatus?status=available  (then /api/v3/...)
+GET /api/v2/pet/findByStatus?status=available -> 404 application/json
+GET /api/v3/pet/findByStatus?status=available -> 200 application/json

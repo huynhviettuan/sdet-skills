@@ -13,6 +13,24 @@ All notable changes to the sdet-skills plugin. Versions follow the `version` in 
 
 ### Added
 
+- Worked examples for eleven more skills, most on one shared domain (Orders), each with the command that checks it.
+  `project-docs/examples/orders-docs`: a full Level 2 package (7 FR, 17 BR, 44 AC, 4 ADR, 6 OQ, a 51-cell
+  permission matrix). `test-case-design/examples/orders`: 25 cases over a 19-AC slice (EP, BVA, state transition,
+  decision table, verified pairwise), the CSV workbook, coverage and regression scope; 0 errors against the slice
+  catalogue (its `analysis.md` was refused to the agent that wrote the example and is missing, said so in its
+  README). `sdet-automation-docs/examples/orders-automation`: strategy, risk, data, flaky policy, CI gates,
+  traceability (the Orders matrix measured at 23 of 51 cells covered by the reference suite). `test-code-review/
+  examples/review-01`: 8 planted violations, the review, the fixed code, an answer key (audit-suite 7 before, 0 after;
+  3 need a human). `refactor-test-suite/examples/legacy-orders`: baseline, audit, plan, three steps 53 -> 43 -> 22 -> 0,
+  the CI ratchet. `debug-failed-tests/examples`: three case studies with real evidence from runs on 2026-11-03 (a race
+  measured 19/20 and fixed on the real signal, data pollution bisected to a widened fixture scope, a CI-only
+  environment failure). `automation-pipeline/examples/pilot-todo-petstore`: the pilot's real status file, one stage
+  brief and its report. `page-builder` and `service-builder` examples from the pilot (coverage 7/8, `uploadFile`
+  skipped and recorded). `manual-qa-agent/examples/lockout-spec`: an API-level executable spec, 0 errors from
+  `check-spec`. `performance-testing/examples/vuln-api-load`: a stdlib closed-model run with a filled report that
+  questions its own outlier. New CI job `Skill examples` runs `scripts/check-examples.sh`, which asserts the exact
+  numbers each README states (shown red once by planting a sleep in a fixed file); examples that need the network or
+  another repo say "ran once on 2026-11-03".
 - `security-testing` upgraded for cybersecurity QA. A runnable example `examples/vuln-api` (stdlib API, eleven
   switchable flaws: bola, mass, headers, cors, errors, ratelimit, enum, jwt-none, jwt-nosig, jwt-noexp, audit) with the suite the skill
   asks for — matrix from the permission table, BOLA with the object-unchanged assertion, mass assignment, headers
