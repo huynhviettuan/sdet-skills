@@ -251,14 +251,30 @@ def test_unknown_pet_id_returns_404(pet_factory: PetFactory, pet_service: PetSer
 @pytest.mark.case("TC-PET-003")
 @pytest.mark.requirement("AC-PET-003")
 @pytest.mark.parametrize("status", list(PetStatus), ids=lambda s: s.value)
-def test_find_by_status_returns_only_that_status(pet_service: PetService, status: PetStatus) -> None:
+def test_find_by_status_returns_only_that_status(
+    pet_factory: PetFactory, pet_service: PetService, status: PetStatus
+) -> None:
     """[TC-PET-003] Search by status returns only pets with that status."""
+    pet = pet_factory.create(status)
+
     response = pet_service.find_pets_by_status(status)
 
+    # The contract is checked on the record this test owns; other users' records on the shared server may
+    # violate the spec (three nameless pets on 2026-11-02), and that is their finding, not this case's — so the
+    # list is scanned raw (parsing it into Pet would assert their shape) and only our record is parsed and validated.
     assert response.status_code == 200
-    assert_matches(response, "pet", "findPetsByStatus_200")
-    assert {pet.status for pet in response.data} <= {status}
+    listed: list[dict[str, Any]] = response.json()
+    assert {found.get("status") for found in listed} <= {status.value}
+    ours = next((found for found in listed if found.get("id") == pet.id), None)
+    assert ours is not None, f"pet {pet.id} created with status {status.value} is listed"
+    assert Pet.model_validate(ours).status == status
+    assert_value_matches(ours, "pet", "getPetById_200")
 ```
+
+(`from typing import Any`, `from qa.api.schema import assert_matches, assert_value_matches`, `from qa.models.pet
+import Pet, PetStatus`.) **Shared server, typed lists:** `response.data` parses the whole body into the spec model, so
+one spec-violating record from another user fails the test before any assertion runs. Read shared lists raw and parse
+only the record you own; the whole-body schema check belongs to a case against a server you control (decision D-18).
 
 ---
 

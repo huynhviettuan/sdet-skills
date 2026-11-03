@@ -6,6 +6,35 @@ All notable changes to the sdet-skills plugin. Versions follow the `version` in 
 
 ### Added
 
+- The automation pipeline runs as a team: `sdet-automation-coordinator` (Sonnet) owns `docs/automation-status.json`
+  and spawns one isolated subagent per stage — `sdet-assess` (Opus), `sdet-build-page` / `sdet-build-service` (one
+  per screen / tag, in parallel), `sdet-implement` (per case file, in parallel), `sdet-verify`, an independent
+  `sdet-review`, `sdet-triage` (Haiku). Stage brief and stage report shapes in `automation-pipeline/references/stages.md`;
+  `sdet-automation-agent` kept behind `/automate --single-context`.
+- Ran once on 2026-11-02 as a pilot (TodoMVC + Petstore on a fresh Playwright scaffold, this session acting as the
+  coordinator): 2 build agents and 2 implement agents in parallel over disjoint paths, verify and an independent
+  reviewer in parallel, three gates with the user. 10/10 cases automated, 42 passed ×3 on 4 workers, sentinel held,
+  can-fail 20 killed / 0 survived; the implement agent refused to loosen a red test caused by other users' data on
+  the shared server (decision D-18); the reviewer found the verify/review shared-tree hazard (decision D-19) and a
+  missing precondition check. Two coordinator brief errors (a tool flag, a project name) were caught by the agents
+  and fixed in the tool and the brief template.
+- Stop rules as hooks in every scaffold: `scripts/guard-hooks.mjs` (PreToolUse on Bash and Edit/Write, PostToolUse
+  audit) blocks a merge or push to the default branch, a production host (`.claude/guard.json`), a permission bypass,
+  a fixed sleep, and an edit that changes an existing assertion in a test (`ALLOW_ASSERTION_EDIT=1` is a person's
+  override); `audit-suite --fail-on block` runs after every write under `src/` or `tests/`. Self-tested; every guard
+  shown to fail its tests when removed.
+- `automation-status.json` with a schema (`automation-pipeline/schemas/`) and `scripts/status.mjs validate | render |
+  summary` (dependency-free validator; the Markdown status is rendered from the JSON). Shipped in every scaffold.
+- `openapi-tool schemas --tags <tags>`: writes only those services' schemas, so a service builder working on one tag
+  never writes outside its paths (found when a stage agent's brief named a flag that did not exist and the agent
+  generated to scratch rather than write other tags' folders). `service-builder/scripts/selftest.mjs` covers
+  inventory, schemas with and without `--tags`, and coverage (clean, missing, extra).
+- Schema helpers validate one value, not only a whole response: `SchemaValidator.assertMatches(Object, folder, name)`
+  (Java) and `assert_value_matches(value, folder, name)` (Python); TypeScript's `validateJsonSchema` already took
+  any object. Needed by TC-PET-003 below.
+- `.mcp.json.example` in the Playwright scaffold: a headless, isolated, origin-limited Playwright MCP for an explorer
+  subagent that should have a browser and nothing else.
+
 - Working rules for the repo itself: `CLAUDE.md` (a refusal is a stop, green is earned, no "verified" without a
   repeating job, heuristics measured or advisory, one owner per table, Windows-first hygiene, the subagent brief),
   path-scoped `.claude/rules/` (skills, scripts, examples and templates, evals), and `docs/decisions.md` (the calls
@@ -22,6 +51,11 @@ All notable changes to the sdet-skills plugin. Versions follow the `version` in 
   and only a pet still present fails the teardown (decision D-13).
 
 ### Changed
+
+- TC-PET-003 (sample cases, the three example suites, the code templates) asserts the contract on the pet the test
+  created, not on every record of the shared server's response: on 2026-11-02 the public Petstore served three pets
+  without the required `name`, planted by other users, and the pipeline's implement agent correctly refused to
+  loosen the test. Decision D-18; the whole-body check belongs to a case against a server you control.
 
 - One owner per shared table: the ID scheme lives in the README (project-docs keeps only the prefixes it owns);
   "what the executable-spec format can't express" lives in `test-script-writer/references/executable-spec.md`

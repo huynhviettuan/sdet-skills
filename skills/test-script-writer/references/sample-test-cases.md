@@ -149,6 +149,10 @@ Layer:      API
 Automation: Candidate
 Status:     Ready
 
+Preconditions:
+- A pet with <status> exists, created by this test (so the result can't be empty, and so there is a record whose
+  shape this test owns)
+
 Test data:
 | status    |
 |-----------|
@@ -160,6 +164,13 @@ Steps:
 1. Find pets by <status>.
 
 Expected results:
-1. Status 200; body matches the findPetsByStatus response schema.
+1. Status 200.
 2. Every returned pet has status <status>.
+3. The pet this test created is in the result and matches the Pet schema (`getPetById_200`).
+
+Scope note (2026-11-02): the whole-body schema check that used to be expected result 1 is out of scope on a shared
+server — other users' records can violate the spec (the public Petstore served three pets without the required
+`name`), and that is a finding about the server's input validation, not about the API contract this test relies on.
+The case asserts the contract on the record it owns; a dedicated case against a server you control can assert the
+whole body.
 ````

@@ -26,11 +26,23 @@ public final class SchemaValidator {
 
     /** e.g. {@code assertMatches(response, "pet", "findPetsByStatus_200")}. */
     public static void assertMatches(ApiResponse<?> response, String folder, String name) {
-        Set<ValidationMessage> errors = schema(folder, name).validate(JsonMapper.tree(response.bodyText()));
+        assertJsonMatches(response.bodyText(), folder, name, "Response");
+    }
+
+    /**
+     * One value (a record picked out of a list, a model) against a schema — for asserting the contract on the record
+     * a test owns rather than on a whole shared-server body, e.g. {@code assertMatches(ours, "pet", "getPetById_200")}.
+     */
+    public static void assertMatches(Object value, String folder, String name) {
+        assertJsonMatches(JsonMapper.toJson(value), folder, name, "Value");
+    }
+
+    private static void assertJsonMatches(String json, String folder, String name, String what) {
+        Set<ValidationMessage> errors = schema(folder, name).validate(JsonMapper.tree(json));
         if (!errors.isEmpty()) {
-            throw new AssertionError("Response does not match schema " + folder + "/" + name + ":\n  "
+            throw new AssertionError(what + " does not match schema " + folder + "/" + name + ":\n  "
                     + errors.stream().map(ValidationMessage::getMessage).collect(Collectors.joining("\n  "))
-                    + "\nBody: " + response.bodyText());
+                    + "\nBody: " + json);
         }
     }
 

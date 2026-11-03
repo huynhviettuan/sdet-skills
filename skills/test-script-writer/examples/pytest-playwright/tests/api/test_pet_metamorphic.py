@@ -5,6 +5,8 @@ result. They assert relations about the pets this test created (unique ids and t
 is on the server.
 """
 
+from typing import Any
+
 import pytest
 
 from qa.api.schema import assert_matches
@@ -55,6 +57,8 @@ def test_find_by_more_tags_returns_a_superset(pet_factory: PetFactory, pet_servi
 
 
 def _ids_by_status(pet_service: PetService, status: PetStatus) -> list[int | None]:
+    """Ids of the shared server's list, read raw: parsing other users' records into Pet would assert their shape."""
     response = pet_service.find_pets_by_status(status)
     assert response.status_code == 200
-    return [pet.id for pet in response.data]
+    listed: list[dict[str, Any]] = response.json()
+    return [found.get("id") for found in listed]
