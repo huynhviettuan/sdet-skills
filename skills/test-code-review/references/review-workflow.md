@@ -67,8 +67,11 @@ A finding is kept only when you can fill in all three:
 When the consequence is a wrong verdict, show it if you can: break the expectation and run the test, or write the
 input that makes it pass wrongly. When you can't state the consequence in one sentence, drop the finding.
 
-Severity comes from the rule's table, adjusted by consequence only downwards (a block-level pattern in a file that
-can't affect verdicts, such as a tooling script, may be a warn) — never upwards from taste.
+Severity comes from the rule's table, adjusted by consequence: downwards when the pattern can't affect verdicts (a
+block-level pattern in a tooling script may be a warn); upwards to block only when the consequence is a wrong verdict
+you can state in one sentence ("this test passes when shipping is broken") — that is `SKILL.md`'s one blocking class,
+and it outranks the rule's default. Never upwards from taste. The correctness lines of the checklist (§2) are already
+`block` for this reason; `S-KISS-ASSERT` stays `warn` for matcher style and plainness.
 
 ## 5 Write the review
 

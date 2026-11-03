@@ -9,11 +9,14 @@ thing" is the case list in [`README.md`](README.md).
 audit `node skills/refactor-test-suite/scripts/audit-suite.mjs before` 2026-11-03: 4 files scanned, 7 findings
 (block 4: R-NO-SLEEP 1, R-TEARDOWN 3; warn 3: R-SCOPE 1, R-POSITION 1, R-WEAK-ASSERT 1) | tests - not run
 (no app)
-**Verdict:** Request changes (3 block, 5 warn)
+**Verdict:** Request changes (6 block, 2 warn)
 
-Findings 1-5 are the audit's; the review adds the consequence and the fix and does not re-derive them. Findings
-6-8 need a reader with the case in hand: a pattern matcher cannot see them. Each finding is one cause; a cause
-repeated in several places is one finding with several locations.
+Findings 1, 2, 4, 5 and 6 are the audit's; the review adds the consequence and the fix and does not re-derive
+them. Findings 3, 7 and 8 need a reader with the case in hand: a pattern matcher cannot see them. Each finding is one
+cause; a cause repeated in several places is one finding with several locations. Findings 5, 6 and 7 carry a `warn`
+rule but are **raised to block** by consequence ([`review-workflow.md`](../../references/review-workflow.md) § 4):
+each can make a test pass while the product is broken, the one blocking class in `SKILL.md`. Numbers follow the
+answer key, so the Block list is not in numeric order.
 
 ### Block
 
@@ -42,6 +45,31 @@ repeated in several places is one finding with several locations.
    the defect. If the team wants the run green meanwhile, `test.fixme('[TC-ORD-003] ... (blocked by ticket
    4471)', ...)` keeps the case visible in the report (S-TS-TAGS); a passing assertion of the bug does not.
 
+5. `src/pages/orders/orders.page.ts:21` — `.first()` on `filter({ hasText: number })`: `hasText` is a substring
+   match, so for order `ORD-10` the rows `ORD-10` and `ORD-100` both match and `.first()` returns whichever the
+   DOM lists first; the test then edits or reads the wrong order and passes. **R-POSITION** (rule: warn; raised to
+   block: wrong verdict). *Found by audit-suite.* Fix: match the
+   business key exactly — `filter({ has: numberCell })` with `getByText(number, { exact: true })` on the
+   `order-number` cell (`after/src/pages/orders/orders.page.ts:16-20`); an ambiguous match then fails strict
+   mode instead of picking one.
+
+6. `tests/orders.spec.ts:17` — `expect(await lblNote.textContent()).toBeTruthy()` passes for any non-empty note,
+   including the previous one, and reads the text once instead of retrying. **R-WEAK-ASSERT / S-KISS-ASSERT**
+   (rule: warn; raised to block: checklist § 2 "no assertion that passes vacuously"), **S-TS-POLL** for the
+   snapshot read. *Found by audit-suite.* Fix:
+   `await expect(ordersPage.lblNote(order.number)).toHaveText('Leave at reception')`
+   (`after/tests/orders.spec.ts:15`).
+
+7. `tests/orders.spec.ts:21` — the title says "manager ships an order and the row shows Shipped"; the body
+   (`:29`) asserts that the status control is enabled and never ships. A reader of the report believes TC-ORD-002
+   is covered; a regression in shipping passes. **S-KISS-NAME** (warn), and the case's expected result has no
+   assertion (checklist [§ 2](../../references/review-checklist.md#2-correctness-can-this-test-lie), S-KISS-ASSERT,
+   block: the wrong verdict decides the severity, not the naming rule).
+   *Needs a reviewer:* the assertion is well-formed and the title is well-formed; only reading both against the
+   case shows they do not match. Fix: perform the case's Act (`setStatus(order.number, 'shipped')`) and assert
+   its expected result (`lblStatus` has text `Shipped`) — `after/tests/orders.spec.ts:23-25`; or, if the enabled
+   control is what the author meant to prove, retitle it and write TC-ORD-002 as its own test.
+
 ### Warn
 
 4. `src/pages/orders/orders.page.ts:19` — `this.page.locator('[data-testid="order-row"]')` resolves rows against
@@ -49,29 +77,6 @@ repeated in several places is one finding with several locations.
    modal) is matched too, and the page object cannot be reused inside a dialog. **R-SCOPE** (warn). *Found by
    audit-suite.* Fix: the page takes its root from the fixture (`new OrdersPage(page.getByTestId('orders-table'))`)
    and resolves every element from `this.root` (`after/src/pages/orders/orders.page.ts:9`, `:19`).
-
-5. `src/pages/orders/orders.page.ts:21` — `.first()` on `filter({ hasText: number })`: `hasText` is a substring
-   match, so for order `ORD-10` the rows `ORD-10` and `ORD-100` both match and `.first()` returns whichever the
-   DOM lists first; the test then edits or reads the wrong order and passes. **R-POSITION** (warn; the
-   consequence is a wrong verdict, which is why the fix is not optional). *Found by audit-suite.* Fix: match the
-   business key exactly — `filter({ has: numberCell })` with `getByText(number, { exact: true })` on the
-   `order-number` cell (`after/src/pages/orders/orders.page.ts:16-20`); an ambiguous match then fails strict
-   mode instead of picking one.
-
-6. `tests/orders.spec.ts:17` — `expect(await lblNote.textContent()).toBeTruthy()` passes for any non-empty note,
-   including the previous one, and reads the text once instead of retrying. **R-WEAK-ASSERT / S-KISS-ASSERT**
-   (warn), **S-TS-POLL** for the snapshot read. *Found by audit-suite.* Fix:
-   `await expect(ordersPage.lblNote(order.number)).toHaveText('Leave at reception')`
-   (`after/tests/orders.spec.ts:15`).
-
-7. `tests/orders.spec.ts:21` — the title says "manager ships an order and the row shows Shipped"; the body
-   (`:29`) asserts that the status control is enabled and never ships. A reader of the report believes TC-ORD-002
-   is covered; a regression in shipping passes. **S-KISS-NAME** (warn), and the case's expected result has no
-   assertion (checklist [§ 2](../../references/review-checklist.md#2-correctness-can-this-test-lie), S-KISS-ASSERT).
-   *Needs a reviewer:* the assertion is well-formed and the title is well-formed; only reading both against the
-   case shows they do not match. Fix: perform the case's Act (`setStatus(order.number, 'shipped')`) and assert
-   its expected result (`lblStatus` has text `Shipped`) — `after/tests/orders.spec.ts:23-25`; or, if the enabled
-   control is what the author meant to prove, retitle it and write TC-ORD-002 as its own test.
 
 8. `src/pages/orders/orders.page.ts:7`, `:13-15` — `open(options: OpenOptions = {})` builds a `?status=` query
    from `options.filter`, which no test passes; the only caller is `open()`. The page carries a query-string
@@ -121,10 +126,10 @@ disappears with finding 1.
 
 ## Verdict
 
-Request changes. Three findings can produce a wrong verdict today: the sleep (1) makes TC-ORD-001 flaky in both
-directions, the body teardown (2) leaks an order on every failure and makes the next run ambiguous, and TC-ORD-003
-(3) is green because it asserts the defect it was written to catch. Five more cost the next reader or the next
-test: a page-global row lookup, a `.first()` that silently picks between `ORD-10` and `ORD-100`, a `toBeTruthy()`
-that any note satisfies, a title that promises a shipping test the body does not run, and an `open()` option
-nobody passes. The audit found findings 1, 2, 4, 5 and 6 mechanically (7 locations, 5 rules); 3, 7 and 8 were only
+Request changes. Six findings can produce a wrong verdict today: the sleep (1) makes TC-ORD-001 flaky in both
+directions, the body teardown (2) leaks an order on every failure and makes the next run ambiguous, TC-ORD-003 (3)
+is green because it asserts the defect it was written to catch, the `.first()` (5) silently picks between `ORD-10`
+and `ORD-100`, the `toBeTruthy()` (6) is satisfied by any note including the old one, and the shipping test (7)
+never ships. Two more cost the next reader or the next test: a page-global row lookup (4) and an `open()` option
+nobody passes (8). The audit found findings 1, 2, 4, 5 and 6 mechanically (7 locations, 5 rules); 3, 7 and 8 were only
 visible with the test cases open beside the code, which is the half of a review a script cannot do.

@@ -28,6 +28,13 @@ Climb only as far as needed; each rung adds a variable.
 | 6. CI-like | headless, CI viewport, CI workers, `TZ`/locale, CI env file, `--retries=0` | Environment differences |
 | 7. In CI | re-run the job with tracing on every attempt | Infra-only causes (resources, network, secrets) |
 
+Rungs 2–3 repeat **one test**; they cannot show state that one test leaves for a *different* one in the same worker
+(a worker-scoped fixture, `localStorage` in a reused context, a module-level cache). Repeats need not share a worker:
+in `examples/02-data-pollution`, ten repeats of the victim's neighbour reported ten different worker indices and all
+passed, while the same tests in one file with `--workers=1` failed 2 of 4. Playwright also replaces a worker after
+any failed test, which resets worker state between a failure and the next attempt. For suspected pollution go to
+rung 4 with `--workers=1` and read the worker index per test from the JSON reporter, then bisect the neighbours.
+
 TestNG + Maven equivalents:
 
 | Rung | Command |

@@ -51,6 +51,14 @@ todo.addTodo("buy milk");
 Eventually.verify(() -> assertThat(todo.main.item("buy milk").isCompleted()).isTrue());
 ```
 
+Where the screen's **root** lookup lives: every container needs one locator that starts from the page. In the
+scaffolds it is made by the framework layer (`$()` in the Playwright template, `BrowserInstance`), so page files
+never call `page.locator(...)`; in a page object without that helper, the fixture (composition root) resolves the root
+and passes it in (`new OrdersPage(page.getByTestId('orders-table'))`). In TypeScript and Java, `R-SCOPE` flags *any*
+page-level lookup in a page file, the root included; in Python, `page.locator(...)` is accepted as the root and only
+a page-level `get_by_*` is flagged. Both idioms are in `refactor-test-suite/examples/legacy-orders/step-3` and
+`test-code-review/examples/review-01/after`.
+
 Steps:
 
 1. Pick one screen; list every locator the tests use on it (grep the audit findings for that page).

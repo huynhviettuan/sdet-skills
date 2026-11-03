@@ -146,8 +146,11 @@ node scripts/audit-suite.mjs . --baseline audit-baseline.json
 
 - Fails when any rule's count **increases** compared with the committed baseline; passes when counts stay or drop.
 - After a refactor PR lowers counts, regenerate and commit the baseline (`--json audit-baseline.json`) in the same PR.
-- When a rule reaches zero, switch CI to `--fail-on block` (and later `--fail-on warn`) and add the equivalent lint
-  rule so editors flag it before CI does. Both scaffolds ship them, keyed to the same rule IDs — copy them into the
+- `--fail-on` takes a **severity**, not a rule: `--fail-on block` fails on any `block` finding, so it can be switched
+  on only when **every** block rule is at zero (and `--fail-on warn` when every rule is). Until then the baseline is
+  the ratchet. When a single rule reaches zero, lock that one in with its lint rule instead, so editors flag it
+  before CI does (`refactor-test-suite/examples/legacy-orders`: at step 2, six of seven block rules were at zero and
+  `--fail-on block` still exited 1). Both scaffolds ship them, keyed to the same rule IDs — copy them into the
   repo: ESLint `no-restricted-imports` / `no-restricted-syntax` blocks in the Playwright template's
   `eslint.config.mjs`, and `src/test/java/.../architecture/ArchitectureRulesTest.java` (ArchUnit) in the Java
   template.

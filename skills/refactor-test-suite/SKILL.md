@@ -45,7 +45,8 @@ coverage, and stop it from sliding back. Never a big-bang rewrite.
 5. **Verify each step** against the baseline: same tests, all green with retries off, repeated and parallel runs
    green, duration not worse, targeted audit counts down and no count up (`--baseline audit-baseline.json`).
 6. **Lock in.** Commit the updated `audit-baseline.json`; run the ratchet in CI so no count can grow; switch to
-   `--fail-on block` once block findings reach zero, and add the matching lint / ArchUnit rules.
+   `--fail-on block` once every block rule is at zero (it takes a severity, not a rule), and lock each rule that
+   reaches zero earlier with the matching lint / ArchUnit rule.
 
 ## Non-negotiable rules
 

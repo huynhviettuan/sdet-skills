@@ -102,6 +102,12 @@ gets built) and naming the finding IDs.
 Every row cites both sides. "Likely current" is a judgement with its reason (newer, more authoritative, more
 specific, as built); the decision stays with the owner.
 
+Finding IDs, one prefix per table: `C-n` conflicts, `G-n` gaps, `AM-n` ambiguities, `ST-n` stale or superseded,
+`R-n` risks. Never `A-n` or `D-n`: those are requirement kinds the sources themselves use (documented assumptions
+`A-377`, decisions `D-082`), and `check_cases.py` counts every `A-`/`D-` token in the testing view and the conflict
+table as a requirement ID, so an ambiguity numbered `A-1` turns into a phantom requirement (found building the Orders
+example, 2026-11-03).
+
 Use a prefix of the KB's own for its questions (KQ-) — the sources usually have an OQ- series already, and two
 OQ-012s that mean different things are worse than none. When several people (or agents) wrote the pages, each
 reports the conflicts and gaps it met; the analysis merges those reports with the digests' "Noticed" sections,
@@ -132,4 +138,5 @@ them and refuses a case that encodes a disputed rule as settled.
 - `analysis.md` → `## Conflicts`: first column `C-n`, second the severity (`High`, `Medium`, `Low`), then topic,
   source A, source B. Every requirement ID named in topic or either side counts as disputed: a High or Medium row
   blocks `Basis: specified` on cases verifying it; a Low row (wording) only advises. Name only the IDs actually in
-  dispute in those three columns.
+  dispute in those three columns; the `#`, severity, "Likely current" and `KQ / OQ` columns are not read, so an ID
+  cited there for context (the action item that will settle it, a related rule) does not become disputed.

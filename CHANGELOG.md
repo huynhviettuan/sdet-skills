@@ -6,6 +6,20 @@ All notable changes to the sdet-skills plugin. Versions follow the `version` in 
 
 ### Fixed
 
+- Seven places where a skill's own documents disagreed with each other or with its script, all found by the agents
+  that built the worked examples:
+  - `test-code-review`: the severity of a test that can pass with the product broken was set in three places that
+    disagreed (`SKILL.md` "the only blocking class", checklist § 2 `warn`, workflow "only downwards"). `SKILL.md`
+    wins: the two correctness lines of § 2 are `block`, and the workflow raises a finding to block when its
+    consequence is a wrong verdict stated in one sentence. The `review-01` example now has 6 block, 2 warn.
+  - `project-knowledge-base`: finding IDs per table (`C-` `G-` `AM-` `ST-` `R-`), never `A-`/`D-`, which
+    `check_cases.py` reads as requirement kinds; which conflict columns are read as disputed; citations count lines
+    in `_sources/text/`, where `ingest.py`'s header makes them one more than the original file.
+  - `refactor-test-suite`: `--fail-on` takes a severity, so `--fail-on block` waits for every block rule to reach
+    zero (a single rule is locked with its lint rule); `R-SCOPE` flags the container root lookup in TS and Java, not
+    in Python, and the recipe says where the root belongs (framework helper or fixture).
+  - `debug-failed-tests`: `--repeat-each` cannot expose state one test leaves for another in the same worker
+    (measured in the data-pollution case study); a racy page-object read is fixed in the action method, once.
 - `/review-tests` lost all its frontmatter (description, argument hint) on a Windows checkout with CRLF line endings:
   the unquoted `argument-hint` (`[...]  [--post]`) is not valid YAML, and the strict validator rejects it once the
   file has CRLF. Quoted. Found by validating a clean worktree before a push; LF checkouts (CI, Linux, macOS) were

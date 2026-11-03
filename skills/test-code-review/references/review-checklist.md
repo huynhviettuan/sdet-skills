@@ -47,9 +47,9 @@ Run them; report results; don't re-review what they enforce.
 ## 2 Correctness: can this test lie?
 
 ```text
-[ ] Every expected result of the case has an assertion with the stated value               S-KISS-ASSERT   warn
+[ ] Every expected result of the case has an assertion with the stated value               S-KISS-ASSERT   block
 [ ] A negative check has a sync point; the "nothing happened" check runs after it          test-script-writer block
-[ ] No assertion that passes vacuously (empty list `allSatisfy`, `toBeTruthy` on a string) S-KISS-ASSERT   warn
+[ ] No assertion that passes vacuously (empty list `allSatisfy`, `toBeTruthy` on a string) S-KISS-ASSERT   block
 [ ] Waits are on signals, bounded; no sleeps, no force                                     R-NO-SLEEP/R-FORCE block
 [ ] Actions and assertions awaited; no floating promises                                   S-ASYNC-AWAIT    block
 [ ] No try/catch or `.catch` that turns a failure into a pass                              S-ERROR-BOUNDARY  block

@@ -34,7 +34,7 @@ Contents:
 
 | ID | Rule | Detected | Fix recipe |
 |---|---|---|---|
-| `R-SCOPE` | Page objects resolve elements through their container, not the whole page | page-global helpers / `driver.findElement` inside page objects | [Raw UI → page objects](recipes.md#raw-ui-calls--page-objects) |
+| `R-SCOPE` | Page objects resolve elements through their container, not the whole page | page-global helpers / `driver.findElement` inside page objects; in TS and Java also the container's own root lookup (it belongs in the framework helper or the fixture), in Python only a page-level `get_by_*` | [Raw UI → page objects](recipes.md#raw-ui-calls--page-objects) |
 | `R-POSITION` | Elements identified by business key, not position | `.nth(`, `.first()`, `:nth-child`, `findElements(…).get(0)` in tests/pages (generic table/list components exempt) | [Positions → business keys](recipes.md#positions--business-keys) |
 | `R-XPATH-ABS` | No absolute or long XPath | `/html/…`, `//a/b/c/d…`, `xpath=//…` | [Raw UI → page objects](recipes.md#raw-ui-calls--page-objects) |
 | `R-FORCE` | No forced / scripted actions bypassing interactability | `force: true`, `executeScript(… click …)` | [Sleeps → real signals](recipes.md#sleeps--real-signals) (wait for the overlay/state instead) |

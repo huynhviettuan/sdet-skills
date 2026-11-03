@@ -47,6 +47,12 @@ project may split a page (`business-rules/<area>.md`) — keep the top-level fil
 Ranges `[S07 L120-L140]`; several `[S07 L120; S19 L88]`; an image `[S41]` (no line). The README explains the format
 and links the inventory, so any citation is two clicks from the original wording.
 
+The extracted text is the citation target, **not the original file**: `ingest.py` writes a one-line header
+(`<!-- S07: <file> — extracted <date>; cite as [S07 L<line>] -->`) above the text, so for a Markdown or text source
+line *n* of the original is `L(n+1)`, and for a PDF or Word source the original has no stable line numbers at all.
+Read line numbers from `_sources/text/`, never from the original (`check_kb.py` and `check_cases.py --kb` check
+against the extracted file, so a citation copied from an editor showing the original is off by one).
+
 Cite at the level of the claim: one citation per bullet, table row or sentence that states a fact. A summary
 paragraph cites the sources it summarizes. Inferences are written *(inferred from [S03 L40], [S06 L12])*.
 
