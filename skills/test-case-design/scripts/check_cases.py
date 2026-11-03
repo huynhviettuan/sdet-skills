@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """check_cases — check test-case files written in this skill's format against a requirement catalogue.
 
-    python check_cases.py <cases-dir-or-file> [--catalogue <file> ...] [--kb <knowledge-base-dir>] [--trace out.csv]
+    python check_cases.py <cases-dir-or-file> [--catalogue <file> ...] [--kb <knowledge-base-dir>]
+                          [--sources <file-or-dir> ...] [--trace out.csv]
 
 Cases are Markdown sections "## TC-<AREA>-NNN — Title" with the fields of references/test-case-format.md, or rows of
 the 20-column CSV workbook described there (any .csv in the target; its execution columns are allowed).
@@ -14,6 +15,11 @@ is in the catalogue. Without --catalogue only the cases themselves are checked.
   - an Evidence quote that carries a citation is checked against that line (whitespace and quote marks normalised,
     case ignored): a quote that is not there is an error — it is the one claim a reviewer would otherwise take on trust.
 
+--sources names the requirement documents themselves (Markdown or text; a directory is read recursively) when there
+is no knowledge base: every Evidence quote (the first quoted span of the line) must then appear, normalised the same
+way, in at least one of them, or it is an error. A quote already checked against a --kb citation is not checked twice.
+Without --kb or --sources, quotes are not compared with anything and the run says so.
+
 Errors (exit 1):
   - a case ID is used twice
   - a case has no Verifies, Priority, Basis or Expected results
@@ -23,6 +29,7 @@ Errors (exit 1):
   - an acceptance criterion (AC-) in the catalogue is verified by no case
   - an execution result (Actual result, or a Pass/Fail status) is written into a design file
   - with --kb: a citation to an unknown or removed source or a line past its end; an evidence quote not found at its line
+  - with --sources: an evidence quote found in none of the source documents
   - with --kb: Basis specified on a case that verifies a requirement disputed in a High or Medium conflict of the KB's
     analysis.md — it encodes a guess; it must be an assumption naming the C-n row or its KQ-/OQ- question
 Advisory (printed, never fails; lexical checks are not measured against your product, so read them as hints):
@@ -192,6 +199,7 @@ def main() -> int:
     files = sorted([*target.rglob("*.md"), *target.rglob("*.csv")]) if target.is_dir() else [target]
     catalogue: set[str] = set()
     kb: KnowledgeBase | None = None
+    source_texts: list[str] = []
     i = 1
     while i < len(args):
         if args[i] == "--catalogue":
@@ -201,8 +209,14 @@ def main() -> int:
             kb = KnowledgeBase(Path(args[i + 1]).resolve())
             catalogue |= kb.ids
             i += 2
+        elif args[i] == "--sources":
+            src = Path(args[i + 1])
+            paths = sorted(p for p in src.rglob("*") if p.suffix.lower() in (".md", ".txt")) if src.is_dir() else [src]
+            source_texts += [normalise(p.read_text(encoding="utf-8")) for p in paths]
+            i += 2
         else:
             i += 1
+    quotes_checked = 0
     trace_out = args[args.index("--trace") + 1] if "--trace" in args else None
 
     cases = parse(files)
@@ -287,6 +301,11 @@ def main() -> int:
                     if quote and not kb.quote_at(quote.group(1), source_id, start, end):
                         errors.append(f"{where}: evidence {n} quote not found at {source_id} L{start}"
                                       + (f"-L{end}" if end != start else "") + f": \"{quote.group(1)[:60]}\"")
+                if quote and source_texts and not (kb is not None and cites):
+                    quotes_checked += 1
+                    if not any(normalise(quote.group(1)) in text for text in source_texts):
+                        errors.append(f"{where}: evidence {n} quote found in none of the --sources documents: "
+                                      f"\"{quote.group(1)[:60]}\"")
 
     if csv_unquoted:
         advice.append(f"{csv_unquoted} specified case(s) in the CSV carry no evidence quotes (the workbook has no "
@@ -314,6 +333,10 @@ def main() -> int:
     total = len(catalogue) if catalogue else len(trace)
     print(f"{len(cases)} cases in {len(files)} file(s) | {covered}/{total} requirement IDs named by a case"
           + (f" | catalogue from {len(kb.sources)} knowledge-base sources" if kb else ""))
+    if source_texts:
+        print(f"evidence quotes: {quotes_checked} checked against {len(source_texts)} source document(s)")
+    elif kb is None and any(e["evidence"] for c in cases for e in c["expected"]):
+        print("evidence quotes: not compared with any source (pass --sources <docs> or --kb <knowledge-base>)")
     if kb:
         rules = kb.testable_rules()
         with_ids = [(label, rids) for label, rids in rules if rids]

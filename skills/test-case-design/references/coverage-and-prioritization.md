@@ -38,8 +38,14 @@ taken from (`docs/test-cases/catalogue.md`):
   are **stale** until someone re-reads them against the new text — mark them, don't assume they still hold.
 
 ```bash
-python <skill-dir>/scripts/check_cases.py docs/test-cases --catalogue docs/test-cases/catalogue.md --trace traceability.csv
+python <skill-dir>/scripts/check_cases.py docs/test-cases --catalogue docs/test-cases/catalogue.md --sources docs/requirements --trace traceability.csv
 ```
+
+`--sources` points at the requirement documents the `Evidence:` quotes come from; each quote must appear in one of
+them (whitespace, quote marks and case normalised), or the run fails. Without it — and without `--kb` — the checker
+can only see that a quote exists, not that it says what the source says, and it prints that. A design that covers one
+slice of a product is checked against a catalogue of that slice, its rows copied verbatim: an uncovered AC is an
+error by design, so the full catalogue would report every AC outside the slice.
 
 When the project has a knowledge base (`project-knowledge-base`), pass it instead of, or as well as, a catalogue file:
 

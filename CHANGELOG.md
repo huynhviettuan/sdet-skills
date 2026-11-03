@@ -17,6 +17,14 @@ All notable changes to the sdet-skills plugin. Versions follow the `version` in 
 
 ### Added
 
+- `check_cases.py --sources <docs>`: every `Evidence:` quote is checked against the requirement documents when there
+  is no knowledge base (whitespace, quote marks and case normalised); a quote found in none of them is an error.
+  Before, quotes were compared only under `--kb`, so a case set built from an ordinary requirements package could
+  quote anything; a run without `--sources` or `--kb` now says its quotes were not compared. Found building the
+  Orders example (its agent had to check 44 quotes with a throwaway script); that example now runs it in CI (44
+  checked, 0 errors). The skill and `coverage-and-prioritization.md` also say how to check a design that covers one
+  slice: against a catalogue of that slice, since an uncovered AC is an error by design. Self-tested, and shown to
+  fail with the comparison disabled.
 - Worked examples for eleven more skills, most on one shared domain (Orders), each with the command that checks it.
   `project-docs/examples/orders-docs`: a full Level 2 package (7 FR, 17 BR, 44 AC, 4 ADR, 6 OQ, a 51-cell
   permission matrix). `test-case-design/examples/orders`: 25 cases over a 19-AC slice (EP, BVA, state transition,

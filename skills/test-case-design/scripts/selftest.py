@@ -156,6 +156,22 @@ def main() -> int:
         if not trace.startswith(b"\xef\xbb\xbf") or b"BR-CON-005" not in trace:
             failures.append("trace.csv lacks the BOM or the BR-CON-005 row")
 
+        # --sources: the quote is compared with the requirement documents (case and line breaks normalised).
+        docs = root / "docs"
+        docs.mkdir()
+        (docs / "rules.md").write_text("## BR-CON-005\n\nA Manager may approve a pending\ncontract within their limit.\n",
+                                       encoding="utf-8")
+        code, out = run(str(HERE / "check_cases.py"), str(root / "cases" / "good.md"), "--sources", str(docs))
+        if code != 0 or "evidence quotes: 1 checked against 1 source document(s)" not in out:
+            failures.append("--sources rejected or did not count a quote that is in the source:\n" + out)
+        (docs / "rules.md").write_text("## BR-CON-005\n\nA manager may approve any contract.\n", encoding="utf-8")
+        code, out = run(str(HERE / "check_cases.py"), str(root / "cases" / "good.md"), "--sources", str(docs))
+        if code != 1 or "quote found in none of the --sources documents" not in out:
+            failures.append("--sources accepted a quote that is not in any source:\n" + out)
+        code, out = run(str(HERE / "check_cases.py"), str(root / "cases" / "good.md"))
+        if "evidence quotes: not compared with any source" not in out:
+            failures.append("a run without --sources or --kb did not say its quotes were not compared")
+
         kb = root / "kb"
         (kb / "_sources" / "text").mkdir(parents=True)
         source = ("<!-- S06: 05_BUSINESS_RULES.md -->\n# Business rules\n\n## Contracts\n\n"

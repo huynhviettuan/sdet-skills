@@ -53,9 +53,10 @@ fi
 # test-case-design: the 25 Orders cases cover their slice catalogue with 0 errors (Markdown and the CSV workbook).
 T=skills/test-case-design/examples/orders
 for target in "$T/cases" "$T/orders-cases.csv"; do
-    if python skills/test-case-design/scripts/check_cases.py "$target" --catalogue "$T/slice-catalogue.md" > "$OUT/tcd.txt" 2>&1 \
+    if python skills/test-case-design/scripts/check_cases.py "$target" --catalogue "$T/slice-catalogue.md" \
+            --sources skills/project-docs/examples/orders-docs > "$OUT/tcd.txt" 2>&1 \
         && grep -q "^25 cases" "$OUT/tcd.txt" && grep -q "^0 error(s)" "$OUT/tcd.txt"; then
-        ok "test-case-design orders: $(basename "$target") 25 cases, 0 errors against the slice"
+        ok "test-case-design orders: $(basename "$target") 25 cases, 0 errors against the slice ($(grep '^evidence quotes' "$OUT/tcd.txt"))"
     else
         bad "test-case-design orders: $target"; tail -5 "$OUT/tcd.txt"
     fi

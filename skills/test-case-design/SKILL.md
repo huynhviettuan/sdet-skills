@@ -36,8 +36,11 @@ Scripts (Python ≥ 3.10, no dependencies):
 - `scripts/check_cases.py <cases> --catalogue <file> | --kb <knowledge-base>` — IDs unique, required fields, basis,
   catalogue references, every AC covered; with a knowledge base every `[Sxx Lnn]` citation and evidence quote
   verified against the source line, no `specified` case on a disputed rule, and coverage of the KB's testable rules
-  (errors and report); uncovered IDs, missing quotes, all-bare-status cases (advisory, measured on a held-out
-  catalogue); reads the 20-column CSV workbook too; `--trace` CSV.
+  (errors and report); `--sources <docs>` checks every evidence quote against the requirement documents when there
+  is no KB (without either, quotes are compared with nothing and the run says so); uncovered IDs, missing quotes,
+  all-bare-status cases (advisory, measured on a held-out catalogue); reads the 20-column CSV workbook too; `--trace`
+  CSV. An AC no case verifies is an error, so a design that covers one slice is checked against a catalogue of that
+  slice (the rows copied verbatim), not the whole product's (`examples/orders/slice-catalogue.md`).
 - `scripts/pairwise.py generate|verify <factors.json>` — builds an all-pairs table with the reason for each value,
   and proves every allowed pair is covered.
 

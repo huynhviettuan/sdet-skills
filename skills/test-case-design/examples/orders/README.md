@@ -107,10 +107,15 @@ python skills/test-case-design/scripts/pairwise.py verify skills/test-case-desig
 Both exit 0: `13 rows cover the pairs of 96 combinations.` and `Verified: every allowed pair is covered.` The full
 output is in [design-tables.md](design-tables.md#pairwise-note-validation).
 
-**Evidence quotes** — `check_cases.py` compares a quote with its source only under `--kb` with an `[Sxx Lnn]`
-citation; this package is not a knowledge base, so the quotes were checked once by a scratch script (not in the
-repo): every AC quote is a substring of that AC's `Statement:` line, every BR/FR quote a substring of its document,
-whitespace collapsed. Result on 2026-11-03: `44 evidence quotes checked | 0 problem(s)`.
+**Evidence quotes**: checked against the requirements package with `--sources`:
+
+```bash
+python skills/test-case-design/scripts/check_cases.py skills/test-case-design/examples/orders/cases --catalogue skills/test-case-design/examples/orders/slice-catalogue.md --sources skills/project-docs/examples/orders-docs
+```
+
+Result on 2026-11-03: `evidence quotes: 44 checked against 40 source document(s)`, `0 error(s)`. When this example was
+written, `check_cases.py` compared quotes only under `--kb`, so a scratch script checked them first (same result,
+44 / 0); this example is why `--sources` exists. CI's `Skill examples` job re-runs the command above.
 
 **Repository check**: `node scripts/check-repo.mjs` on 2026-11-03 ended `17 problem(s) | 19 skills | 375 Markdown
 files` (exit 1; the script prints a middle dot where this page writes `|`); all 17 are broken links to `analysis.md` under `skills/project-knowledge-base/examples/orders-kb/`,
