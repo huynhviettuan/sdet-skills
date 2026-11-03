@@ -6,6 +6,10 @@ All notable changes to the sdet-skills plugin. Versions follow the `version` in 
 
 ### Fixed
 
+- `/review-tests` lost all its frontmatter (description, argument hint) on a Windows checkout with CRLF line endings:
+  the unquoted `argument-hint` (`[...]  [--post]`) is not valid YAML, and the strict validator rejects it once the
+  file has CRLF. Quoted. Found by validating a clean worktree before a push; LF checkouts (CI, Linux, macOS) were
+  never affected.
 - The repo's working rules moved from `CLAUDE.md` to `.claude/CLAUDE.md`. CI's strict validation of the plugin
   manifest had failed on every push since the rules were added (a root `CLAUDE.md` is not loaded for plugin users);
   only the marketplace target had been validated locally. Claude Code reads `.claude/CLAUDE.md` as project

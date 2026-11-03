@@ -1,6 +1,6 @@
 ---
 description: Review test-automation code (working tree, branch, PR or files) for correctness, readability and reuse
-argument-hint: [<PR number> | <base branch> | <paths...>]  [--post]
+argument-hint: "[<PR number> | <base branch> | <paths...>]  [--post]"
 ---
 
 Run the `test-code-review` skill on: **$ARGUMENTS** (no argument: the working tree diff against HEAD).
