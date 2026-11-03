@@ -13,6 +13,19 @@ All notable changes to the sdet-skills plugin. Versions follow the `version` in 
 
 ### Added
 
+- `security-testing` upgraded for cybersecurity QA. A runnable example `examples/vuln-api` (stdlib API, eleven
+  switchable flaws: bola, mass, headers, cors, errors, ratelimit, enum, jwt-none, jwt-nosig, jwt-noexp, audit) with the suite the skill
+  asks for — matrix from the permission table, BOLA with the object-unchanged assertion, mass assignment, headers
+  and CORS both ways, error leakage, lockout, enumeration, three JWT cases, audit, a strict sentinel: 35 passed +
+  1 xfailed on 2026-11-03; `scripts/selftest.py` enables one flaw at a time and proves exactly the tests that claim
+  it turn red. Two scripts: `authz_matrix.py generate|verify` (the `ROLES_PERMISSIONS.md` table is the single
+  source of authorization cases; verify proves every cell ran and passed from JUnit) and `headers_check.py` (live
+  header/cookie/CORS policy with a `test_hosts` guard). Three references: `api-security.md` (OWASP API Top 10 2023
+  item by item, JWT/OAuth/OIDC, SSRF, GraphQL, webhooks, idempotency and races), `schema-driven-negative-tests.md`
+  (deterministic negative cases from the OpenAPI schema via `service-builder`), `security-in-the-sdlc.md` (DoD,
+  PR checklist for test code, environment guard, release regression, synthetic data, CI secrets, the framework's
+  own supply chain, external report intake, metrics, review template). `automated-security-tests.md` now copies its
+  code from the example; the threat model names the LLM boundary (`ai-guardrail-testing`).
 - `ai-guardrail-testing`: testing the rails around an LLM feature or agent — a `GR-<AREA>-NNN` policy catalogue,
   the entry-point × side-effect threat grid with an OWASP LLM Top 10 mapping, an attack catalogue in eight classes
   (direct, indirect through tool output / documents / pages, encoding and language, multi-turn, tool-argument

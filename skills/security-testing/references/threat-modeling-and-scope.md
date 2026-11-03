@@ -55,7 +55,10 @@ it? Did we do a good job?* Keep it small and alive — a one-page model updated 
 nobody reads.
 
 1. **Draw the data flow**: actors, processes, data stores, external systems, and **trust boundaries** (browser ↔
-   API, API ↔ DB, service ↔ third party, tenant ↔ tenant).
+   API, API ↔ DB, service ↔ third party, tenant ↔ tenant). If the system has an LLM feature or agent, the model is
+   one more boundary: everything that enters its context (documents, tool results, pages) is untrusted input and
+   every tool it can call is a side effect — `ai-guardrail-testing` has the entry-point × side-effect grid and the
+   tests; the two threat models share the STRIDE pass and these rules of engagement.
 2. **Walk each boundary with STRIDE**:
 
 | Threat | Question | Typical control | Typical test |

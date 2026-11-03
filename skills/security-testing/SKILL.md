@@ -24,15 +24,38 @@ security testing combines both, driven by a threat model and scoped by an explic
   authorization, ASVS depth levels, lightweight STRIDE threat modeling, abuse cases, security requirements as
   BR/AC, coverage map against OWASP categories, test plan template.
 - [`references/automated-security-tests.md`](references/automated-security-tests.md) — security checks as ordinary
-  automation tests: fixtures, access-control matrix, BOLA/IDOR, mass assignment, authn/session, input handling,
-  headers/cookies/CORS, error leakage, limits, file upload, business-logic abuse, audit logging (Playwright
-  examples).
+  automation tests: fixtures, access-control matrix (from the permission table), BOLA/IDOR with the object-unchanged
+  assertion, mass assignment, authn/session, input handling, headers/cookies/CORS, error leakage, limits, file
+  upload, business-logic abuse, audit logging; code copied from the runnable example.
+- [`references/api-security.md`](references/api-security.md) — OWASP API Security Top 10 (2023) item by item with
+  a test and an oracle; JWT (alg=none, tampered, expired, aud/iss, kid/jku, key confusion), OAuth2/OIDC flows, SSRF,
+  GraphQL, webhooks, idempotency and races, rate limits and lockout.
+- [`references/schema-driven-negative-tests.md`](references/schema-driven-negative-tests.md) — deterministic
+  negative cases derived from the OpenAPI schema (`service-builder`'s generated schemas): per-type invalid inputs,
+  `readOnly` fields as mass-assignment targets, response-schema validation as a leak detector, what not to do.
+- [`references/security-in-the-sdlc.md`](references/security-in-the-sdlc.md) — security QA as a process:
+  definition of done for a story, the PR checklist for test code, the test-environment guard, security regression
+  per release, synthetic test data, secrets in CI, the test framework's own supply chain, external report intake,
+  metrics that are not vanity, a feature security-review template.
 - [`references/pipeline-scanning.md`](references/pipeline-scanning.md) — SAST/SCA/secrets/IaC/container/DAST/SBOM:
   what each finds, where it runs in the pipeline, gating on new findings, running DAST safely, suppressions with
   expiry, tool mapping.
 - [`references/triage-and-reporting.md`](references/triage-and-reporting.md) — triage flow, contextual severity,
   remediation SLAs, finding and report templates, verification, metrics, handling sensitive findings,
   anti-patterns, review checklist.
+
+Scripts (Python ≥ 3.10, no dependencies):
+
+- `scripts/authz_matrix.py generate <ROLES_PERMISSIONS.md>` — the permission table (`ID | Operation | Actor |
+  Expected`) as the single source of authorization cases: errors for malformed rows, advice for an operation with
+  no deny or no anonymous row; `verify <matrix> <junit.xml>` proves every cell had a test and it passed.
+- `scripts/headers_check.py <url> [--policy policy.json]` — header, cookie and CORS policy against a live test
+  environment with `HDR-`/`CKE-`/`CORS-` findings; refuses a host outside the policy's `test_hosts`.
+
+Example (`examples/vuln-api/`, pytest, no dependencies): a multi-tenant orders API with eleven switchable flaws and
+the suite this skill asks for — matrix, BOLA, mass assignment, headers/CORS, error leakage, lockout, enumeration,
+JWT, audit, sentinel. Ran once on 2026-11-03: 35 passed + 1 xfailed; `scripts/selftest.py` enables one flaw at a
+time and proves exactly the tests that claim it turn red (CI `skill-scripts` job).
 
 ## Workflow
 
@@ -45,8 +68,11 @@ security testing combines both, driven by a threat model and scoped by an explic
 3. **Threat-model the system or the changed feature**: data flow, trust boundaries, STRIDE per boundary, abuse
    cases. Rank threats; map each High/Medium one to a control and a test.
 4. **Record security rules as BR/AC** in the product docs so they trace to tests (`TC-SEC-<AREA>-NNN`).
-5. **Write automated security tests** in the existing suite — access-control matrix and BOLA first; they catch the
-   most serious API flaws and no scanner covers them.
+5. **Write automated security tests** in the existing suite — access-control matrix (generated from the
+   permission table, verified with `authz_matrix.py`) and BOLA first; they catch the most serious API flaws and
+   no scanner covers them. Then the schema-driven negative cases, token tests, headers. The suite keeps a
+   **sentinel** and every security test is shown red once against the flaw it claims (a flaw switch, a mutant, or
+   `can-fail`) — a security test that has never failed proves nothing.
 6. **Add pipeline scanning** (secrets, SCA, SAST, IaC, container at build; DAST against an authorized test
    environment) with a gating policy on *new* findings.
 7. **Triage, fix, verify, add a regression test**; report risk with the template.

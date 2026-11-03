@@ -89,7 +89,7 @@ All of the above as one job, with human gates:
 | Implement documented test cases as automated tests | `test-script-writer` |
 | Submit stories, propose executable specs, run cases and suites, read reports and triage in the Manual QA Agent | `manual-qa-agent` (+ `test-script-writer`) |
 | Load, stress, soak, capacity testing; perf results analysis | `performance-testing` |
-| Authorization/tenant isolation tests, security scans in CI, finding triage | `security-testing` |
+| Authorization/tenant isolation tests, API security (JWT, OAuth, SSRF, GraphQL), schema-driven negative cases, security scans in CI, finding triage, security QA process | `security-testing` |
 | Test an AI assistant or agent: refusal policies, prompt injection, tool-call gates, output contracts, LLM judges | `ai-guardrail-testing` |
 | Investigate a failing, flaky, or CI-only test; triage a red run | `debug-failed-tests` |
 | Audit / clean up / migrate an existing (legacy) test suite; enforce test coding rules | `refactor-test-suite` |
@@ -165,8 +165,11 @@ The documentation skills share one ID scheme so requirements trace through to te
   modeling from production data, open vs closed models, script design (k6 examples + JMeter/Gatling/Locust
   mapping), environment and monitoring, CI gates, bottleneck analysis, and reporting.
 - [`security-testing`](skills/security-testing/SKILL.md) — authorized, defensive security testing: threat modeling
-  and ASVS scoping, automated authz/BOLA/session/header tests, SAST/SCA/secrets/IaC/DAST in CI with gating
-  policies, and finding triage and reporting.
+  and ASVS scoping, the permission table as the single source of authorization tests (`authz_matrix.py`),
+  BOLA/mass-assignment/JWT/OAuth/SSRF/GraphQL/webhook tests with deterministic oracles, schema-driven negative
+  cases, headers/CORS (`headers_check.py`), SAST/SCA/secrets/IaC/DAST in CI with gating policies, security QA in
+  the SDLC, finding triage and reporting; a runnable switchable-flaw example whose selftest proves every test turns
+  red for its flaw.
 - [`ai-guardrail-testing`](skills/ai-guardrail-testing/SKILL.md) — testing the rails around an LLM feature or
   agent: a `GR-` policy catalogue, the entry-point × side-effect threat grid (OWASP LLM Top 10 mapped), an attack
   catalogue with deterministic oracles, paraphrase sets, the tool-gate test, output contracts, a strict sentinel,

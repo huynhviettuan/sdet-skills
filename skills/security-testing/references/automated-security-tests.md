@@ -4,8 +4,10 @@ Security checks written as ordinary tests in the existing automation suite (most
 build and never regress. Scanners find generic flaws; these tests verify **your** rules — who may do what to which
 data — which no scanner knows.
 
-Examples are Playwright API tests in TypeScript (labeled); the patterns apply to any API test tool. Fixtures follow
-`sdet-framework-architect`: data and accounts come from fixtures that own their teardown.
+Code blocks are copied from the runnable example `examples/vuln-api/` (pytest + stdlib against a switchable-flaw
+API; 35 passed + 1 xfailed sentinel on 2026-11-03, and `scripts/selftest.py` proves each test turns red for its
+flaw). The patterns apply to any API test tool; fixtures follow `sdet-framework-architect`: data and accounts come
+from fixtures that own their teardown.
 
 Contents:
 
@@ -47,28 +49,33 @@ matrix is the documented permission model (`ROLES_PERMISSIONS.md`) made executab
 | POST   /contracts/:id/approve| 401       | 403      | 403   | 200   |
 ```
 
-*Playwright example:*
+The executable form is one row per cell, `ID | Operation | Actor | Expected`, read by `scripts/authz_matrix.py`
+(`examples/vuln-api/ROLES_PERMISSIONS.md`); the suite parametrizes one test per row and never decides an expected
+result itself:
 
-```ts
-const matrix = [
-  { method: 'DELETE', path: (o) => `/orders/${o.id}`, expect: { anonymous: 401, customer: 403, staff: 403, admin: 204 } },
-  { method: 'GET',    path: () => '/admin/users',      expect: { anonymous: 401, customer: 403, staff: 403, admin: 200 } },
-] as const;
+```python
+MATRIX = load_matrix(Path(__file__).parent / "ROLES_PERMISSIONS.md")
 
-for (const row of matrix) {
-  for (const [role, status] of Object.entries(row.expect)) {
-    test(`[TC-SEC-ACL] ${role} ${row.method} ${row.path({ id: ':id' })} → ${status}`,
-      async ({ apiAs, orderFactory }) => {
-        const order = await orderFactory.create();              // fixture-owned, torn down after
-        const res = await apiAs(role).fetch(row.path(order), { method: row.method });
-        expect(res.status()).toBe(status);
-      });
-  }
-}
+
+# TC-SEC-AUTHZ-001 - one test per matrix row; the table is the only source of expected results.
+@pytest.mark.parametrize("cell", MATRIX, ids=[c.id for c in MATRIX])
+def test_access_control_matrix(api: Api, tokens: dict[str, str | None], alice_order: dict, cell) -> None:
+    method, _, template = cell.operation.partition(" ")
+    path = template.replace("{id}", str(alice_order["id"]))
+    body = {"note": "edited"} if method in {"PATCH", "POST"} else None
+
+    r = api.request(method, path, token=tokens[cell.actor], json_body=body)
+
+    assert r.status == cell.expected, f"{cell.id} {cell.operation} as {cell.actor}: {r.status} {r.body}"
 ```
 
+After a run, `python scripts/authz_matrix.py verify ROLES_PERMISSIONS.md junit.xml` proves every cell had a test
+and it passed (a cell with no test is an error, not a gap note). `generate` warns when an operation has no deny row
+or no anonymous row — a matrix of allows proves nothing.
+
 Every new endpoint adds a row; a missing row is a review blocker. Default expectation for anything not listed:
-deny.
+deny. Actors are relative to the object under test (owner, same tenant, other tenant, manager of each, admin), not
+just roles — most BOLA bugs live between two users of the *same* role.
 
 ---
 
@@ -84,16 +91,20 @@ Act:     B reads / updates / deletes X by id
 Assert:  denied (404 preferred, so existence isn't confirmed) AND X is unchanged (re-read as A)
 ```
 
-*Playwright example:*
+```python
+# TC-SEC-BOLA-001 - the attacker is denied AND the object is unchanged (flaw: bola)
+def test_bola_attacker_cannot_change_another_tenants_order(api: Api, tokens, alice_order: dict) -> None:
+    attack = api.request("PATCH", f"/orders/{alice_order['id']}", token=tokens["customer-other-tenant"],
+                         json_body={"note": "owned"})
+    after = api.request("GET", f"/orders/{alice_order['id']}", token=tokens["customer-own"])
 
-```ts
-test('[TC-SEC-ORDER-003] customer cannot read another customer’s order', async ({ customerA, customerB, orderFactory }) => {
-  const order = await orderFactory.create({ owner: customerA });
-  const res = await customerB.get(`/orders/${order.id}`);
-  expect(res.status()).toBe(404);
-  expect(await res.text()).not.toContain(order.id);
-});
+    assert attack.status == 404
+    assert after.body["note"] == "original"
 ```
+
+The second assertion is the one that matters: an endpoint that answers 404 and still applies the change is the
+worse bug. The suite's **sentinel** is the same read from the other tenant asserted as `200` under
+`xfail(strict=True)` — if object-level authorization disappears, the sentinel passes and the run goes red.
 
 Also cover: ids inside bulk/list filters (`?customerId=`), nested resources (`/orders/:id/invoice`), exports, and
 GraphQL node lookups. Unguessable ids (UUIDs) reduce exposure but are not access control.
@@ -106,10 +117,21 @@ GraphQL node lookups. Unguessable ids (UUIDs) reduce exposure but are not access
   flags, other users' PII). Assert the response schema has no extra fields for each role.
 - **Mass assignment**: send fields the caller must not set and assert they're ignored or rejected:
 
-```text
-PATCH /users/me  { "displayName": "x", "role": "admin", "isVerified": true, "tenantId": "<other>" }
-→ 200 or 400, and re-reading the user shows role/isVerified/tenantId unchanged
+```python
+# TC-SEC-MASS-001 - read-only fields are rejected, not silently ignored (flaw: mass)
+def test_mass_assignment_rejected(api: Api, tokens, alice_order: dict) -> None:
+    r = api.request("PATCH", f"/orders/{alice_order['id']}", token=tokens["customer-own"],
+                    json_body={"note": "ok", "status": "paid", "tenant": "tenant-b"})
+    after = api.request("GET", f"/orders/{alice_order['id']}", token=tokens["customer-own"])
+
+    assert r.status == 400
+    assert r.body["fields"] == ["status", "tenant"]
+    assert (after.body["status"], after.body["tenant"]) == ("new", "tenant-a")
 ```
+
+  Rejecting (400 naming the fields) beats ignoring: a silently dropped field hides a client bug and makes the
+  test weaker (only the re-read proves anything). The candidates come from the schema's `readOnly` fields —
+  see `schema-driven-negative-tests.md`.
 
 ---
 
@@ -128,6 +150,30 @@ PATCH /users/me  { "displayName": "x", "role": "admin", "isVerified": true, "ten
 | Session cookie after login | New session id issued (no fixation) |
 
 Never put real credentials in tests; use per-role test accounts from the secret store.
+
+Lockout and enumeration from the example (the error body is compared whole, not matched for wording):
+
+```python
+# TC-SEC-AUTHN-001 - failed logins are rate-limited per account (flaw: ratelimit)
+def test_login_rate_limited(api: Api) -> None:
+    for _ in range(app.LOGIN_LIMIT):
+        assert api.login("nobody-rl", "wrong").status == 401
+
+    r = api.login("nobody-rl", "wrong")
+
+    assert r.status == 429
+    assert r.headers.get("Retry-After") == "60"
+
+
+# TC-SEC-AUTHN-002 - the login error is identical for unknown users and wrong passwords (flaw: enum)
+def test_login_does_not_reveal_usernames(api: Api) -> None:
+    known = api.login("alice", "wrong")
+    unknown = api.login("zed", "wrong")
+
+    assert (known.status, known.body) == (unknown.status, unknown.body)
+```
+
+Token tests (`alg=none`, tampered, expired, and the rest of the JWT/OAuth list) are in `api-security.md`.
 
 ---
 
@@ -167,9 +213,49 @@ CORS                        Origin: https://evil.example → no Access-Control-A
                             never "*" together with credentials
 ```
 
+In the suite, assert exact values against the documented policy (the example's `SECURITY_HEADERS` dict is the
+policy):
+
+```python
+# TC-SEC-HDR-001 - every documented security header, exact value (flaw: headers)
+def test_security_headers_present(api: Api, tokens) -> None:
+    r = api.request("GET", "/orders", token=tokens["customer-own"])
+
+    missing = {k: v for k, v in app.SECURITY_HEADERS.items() if r.headers.get(k) != v}
+    assert missing == {}, f"missing or wrong: {missing}"
+
+
+# TC-SEC-CORS-001 - an unknown origin gets no CORS grant (flaw: cors)
+def test_cors_rejects_unknown_origin(api: Api, tokens) -> None:
+    r = api.request("GET", "/orders", token=tokens["customer-own"],
+                    headers={"Origin": "https://evil.example.test"})
+
+    assert "Access-Control-Allow-Origin" not in r.headers
+    assert "Access-Control-Allow-Credentials" not in r.headers
+```
+
+Keep the positive path too (`test_cors_allows_listed_origin`): a CORS policy that grants nobody also passes the
+negative test. Outside the suite — a deployed test environment, a release check — `scripts/headers_check.py <url>`
+runs the same policy from a JSON file with `HDR-`/`CKE-`/`CORS-` findings, and refuses any host not listed in
+its `test_hosts`.
+
 ---
 
 ## Errors and information leakage
+
+```python
+# TC-SEC-ERR-001 - a 500 carries a reference, never a trace or a file path (flaw: errors)
+def test_error_response_does_not_leak(api: Api) -> None:
+    r = api.request("GET", "/_boom")
+
+    assert r.status == 500
+    text = json.dumps(r.body)
+    assert "Traceback" not in text and "app.py" not in text and "pricing" not in text
+    assert "ref" in r.body
+```
+
+The example provokes the fault through a test hook; a real suite uses a real fault path (a dependency stub that
+throws) and keeps the "reference present" assertion — a bare 500 with no correlation id is a support problem.
 
 Force errors (invalid JSON, unknown route, wrong method, oversized body, invalid id format) and assert: correct
 4xx, a generic error body in the documented error format, no stack traces, SQL fragments, internal hostnames, file
@@ -213,6 +299,16 @@ These map directly to the state machines and business rules in the product docs.
 ---
 
 ## Audit logging
+
+```python
+# TC-SEC-AUDIT-001 - a denied request leaves an audit entry naming actor and action (flaw: audit)
+def test_denied_request_is_audited(api: Api, tokens) -> None:
+    assert api.request("GET", "/admin/users", token=tokens["customer-own"]).status == 403
+
+    audit = api.request("GET", "/_audit", token=tokens["admin"])
+
+    assert {"actor": "alice", "action": "GET /admin/users", "outcome": "denied"} in audit.body
+```
 
 Sensitive actions (login, failed login, permission change, approval, export, deletion) produce an audit event with
 actor, timestamp, action, target — and the event contains **no secrets or full PII**. Assert via the audit API or

@@ -44,6 +44,7 @@ node scripts/check-repo.mjs
 python skills/test-case-design/scripts/selftest.py
 python skills/project-knowledge-base/scripts/selftest.py
 python skills/ai-guardrail-testing/scripts/selftest.py
+python skills/security-testing/scripts/selftest.py
 node skills/test-script-writer/scripts/selftest.mjs
 node skills/automation-pipeline/scripts/selftest.mjs
 node skills/service-builder/scripts/selftest.mjs
